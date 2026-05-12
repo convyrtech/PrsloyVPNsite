@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRSLOY · Global Network · amCharts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Doto:wght@400;700&family=Space+Grotesk:wght@300;400;500&family=Space+Mono:wght@400&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --black: #000;
+      --surface: #111;
+      --surface-raised: #1a1a1a;
+      --border: #222;
+      --border-visible: #333;
+      --text-disabled: #666;
+      --text-secondary: #999;
+      --text-primary: #e8e8e8;
+      --text-display: #fff;
+      --accent: #d71921;
+      --success: #4a9e5c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: var(--black);
+      color: var(--text-primary);
+      font-family: "Space Grotesk", system-ui, sans-serif;
+      font-weight: 300;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* OVERLAY — title + metrics */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px;
+    }
+
+    .overlay > * { pointer-events: auto; }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .label {
+      font-family: "Space Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-disabled);
+    }
+
+    .title-block .label {
+      margin-bottom: 12px;
+    }
+
+    .title-block h1 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      color: var(--text-display);
+    }
+
+    .title-block h1 strong {
+      font-weight: 500;
+      color: var(--text-display);
+    }
+
+    .title-block .subtitle {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-top: 12px;
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    .metrics {
+      text-align: right;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+    }
+
+    .metric {
+      text-align: left;
+    }
+
+    .metric .label {
+      margin-bottom: 4px;
+    }
+
+    .metric .value {
+      font-family: "Space Mono", monospace;
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--text-display);
+      letter-spacing: -0.02em;
+    }
+
+    .metric .value .unit {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-left: 4px;
+    }
+
+    .bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .legend {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      font-family: "Space Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot-origin {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1.5px solid var(--text-display);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    }
+    .dot-exit {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-display);
+    }
+    .dot-active {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(215, 25, 33, 0.6);
+    }
+
+    .signature {
+      font-family: "Doto", monospace;
+      font-size: 16px;
+      letter-spacing: 0.2em;
+      color: var(--text-display);
+      opacity: 0.7;
+    }
+
+    /* CHART CONTAINER */
+    #chartdiv {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    /* amCharts attribution restyling */
+    #chartdiv a[href*="amcharts.com"] {
+      font-family: "Space Mono", monospace !important;
+      font-size: 9px !important;
+      color: var(--text-disabled) !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase !important;
+      opacity: 0.5 !important;
+      bottom: 12px !important;
+      right: 12px !important;
+    }
+
+    @media (max-width: 768px) {
+      .overlay { padding: 24px; }
+      .metrics {
+        grid-template-columns: 1fr;
+        text-align: left;
+        gap: 12px;
+      }
+      .top-bar {
+        flex-direction: column;
+        gap: 32px;
+      }
+      .title-block h1 { font-size: 28px; }
+      .legend { gap: 12px; flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div id="chartdiv"></div>
+
+    <div class="overlay">
+      <div class="top-bar">
+        <div class="title-block">
+          <div class="label">GLOBAL INFRASTRUCTURE</div>
+          <h1>Live network.<br /><strong>Real routes. Real time.</strong></h1>
+          <p class="subtitle">
+            Every connection routed through whitelisted entry, hopped to global exit nodes.
+          </p>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="label">NODES</div>
+            <div class="value" id="m-nodes">12</div>
+          </div>
+          <div class="metric">
+            <div class="label">REGIONS</div>
+            <div class="value" id="m-regions">7</div>
+          </div>
+          <div class="metric">
+            <div class="label">UPTIME</div>
+            <div class="value" id="m-uptime">99.7<span class="unit">%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-bar">
+        <div class="legend">
+          <div class="legend-item"><span class="dot-origin"></span>ENTRY</div>
+          <div class="legend-item"><span class="dot-exit"></span>EXIT NODE</div>
+          <div class="legend-item"><span class="dot-active"></span>ACTIVE PACKET</div>
+        </div>
+        <div class="signature">PRSLOY</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- amCharts 5 -->
+  <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+
+  <script>
+    // ─── Sanity check: did amCharts scripts load? ───
+    if (typeof am5 === "undefined" || typeof am5map === "undefined" || typeof am5geodata_worldLow === "undefined") {
+      const chartDiv = document.getElementById("chartdiv");
+      chartDiv.style.display = "flex";
+      chartDiv.style.alignItems = "center";
+      chartDiv.style.justifyContent = "center";
+      chartDiv.style.color = "#d71921";
+      chartDiv.style.fontFamily = "Space Mono, monospace";
+      chartDiv.style.fontSize = "13px";
+      chartDiv.style.padding = "40px";
+      chartDiv.style.textAlign = "center";
+      chartDiv.innerHTML =
+        "[ERROR]<br><br>amCharts CDN не загрузился.<br>Возможные причины:<br>• AdBlock блокирует amcharts.com<br>• Нет интернета<br>• CDN недоступен<br><br>Открой DevTools → Network для деталей.";
+      throw new Error("amCharts not loaded");
+    }
+
+    function showFatal(err) {
+      console.error("[PRSLOY map fatal]", err);
+      const div = document.getElementById("chartdiv");
+      div.style.cssText +=
+        "display:flex;align-items:center;justify-content:center;color:#d71921;font-family:'Space Mono',monospace;font-size:12px;padding:40px;text-align:left;";
+      div.innerHTML =
+        "<pre style='white-space:pre-wrap;max-width:700px'>[FATAL]\n\n" +
+        (err && err.message ? err.message : String(err)) +
+        "\n\n" +
+        (err && err.stack ? err.stack : "") +
+        "</pre>";
+    }
+
+    window.addEventListener("error", (e) => showFatal(e.error || e.message));
+
+    am5.ready(function () {
+      try {
+      console.log("[PRSLOY] am5.ready fired");
+      console.log("[PRSLOY] container size:", document.getElementById("chartdiv").getBoundingClientRect());
+      // ─────────────────────────────────────────
+      // ROOT + THEME
+      // ─────────────────────────────────────────
+      const root = am5.Root.new("chartdiv");
+      root.setThemes([am5themes_Animated.new(root)]);
+      console.log("[PRSLOY] root + theme created");
+
+      // ─────────────────────────────────────────
+      // CHART
+      // ─────────────────────────────────────────
+      const chart = root.container.children.push(
+        am5map.MapChart.new(root, {
+          panX: "translateX",
+          panY: "translateY",
+          projection: am5map.geoNaturalEarth1(),
+          paddingBottom: 60,
+          paddingTop: 60,
+          paddingLeft: 20,
+          paddingRight: 20,
+          maxZoomLevel: 8,
+          wheelY: "none",
+        })
+      );
+      console.log("[PRSLOY] chart created");
+
+      // ─────────────────────────────────────────
+      // COUNTRIES (polygons)
+      // ─────────────────────────────────────────
+      const polygonSeries = chart.series.push(
+        am5map.MapPolygonSeries.new(root, {
+          geoJSON: am5geodata_worldLow,
+          exclude: ["AQ"],
+        })
+      );
+
+      polygonSeries.mapPolygons.template.setAll({
+        fill: am5.color(0x2a2a2a),
+        stroke: am5.color(0x555555),
+        strokeWidth: 0.6,
+        interactive: false,
+      });
+      console.log("[PRSLOY] polygon series styled");
+
+      polygonSeries.events.on("datavalidated", () => {
+        console.log("[PRSLOY] polygon data validated, polygons:", polygonSeries.mapPolygons.length);
+      });
+
+      // ─────────────────────────────────────────
+      // POINTS — origin + destinations
+      // ─────────────────────────────────────────
+      const ORIGIN = { name: "MOSCOW · ENTRY", lat: 55.7558, lng: 37.6176 };
+      const DESTINATIONS = [
+        { name: "AMSTERDAM",  lat: 52.3676, lng: 4.9041 },
+        { name: "FRANKFURT",  lat: 50.1109, lng: 8.6821 },
+        { name: "LONDON",     lat: 51.5074, lng: -0.1278 },
+        { name: "NEW YORK",   lat: 40.7128, lng: -74.0060 },
+        { name: "TOKYO",      lat: 35.6762, lng: 139.6503 },
+        { name: "SINGAPORE",  lat: 1.3521,  lng: 103.8198 },
+        { name: "SAN PAULO",  lat: -23.5505, lng: -46.6333 },
+      ];
+
+      // Origin point series (special bullet — outlined ring)
+      const originSeries = chart.series.push(am5map.MapPointSeries.new(root, {}));
+
+      originSeries.bullets.push(function () {
+        const container = am5.Container.new(root, {});
+
+        // Outer pulse ring
+        const ring = container.children.push(
+          am5.Circle.new(root, {
+            radius: 5,
+            fill: am5.color(0xffffff),
+            fillOpacity: 0,
+            stroke: am5.color(0xffffff),
+            strokeWidth: 1.5,
+            strokeOpacity: 0.9,
+          })
+        );
+
+        // Outer expanding pulse
+        const pulse = container.children.push(
+          am5.Circle.new(root, {
+            radius: 5,
+            fill: am5.color(0xffffff),
+            fillOpacity: 0.15,
+            stroke: am5.color(0xffffff),
+            strokeWidth: 1,
+            strokeOpacity: 0.4,
+          })
+        );
+
+        pulse.animate({
+          key: "radius",
+          to: 22,
+          duration: 1800,
+          easing: am5.ease.out(am5.ease.cubic),
+          loops: Infinity,
+        });
+        pulse.animate({
+          key: "strokeOpacity",
+          from: 0.6,
+          to: 0,
+          duration: 1800,
+          easing: am5.ease.out(am5.ease.cubic),
+          loops: Infinity,
+        });
+        pulse.animate({
+          key: "fillOpacity",
+          from: 0.2,
+          to: 0,
+          duration: 1800,
+          easing: am5.ease.out(am5.ease.cubic),
+          loops: Infinity,
+        });
+
+        return am5.Bullet.new(root, { sprite: container });
+      });
+
+      const originItem = originSeries.pushDataItem({
+        latitude: ORIGIN.lat,
+        longitude: ORIGIN.lng,
+        title: ORIGIN.name,
+      });
+
+      // Destination point series
+      const destSeries = chart.series.push(am5map.MapPointSeries.new(root, {}));
+
+      destSeries.bullets.push(function () {
+        const circle = am5.Circle.new(root, {
+          radius: 4,
+          fill: am5.color(0xffffff),
+          stroke: am5.color(0x000000),
+          strokeWidth: 1.5,
+        });
+        return am5.Bullet.new(root, { sprite: circle });
+      });
+
+      const destItems = DESTINATIONS.map((d) =>
+        destSeries.pushDataItem({
+          latitude: d.lat,
+          longitude: d.lng,
+          title: d.name,
+        })
+      );
+
+      // ─────────────────────────────────────────
+      // LINES — origin → each destination
+      // ─────────────────────────────────────────
+      const lineSeries = chart.series.push(am5map.MapLineSeries.new(root, {}));
+
+      lineSeries.mapLines.template.setAll({
+        stroke: am5.color(0xffffff),
+        strokeWidth: 0.7,
+        strokeOpacity: 0.35,
+        strokeDasharray: [2, 4],
+      });
+
+      const lineItems = destItems.map((destItem) =>
+        lineSeries.pushDataItem({
+          pointsToConnect: [originItem, destItem],
+        })
+      );
+
+      // ─────────────────────────────────────────
+      // ANIMATED PACKETS — flying along lines
+      // ─────────────────────────────────────────
+      const packetSeries = chart.series.push(am5map.MapPointSeries.new(root, {}));
+
+      packetSeries.bullets.push(function () {
+        const dot = am5.Circle.new(root, {
+          radius: 3,
+          fill: am5.color(0xd71921),
+          stroke: am5.color(0x000000),
+          strokeWidth: 1,
+        });
+
+        // Constant subtle pulse on the packet itself
+        dot.animate({
+          key: "radius",
+          to: 4,
+          duration: 600,
+          easing: am5.ease.inOut(am5.ease.sine),
+          loops: Infinity,
+        });
+
+        return am5.Bullet.new(root, { sprite: dot });
+      });
+
+      // Create one packet per line, animate position along line
+      lineItems.forEach((line, idx) => {
+        const packet = packetSeries.pushDataItem({
+          lineDataItem: line,
+          positionOnLine: 0,
+          autoRotate: false,
+        });
+
+        const animateAlong = () => {
+          packet.animate({
+            key: "positionOnLine",
+            from: 0,
+            to: 1,
+            duration: 3500 + idx * 200,
+            easing: am5.ease.linear,
+            loops: Infinity,
+          });
+        };
+
+        // Stagger the start of each packet
+        setTimeout(animateAlong, idx * 450);
+      });
+
+      // ─────────────────────────────────────────
+      // INITIAL VIEW
+      // ─────────────────────────────────────────
+      chart.set("homeGeoPoint", { longitude: 30, latitude: 30 });
+      chart.set("homeZoomLevel", 1.05);
+      chart.appear(1500, 200);
+      console.log("[PRSLOY] init complete");
+      } catch (err) {
+        showFatal(err);
+      }
+    });
+  </script>
+</body>
+</html>

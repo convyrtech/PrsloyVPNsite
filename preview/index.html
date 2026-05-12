@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRSLOY — Privacy is the architecture.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Doto:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --black: #000000;
+      --surface: #111111;
+      --surface-raised: #1a1a1a;
+      --border: #222222;
+      --border-visible: #333333;
+      --text-disabled: #666666;
+      --text-secondary: #999999;
+      --text-primary: #e8e8e8;
+      --text-display: #ffffff;
+      --accent: #d71921;
+      --success: #4a9e5c;
+
+      --font-display: "Doto", "Space Mono", monospace;
+      --font-body: "Space Grotesk", "DM Sans", system-ui, sans-serif;
+      --font-mono: "Space Mono", "JetBrains Mono", monospace;
+
+      --ease-out: cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--black);
+    }
+
+    body {
+      background: var(--black);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-weight: 300;
+      overflow-x: hidden;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ─────────────────────────────────────────────
+       HEADER — notch with status dot
+       ───────────────────────────────────────────── */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .header-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 120px;
+      pointer-events: none;
+    }
+
+    .header-svg path {
+      fill: var(--surface);
+    }
+
+    .header-content {
+      position: relative;
+      height: 64px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 0 48px;
+      pointer-events: auto;
+    }
+
+    .header-nav {
+      display: flex;
+      gap: 32px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .header-nav.right {
+      justify-content: flex-end;
+    }
+
+    .header-nav a {
+      color: inherit;
+      text-decoration: none;
+      transition: color 150ms var(--ease-out), letter-spacing 200ms var(--ease-out);
+      cursor: pointer;
+    }
+
+    .header-nav a:hover {
+      color: var(--text-display);
+      letter-spacing: 0.12em;
+    }
+
+    .notch-content {
+      width: 220px;
+      height: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: transform 200ms var(--ease-out);
+    }
+
+    .notch-brand {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 0.12em;
+      color: var(--text-display);
+      font-weight: 400;
+      transition: opacity 200ms var(--ease-out);
+    }
+
+    .notch-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-disabled);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px rgba(74, 158, 92, 0.4);
+      animation: pulse-dot 2s var(--ease-out) infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% {
+        opacity: 0.6;
+        transform: scale(0.95);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.1);
+      }
+    }
+
+    .lang-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      margin-left: 32px;
+      cursor: pointer;
+    }
+
+    .lang-toggle .active {
+      color: var(--text-display);
+    }
+
+    .lang-toggle .inactive {
+      color: var(--text-disabled);
+    }
+
+    .lang-sep {
+      color: var(--text-disabled);
+    }
+
+    /* ─────────────────────────────────────────────
+       HERO — particle PRSLOY
+       ───────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      min-height: 700px;
+      overflow: hidden;
+      background: var(--black);
+    }
+
+    .hero-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 0 48px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      pointer-events: none;
+    }
+
+    .hero-tagline {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+      text-align: center;
+      line-height: 1.4;
+      opacity: 0;
+      animation: fade-up 800ms var(--ease-out) forwards;
+      animation-delay: 2400ms;
+    }
+
+    .hero-tagline strong {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    @keyframes fade-up {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .cta {
+      pointer-events: auto;
+      background: var(--text-display);
+      color: var(--black);
+      border: none;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 16px 40px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: opacity 200ms var(--ease-out), letter-spacing 250ms var(--ease-out);
+      opacity: 0;
+      animation: fade-up 800ms var(--ease-out) forwards;
+      animation-delay: 2800ms;
+    }
+
+    .cta:hover {
+      opacity: 0.88;
+      letter-spacing: 0.12em;
+    }
+
+    .cta:active {
+      transform: scale(0.98);
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-disabled);
+      opacity: 0;
+      animation: fade-up 800ms var(--ease-out) forwards, scroll-pulse 2.5s var(--ease-out) infinite;
+      animation-delay: 3400ms, 4200ms;
+    }
+
+    @keyframes scroll-pulse {
+      0%, 100% { transform: translate(-50%, 0); opacity: 0.4; }
+      50% { transform: translate(-50%, 6px); opacity: 0.8; }
+    }
+
+    /* ─────────────────────────────────────────────
+       ROUTE BLOCK — "YOUR ISP SEES NOTHING"
+       ───────────────────────────────────────────── */
+    .route-section {
+      position: relative;
+      width: 100%;
+      height: 280vh;
+      background: var(--black);
+    }
+
+    .route-sticky {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .route-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .route-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 1200px;
+      padding: 0 48px;
+      text-align: center;
+    }
+
+    .route-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-disabled);
+      margin-bottom: 64px;
+    }
+
+    .route-text {
+      font-family: var(--font-body);
+      font-weight: 300;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    .route-line {
+      display: block;
+      font-size: clamp(40px, 7vw, 84px);
+      color: var(--text-primary);
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
+    }
+
+    .route-line.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .route-line.nothing {
+      font-family: var(--font-body);
+      font-weight: 400;
+      font-size: clamp(64px, 11vw, 140px);
+      letter-spacing: 0.25em;
+      color: var(--text-display);
+      margin-top: 16px;
+      margin-left: 0.25em; /* compensate for letter-spacing */
+      transition: opacity 800ms var(--ease-out);
+      will-change: opacity;
+    }
+
+    .route-line.nothing.dissolving {
+      opacity: 0;
+    }
+
+    .route-meta {
+      margin-top: 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
+      transition-delay: 200ms;
+    }
+
+    .route-meta.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .route-meta-secondary {
+      color: var(--text-disabled);
+    }
+
+    /* ROUTE DIAGRAM — appears after dissolution */
+    .route-diagram {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(900px, 90%);
+      opacity: 0;
+      transition: opacity 800ms var(--ease-out);
+      pointer-events: none;
+    }
+
+    .route-diagram.visible {
+      opacity: 1;
+    }
+
+    .route-diagram svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .route-nodes {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      margin-top: 16px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-disabled);
+    }
+
+    .route-node-label {
+      text-align: center;
+    }
+
+    .route-node-label .name {
+      color: var(--text-secondary);
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* ─────────────────────────────────────────────
+       UTILITY / SCROLL TRANSITION
+       ───────────────────────────────────────────── */
+    .next-section-cue {
+      position: absolute;
+      top: 100vh;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-disabled);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    /* ─────────────────────────────────────────────
+       MOBILE
+       ───────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .header-content {
+        padding: 0 16px;
+        grid-template-columns: 1fr auto 1fr;
+      }
+      .header-nav {
+        gap: 16px;
+        font-size: 10px;
+      }
+      .header-nav.right .nav-link {
+        display: none;
+      }
+      .header-nav.left .nav-link:nth-child(2) {
+        display: none;
+      }
+      .lang-toggle {
+        margin-left: 12px;
+      }
+      .notch-content {
+        width: 160px;
+        height: 80px;
+      }
+      .notch-brand {
+        font-size: 18px;
+      }
+      .hero-overlay {
+        padding: 0 24px 64px;
+        gap: 24px;
+      }
+      .route-content {
+        padding: 0 24px;
+      }
+      .route-label {
+        margin-bottom: 32px;
+      }
+      .route-meta {
+        margin-top: 32px;
+      }
+      .route-section {
+        height: 240vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ──────────── HEADER ──────────── -->
+  <header class="header">
+    <svg class="header-svg" viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <!-- Header bar with notch cutout protruding downward -->
+      <path
+        d="
+          M 0 0
+          L 1440 0
+          L 1440 64
+          L 836 64
+          C 818 64, 818 76, 818 88
+          L 818 100
+          C 818 116, 802 116, 786 116
+          L 654 116
+          C 638 116, 622 116, 622 100
+          L 622 88
+          C 622 76, 622 64, 604 64
+          L 0 64
+          Z
+        "
+      />
+    </svg>
+
+    <div class="header-content">
+      <nav class="header-nav left">
+        <a class="nav-link" href="#">PRICING</a>
+        <a class="nav-link" href="#">FAQ</a>
+      </nav>
+
+      <div class="notch-content" id="notch">
+        <div class="notch-brand">PRSLOY</div>
+        <div class="notch-status">
+          <span class="status-dot"></span>
+          <span id="status-text">12 ONLINE · 99.7%</span>
+        </div>
+      </div>
+
+      <nav class="header-nav right">
+        <a class="nav-link" href="#">BLOG</a>
+        <a class="nav-link" href="#">DASHBOARD</a>
+        <span class="lang-toggle">
+          <span class="active">EN</span>
+          <span class="lang-sep">|</span>
+          <span class="inactive">RU</span>
+        </span>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ──────────── HERO ──────────── -->
+  <section class="hero">
+    <canvas class="hero-canvas" id="hero-canvas"></canvas>
+    <div class="hero-overlay">
+      <p class="hero-tagline">
+        <strong>YOUR TRAFFIC. YOUR RULES.</strong><br />
+        Privacy isn&rsquo;t a feature. It&rsquo;s the architecture.
+      </p>
+      <button class="cta">[ GET ACCESS ]</button>
+    </div>
+    <div class="scroll-hint">SCROLL ↓</div>
+  </section>
+
+  <!-- ──────────── ROUTE BLOCK ──────────── -->
+  <section class="route-section" id="route-section">
+    <div class="route-sticky">
+      <canvas class="route-canvas" id="route-canvas"></canvas>
+
+      <div class="route-content">
+        <div class="route-label">DOUBLE-HOP ENCRYPTION</div>
+
+        <div class="route-text">
+          <span class="route-line" data-line="1">YOUR ISP</span>
+          <span class="route-line" data-line="2">SEES</span>
+          <span class="route-line nothing" id="nothing-text" data-line="3">N&nbsp;O&nbsp;T&nbsp;H&nbsp;I&nbsp;N&nbsp;G</span>
+        </div>
+
+        <div class="route-meta" id="route-meta">
+          <div>RU WHITELIST → GLOBAL EXIT</div>
+          <div class="route-meta-secondary">YOUR DATA. INVISIBLE.</div>
+        </div>
+      </div>
+
+      <div class="route-diagram" id="route-diagram">
+        <svg viewBox="0 0 900 80" xmlns="http://www.w3.org/2000/svg">
+          <!-- Route line as dashed dots -->
+          <line x1="60" y1="40" x2="840" y2="40"
+                stroke="#333" stroke-width="1" stroke-dasharray="2 6" />
+          <!-- Nodes -->
+          <circle cx="60" cy="40" r="6" fill="none" stroke="#999" stroke-width="1.5" />
+          <circle cx="320" cy="40" r="8" fill="#fff" />
+          <circle cx="580" cy="40" r="8" fill="#fff" />
+          <circle cx="840" cy="40" r="6" fill="none" stroke="#999" stroke-width="1.5" />
+          <!-- Animated packet -->
+          <circle r="3" fill="#d71921">
+            <animateMotion dur="3.5s" repeatCount="indefinite"
+              path="M 60 40 L 840 40" />
+          </circle>
+        </svg>
+        <div class="route-nodes">
+          <div class="route-node-label">YOU<span class="name">ENTRY</span></div>
+          <div class="route-node-label">HOP 1<span class="name">RU NODE</span></div>
+          <div class="route-node-label">HOP 2<span class="name">EXIT</span></div>
+          <div class="route-node-label">NET<span class="name">DESTINATION</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- spacer to allow scrolling past route section for testing -->
+  <div style="height: 60vh; display: flex; align-items: center; justify-content: center; color: var(--text-disabled); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">
+    [ END OF PREVIEW · BLOCKS 4-6 PENDING ]
+  </div>
+
+  <script>
+    /* ═════════════════════════════════════════════════════════
+       PARTICLE SYSTEM — Hero PRSLOY
+       ═════════════════════════════════════════════════════════ */
+    class HeroParticles {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext("2d", { alpha: true });
+        this.particles = [];
+        this.mouse = { x: -9999, y: -9999, active: false };
+        this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+        this.startTime = performance.now();
+
+        this.resize();
+        this.sample();
+        this.bindEvents();
+        this.animate();
+      }
+
+      resize() {
+        const parent = this.canvas.parentElement;
+        this.width = parent.clientWidth;
+        this.height = parent.clientHeight;
+        this.canvas.width = this.width * this.dpr;
+        this.canvas.height = this.height * this.dpr;
+        this.canvas.style.width = this.width + "px";
+        this.canvas.style.height = this.height + "px";
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.scale(this.dpr, this.dpr);
+      }
+
+      sample() {
+        const off = document.createElement("canvas");
+        off.width = this.width;
+        off.height = this.height;
+        const oc = off.getContext("2d");
+
+        // Pick font size to fit ~70% of width
+        const targetWidth = this.width * 0.72;
+        let fontSize = Math.min(260, Math.max(80, this.width / 5));
+        oc.font = `400 ${fontSize}px "Doto", monospace`;
+        let measured = oc.measureText("PRSLOY").width;
+        let safety = 50;
+        while (measured > targetWidth && fontSize > 40 && safety-- > 0) {
+          fontSize -= 4;
+          oc.font = `400 ${fontSize}px "Doto", monospace`;
+          measured = oc.measureText("PRSLOY").width;
+        }
+
+        oc.fillStyle = "#fff";
+        oc.textAlign = "center";
+        oc.textBaseline = "middle";
+        oc.fillText("PRSLOY", this.width / 2, this.height / 2 - 20);
+
+        const data = oc.getImageData(0, 0, this.width, this.height).data;
+        const density = window.innerWidth < 768 ? 4 : 3;
+
+        const oldParticles = this.particles;
+        this.particles = [];
+
+        for (let y = 0; y < this.height; y += density) {
+          for (let x = 0; x < this.width; x += density) {
+            const i = (y * this.width + x) * 4;
+            if (data[i + 3] > 128) {
+              const idx = this.particles.length;
+              const reuse = oldParticles[idx];
+              this.particles.push({
+                tx: x,
+                ty: y,
+                ox: x,
+                oy: y,
+                x: reuse ? reuse.x : this.width / 2 + (Math.random() - 0.5) * this.width * 1.8,
+                y: reuse ? reuse.y : this.height / 2 + (Math.random() - 0.5) * this.height * 1.8,
+                vx: reuse ? reuse.vx : 0,
+                vy: reuse ? reuse.vy : 0,
+                phase: Math.random() * Math.PI * 2,
+              });
+            }
+          }
+        }
+      }
+
+      bindEvents() {
+        const onMouseMove = (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          this.mouse.x = e.clientX - rect.left;
+          this.mouse.y = e.clientY - rect.top;
+          this.mouse.active = true;
+        };
+        window.addEventListener("mousemove", onMouseMove, { passive: true });
+        window.addEventListener("touchmove", (e) => {
+          if (e.touches[0]) {
+            const rect = this.canvas.getBoundingClientRect();
+            this.mouse.x = e.touches[0].clientX - rect.left;
+            this.mouse.y = e.touches[0].clientY - rect.top;
+            this.mouse.active = true;
+          }
+        }, { passive: true });
+        document.addEventListener("mouseleave", () => {
+          this.mouse.active = false;
+        });
+
+        let resizeTimer;
+        window.addEventListener("resize", () => {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            this.resize();
+            this.sample();
+          }, 200);
+        });
+      }
+
+      animate() {
+        const now = performance.now();
+        const t = now * 0.001;
+        const elapsed = (now - this.startTime) / 1000;
+
+        // Assembly intensity: stronger pull at start, settles down
+        const assemblySpring = elapsed < 2.0 ? 0.12 : 0.06;
+        const friction = elapsed < 2.0 ? 0.78 : 0.84;
+
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.ctx.fillStyle = "#FFFFFF";
+
+        for (let i = 0; i < this.particles.length; i++) {
+          const p = this.particles[i];
+
+          // Breathing: slow horizontal sine wave through the text
+          const wave = Math.sin(t * 0.6 + p.ox * 0.006) * 1.4;
+          const tx = p.ox;
+          const ty = p.oy + wave;
+
+          // Brownian micro-jitter (subtle)
+          const jx = (Math.random() - 0.5) * 0.25;
+          const jy = (Math.random() - 0.5) * 0.25;
+
+          // Cursor repulsion
+          let pushX = 0, pushY = 0;
+          if (this.mouse.active) {
+            const dx = p.x - this.mouse.x;
+            const dy = p.y - this.mouse.y;
+            const dist2 = dx * dx + dy * dy;
+            const radius = 100;
+            if (dist2 < radius * radius && dist2 > 0.5) {
+              const dist = Math.sqrt(dist2);
+              const t = (radius - dist) / radius;
+              const force = t * t * 5;
+              pushX = (dx / dist) * force;
+              pushY = (dy / dist) * force;
+            }
+          }
+
+          p.vx += (tx - p.x) * assemblySpring + pushX + jx;
+          p.vy += (ty - p.y) * assemblySpring + pushY + jy;
+
+          p.vx *= friction;
+          p.vy *= friction;
+
+          p.x += p.vx;
+          p.y += p.vy;
+
+          this.ctx.fillRect(p.x | 0, p.y | 0, 2, 2);
+        }
+
+        requestAnimationFrame(() => this.animate());
+      }
+    }
+
+    /* ═════════════════════════════════════════════════════════
+       ROUTE BLOCK — scroll-driven NOTHING dissolution
+       ═════════════════════════════════════════════════════════ */
+    class RouteSection {
+      constructor() {
+        this.section = document.getElementById("route-section");
+        this.canvas = document.getElementById("route-canvas");
+        this.ctx = this.canvas.getContext("2d");
+        this.nothingEl = document.getElementById("nothing-text");
+        this.metaEl = document.getElementById("route-meta");
+        this.diagramEl = document.getElementById("route-diagram");
+        this.lines = document.querySelectorAll(".route-line");
+        this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+        this.particles = [];
+        this.particlesSeeded = false;
+        this.cipherActive = false;
+        this.dissolveTriggered = false;
+        this.diagramShown = false;
+        this.cipherInterval = null;
+        this.originalText = "N O T H I N G";
+        this.cipherChars = "▓░█▒%@#&XΨΔΣΩ$01";
+
+        this.resize();
+        this.bindEvents();
+        this.animate();
+      }
+
+      resize() {
+        const sticky = this.canvas.parentElement;
+        this.width = sticky.clientWidth;
+        this.height = sticky.clientHeight;
+        this.canvas.width = this.width * this.dpr;
+        this.canvas.height = this.height * this.dpr;
+        this.canvas.style.width = this.width + "px";
+        this.canvas.style.height = this.height + "px";
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.scale(this.dpr, this.dpr);
+      }
+
+      bindEvents() {
+        let resizeTimer;
+        window.addEventListener("resize", () => {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            this.resize();
+            this.particlesSeeded = false; // re-seed on resize
+          }, 200);
+        });
+      }
+
+      seedParticles() {
+        // Sample NOTHING text from offscreen canvas at the SAME position as DOM element
+        const rect = this.nothingEl.getBoundingClientRect();
+        const stickyRect = this.canvas.getBoundingClientRect();
+        const localX = rect.left - stickyRect.left + rect.width / 2;
+        const localY = rect.top - stickyRect.top + rect.height / 2;
+
+        const off = document.createElement("canvas");
+        off.width = this.width;
+        off.height = this.height;
+        const oc = off.getContext("2d");
+
+        const computed = window.getComputedStyle(this.nothingEl);
+        const fontSize = parseFloat(computed.fontSize);
+        oc.font = `${computed.fontWeight} ${fontSize}px ${computed.fontFamily}`;
+        oc.fillStyle = "#fff";
+        oc.textAlign = "center";
+        oc.textBaseline = "middle";
+        oc.letterSpacing = "0.25em";
+
+        oc.fillText("NOTHING", localX, localY);
+
+        const data = oc.getImageData(0, 0, this.width, this.height).data;
+        const density = window.innerWidth < 768 ? 3 : 2;
+        this.particles = [];
+
+        for (let y = 0; y < this.height; y += density) {
+          for (let x = 0; x < this.width; x += density) {
+            const i = (y * this.width + x) * 4;
+            if (data[i + 3] > 100) {
+              this.particles.push({
+                x: x,
+                y: y,
+                ox: x,
+                oy: y,
+                vx: 0,
+                vy: 0,
+                opacity: 0,
+                state: "hidden", // hidden | settled | flying
+              });
+            }
+          }
+        }
+        this.particlesSeeded = true;
+      }
+
+      startCipher() {
+        if (this.cipherActive) return;
+        this.cipherActive = true;
+        const chars = this.cipherChars;
+        let ticks = 0;
+        const original = "NOTHING";
+        this.cipherInterval = setInterval(() => {
+          ticks++;
+          let out = "";
+          for (let i = 0; i < original.length; i++) {
+            // Fix letters one by one as we progress (left to right)
+            if (ticks > i * 3 + 8) {
+              out += original[i] + (i < original.length - 1 ? " " : "");
+            } else {
+              const c = chars[Math.floor(Math.random() * chars.length)];
+              out += c + (i < original.length - 1 ? " " : "");
+            }
+          }
+          this.nothingEl.textContent = out;
+          if (ticks > original.length * 3 + 12) {
+            clearInterval(this.cipherInterval);
+            this.cipherInterval = null;
+          }
+        }, 50);
+      }
+
+      stopCipher() {
+        if (this.cipherInterval) {
+          clearInterval(this.cipherInterval);
+          this.cipherInterval = null;
+        }
+        this.nothingEl.textContent = this.originalText;
+      }
+
+      triggerDissolve() {
+        if (this.dissolveTriggered) return;
+        this.dissolveTriggered = true;
+
+        if (!this.particlesSeeded) this.seedParticles();
+
+        // Hide DOM NOTHING text (particles take over)
+        this.nothingEl.classList.add("dissolving");
+
+        // Activate particles with explosion physics
+        for (const p of this.particles) {
+          p.state = "flying";
+          p.opacity = 1;
+          // Initial push: rightward + slight downward + randomness
+          const angle = Math.random() * Math.PI * 0.6 - Math.PI * 0.1; // -18° to +90° from horizontal
+          const speed = 1 + Math.random() * 4;
+          p.vx = Math.cos(angle) * speed + 1.5;
+          p.vy = Math.sin(angle) * speed * 0.5;
+        }
+      }
+
+      reverseDissolve() {
+        // If user scrolls back up, reset the dissolution so it can play again
+        if (!this.dissolveTriggered) return;
+        this.dissolveTriggered = false;
+        this.cipherActive = false;
+        this.stopCipher();
+        this.nothingEl.classList.remove("dissolving");
+        this.particles = [];
+        this.particlesSeeded = false;
+      }
+
+      computeProgress() {
+        const rect = this.section.getBoundingClientRect();
+        const sectionHeight = rect.height;
+        const viewportHeight = window.innerHeight;
+        // Progress: 0 when top of section enters viewport, 1 when bottom leaves
+        // We measure relative to scrollable distance (section height - viewport height)
+        const scrolled = -rect.top;
+        const total = sectionHeight - viewportHeight;
+        return Math.max(0, Math.min(1, scrolled / total));
+      }
+
+      updatePhases(progress) {
+        // Phase 1 (0 - 0.18): lines appear with stagger
+        if (progress > 0.02) this.lines[0].classList.add("visible");
+        if (progress > 0.06) this.lines[1].classList.add("visible");
+        if (progress > 0.10) this.lines[2].classList.add("visible");
+
+        // Phase 2 (0.30 - 0.45): cipher glitch on NOTHING
+        if (progress > 0.30 && progress < 0.55 && !this.cipherActive && !this.dissolveTriggered) {
+          this.startCipher();
+        }
+
+        // Phase 3 (0.55+): dissolve into particles
+        if (progress > 0.55 && !this.dissolveTriggered) {
+          this.triggerDissolve();
+        }
+
+        // Phase 4 (0.78+): show meta + diagram
+        if (progress > 0.72) {
+          this.metaEl.classList.add("visible");
+        }
+        if (progress > 0.82) {
+          this.diagramEl.classList.add("visible");
+        }
+
+        // Reset on scroll back up
+        if (progress < 0.20 && this.cipherActive) {
+          this.cipherActive = false;
+          this.stopCipher();
+        }
+        if (progress < 0.50 && this.dissolveTriggered) {
+          this.reverseDissolve();
+          this.lines.forEach((l) => l.classList.remove("visible"));
+          this.metaEl.classList.remove("visible");
+          this.diagramEl.classList.remove("visible");
+        }
+      }
+
+      animate() {
+        const progress = this.computeProgress();
+        this.updatePhases(progress);
+
+        this.ctx.clearRect(0, 0, this.width, this.height);
+
+        if (this.dissolveTriggered && this.particles.length > 0) {
+          this.ctx.fillStyle = "#FFFFFF";
+          for (const p of this.particles) {
+            if (p.state !== "flying") continue;
+
+            // Physics: drift right + slight gravity, fade out
+            p.vx += 0.05; // continuous rightward push
+            p.vy += 0.02; // gentle gravity
+            p.vx *= 0.99;
+            p.vy *= 0.99;
+            p.x += p.vx;
+            p.y += p.vy;
+
+            // Fade out as they travel
+            const dist = Math.abs(p.x - p.ox);
+            const fadeStart = 200;
+            const fadeRange = 400;
+            if (dist > fadeStart) {
+              p.opacity = Math.max(0, 1 - (dist - fadeStart) / fadeRange);
+            }
+
+            if (p.opacity <= 0.02 || p.x > this.width + 50 || p.y > this.height + 50) {
+              continue;
+            }
+
+            this.ctx.globalAlpha = p.opacity;
+            this.ctx.fillRect(p.x | 0, p.y | 0, 2, 2);
+          }
+          this.ctx.globalAlpha = 1;
+        }
+
+        requestAnimationFrame(() => this.animate());
+      }
+    }
+
+    /* ═════════════════════════════════════════════════════════
+       NOTCH — expand on hover
+       ═════════════════════════════════════════════════════════ */
+    function initNotch() {
+      const notch = document.getElementById("notch");
+      const status = document.getElementById("status-text");
+      const original = status.textContent;
+      const expanded = "12 SERVERS · 99.7% UPTIME · 3MS";
+      notch.addEventListener("mouseenter", () => {
+        status.textContent = expanded;
+      });
+      notch.addEventListener("mouseleave", () => {
+        status.textContent = original;
+      });
+    }
+
+    /* ═════════════════════════════════════════════════════════
+       INIT
+       ═════════════════════════════════════════════════════════ */
+    document.fonts.ready.then(() => {
+      const heroCanvas = document.getElementById("hero-canvas");
+      new HeroParticles(heroCanvas);
+      new RouteSection();
+      initNotch();
+    });
+  </script>
+</body>
+</html>

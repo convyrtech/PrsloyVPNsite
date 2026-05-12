@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ───────────────────────────────────────────────
+   PRSLOY · Nothing-inspired design tokens
+   ─────────────────────────────────────────────── */
+:root {
+  /* Color palette — dark mode primary */
+  --color-black: #000000;
+  --color-surface: #111111;
+  --color-surface-raised: #1a1a1a;
+  --color-border: #222222;
+  --color-border-visible: #333333;
+  --color-text-disabled: #666666;
+  --color-text-secondary: #999999;
+  --color-text-primary: #e8e8e8;
+  --color-text-display: #ffffff;
+  --color-accent: #d71921;
+  --color-accent-subtle: rgba(215, 25, 33, 0.15);
+  --color-success: #4a9e5c;
+  --color-warning: #d4a843;
+  --color-interactive: #5b9bf6;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Hard-coded reset for the few things Tailwind does not handle */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-black);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--color-black);
+  color: var(--color-text-primary);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+}
+
+/* Light mode — to be implemented later */
+@media (prefers-color-scheme: light) {
+  /* Future light mode tokens */
+}
+
+/* Selection styling — match the brand */
+::selection {
+  background: var(--color-text-display);
+  color: var(--color-black);
+}
+
+/* Focus outline — accessible, monochrome */
+:focus-visible {
+  outline: 2px solid var(--color-text-display);
+  outline-offset: 2px;
+}
+
+/* Doto sometimes inherits multi-color highlight from system / browser default.
+   Force pure white. */
+.font-display,
+[class*="font-display"] {
+  -webkit-text-fill-color: currentColor;
+  font-feature-settings: "ss01" off;
+}
+
+/* Soft slow status pulse — replaces tailwind animate-ping (too aggressive for Nothing aesthetic) */
+@keyframes prsloy-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.92); }
+  50%      { opacity: 1.00; transform: scale(1.08); }
+}
+
+.pulse-dot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--color-success);
+  animation: prsloy-pulse 2.4s var(--ease-out) infinite;
+  pointer-events: none;
+}
+
+/* Dot-grid utility class */
+.dot-grid {
+  background-image: radial-gradient(
+    circle,
+    var(--color-border-visible) 1px,
+    transparent 1px
+  );
+  background-size: 16px 16px;
+}
+
+.dot-grid-subtle {
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.04) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}

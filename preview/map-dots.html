@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRSLOY · Global Network · Dot-Matrix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Doto:wght@400;700&family=Space+Grotesk:wght@300;400;500&family=Space+Mono:wght@400&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --black: #000;
+      --surface: #111;
+      --border: #222;
+      --border-visible: #333;
+      --text-disabled: #666;
+      --text-secondary: #999;
+      --text-primary: #e8e8e8;
+      --text-display: #fff;
+      --accent: #d71921;
+      --success: #4a9e5c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: var(--black);
+      color: var(--text-primary);
+      font-family: "Space Grotesk", system-ui, sans-serif;
+      font-weight: 300;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Canvas for land dots */
+    .dots-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* SVG for routes + markers */
+    .map-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .route-line {
+      fill: none;
+      stroke: var(--text-display);
+      stroke-width: 0.7;
+      stroke-opacity: 0;
+      stroke-dasharray: 3 5;
+      stroke-linecap: round;
+    }
+
+    .route-line.visible {
+      stroke-opacity: 0.45;
+      transition: stroke-opacity 600ms ease-out;
+    }
+
+    .origin-ring {
+      fill: none;
+      stroke: var(--text-display);
+      stroke-width: 1.5;
+    }
+
+    .origin-pulse {
+      fill: var(--text-display);
+      fill-opacity: 0.1;
+      stroke: var(--text-display);
+      stroke-width: 1;
+      stroke-opacity: 0.5;
+      transform-origin: center;
+      transform-box: fill-box;
+      animation: pulse-out 2s ease-out infinite;
+    }
+    @keyframes pulse-out {
+      0% { transform: scale(0.8); opacity: 0.7; }
+      100% { transform: scale(4); opacity: 0; }
+    }
+    .origin-core {
+      fill: var(--text-display);
+    }
+
+    .dest-dot {
+      fill: var(--text-display);
+      stroke: var(--black);
+      stroke-width: 1.2;
+    }
+
+    .dest-pulse {
+      fill: var(--text-display);
+      fill-opacity: 0.08;
+      stroke: var(--text-display);
+      stroke-width: 0.7;
+      stroke-opacity: 0.4;
+      transform-origin: center;
+      transform-box: fill-box;
+      animation: pulse-out 3s ease-out infinite;
+    }
+
+    .packet {
+      fill: var(--accent);
+      stroke: var(--black);
+      stroke-width: 0.8;
+    }
+
+    .city-label {
+      font-family: "Space Mono", monospace;
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      fill: var(--text-secondary);
+      text-transform: uppercase;
+    }
+    .city-label.origin {
+      fill: var(--text-display);
+      font-weight: 400;
+    }
+
+    /* OVERLAY */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px;
+    }
+    .overlay > * { pointer-events: auto; }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .label {
+      font-family: "Space Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-disabled);
+    }
+    .title-block .label { margin-bottom: 12px; }
+    .title-block h1 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      color: var(--text-display);
+    }
+    .title-block h1 strong { font-weight: 500; }
+    .title-block .subtitle {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-top: 12px;
+      max-width: 320px;
+      line-height: 1.5;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+    }
+    .metric .label { margin-bottom: 4px; }
+    .metric .value {
+      font-family: "Space Mono", monospace;
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--text-display);
+      letter-spacing: -0.02em;
+    }
+    .metric .value .unit {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-left: 4px;
+    }
+    .bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .legend {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      font-family: "Space Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot-origin {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1.5px solid var(--text-display);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    }
+    .dot-exit {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-display);
+    }
+    .dot-active {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(215, 25, 33, 0.6);
+    }
+    .signature {
+      font-family: "Doto", monospace;
+      font-size: 16px;
+      letter-spacing: 0.2em;
+      color: var(--text-display);
+      opacity: 0.7;
+    }
+
+    .loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Space Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-disabled);
+      z-index: 5;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.9; }
+    }
+
+    @media (max-width: 768px) {
+      .overlay { padding: 24px; }
+      .metrics {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .top-bar { flex-direction: column; gap: 32px; }
+      .title-block h1 { font-size: 28px; }
+      .legend { gap: 12px; flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <canvas class="dots-canvas" id="dots"></canvas>
+    <svg class="map-svg" id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+
+    <div class="loading" id="loading">[ LOADING WORLD ]</div>
+
+    <div class="overlay">
+      <div class="top-bar">
+        <div class="title-block">
+          <div class="label">GLOBAL INFRASTRUCTURE</div>
+          <h1>Live network.<br /><strong>Real routes. Real time.</strong></h1>
+          <p class="subtitle">
+            Every connection routed through whitelisted entry, hopped to global exit nodes.
+          </p>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="label">NODES</div>
+            <div class="value">12</div>
+          </div>
+          <div class="metric">
+            <div class="label">REGIONS</div>
+            <div class="value">7</div>
+          </div>
+          <div class="metric">
+            <div class="label">UPTIME</div>
+            <div class="value">99.7<span class="unit">%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-bar">
+        <div class="legend">
+          <div class="legend-item"><span class="dot-origin"></span>ENTRY</div>
+          <div class="legend-item"><span class="dot-exit"></span>EXIT NODE</div>
+          <div class="legend-item"><span class="dot-active"></span>ACTIVE PACKET</div>
+        </div>
+        <div class="signature">PRSLOY</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Just the geo data — no full amCharts library needed -->
+  <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
+
+  <script>
+    /* ─────────────────────────────────────────────
+       SETUP
+       ───────────────────────────────────────────── */
+    const canvas = document.getElementById("dots");
+    const ctx = canvas.getContext("2d");
+    const svg = document.getElementById("svg");
+    const loadingEl = document.getElementById("loading");
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    let viewportW = 0, viewportH = 0;
+    let mapW = 0, mapH = 0, mapX = 0, mapY = 0;
+
+    function setupViewport() {
+      viewportW = window.innerWidth;
+      viewportH = window.innerHeight;
+
+      // Maintain 2:1 aspect ratio for equirectangular world
+      // Use ~85% of available space, account for overlay padding
+      const padTop = 280;
+      const padBottom = 160;
+      const padX = 100;
+      const usableW = viewportW - padX * 2;
+      const usableH = viewportH - padTop - padBottom;
+
+      if (usableW / usableH > 2) {
+        mapH = usableH;
+        mapW = usableH * 2;
+      } else {
+        mapW = usableW;
+        mapH = usableW / 2;
+      }
+      mapX = (viewportW - mapW) / 2;
+      mapY = padTop + (usableH - mapH) / 2;
+
+      canvas.width = viewportW * dpr;
+      canvas.height = viewportH * dpr;
+      canvas.style.width = viewportW + "px";
+      canvas.style.height = viewportH + "px";
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+
+      svg.setAttribute("viewBox", `0 0 ${viewportW} ${viewportH}`);
+      svg.setAttribute("width", viewportW);
+      svg.setAttribute("height", viewportH);
+    }
+
+    function project(lng, lat) {
+      // Equirectangular
+      const x = mapX + ((lng + 180) / 360) * mapW;
+      const y = mapY + ((90 - lat) / 180) * mapH;
+      return [x, y];
+    }
+
+    /* ─────────────────────────────────────────────
+       POINT-IN-POLYGON (ray casting)
+       ───────────────────────────────────────────── */
+    function pointInRing(x, y, ring) {
+      let inside = false;
+      const n = ring.length;
+      for (let i = 0, j = n - 1; i < n; j = i++) {
+        const xi = ring[i][0], yi = ring[i][1];
+        const xj = ring[j][0], yj = ring[j][1];
+        if (((yi > y) !== (yj > y)) && (x < ((xj - xi) * (y - yi)) / (yj - yi || 1e-9) + xi)) {
+          inside = !inside;
+        }
+      }
+      return inside;
+    }
+
+    /* ─────────────────────────────────────────────
+       PROJECT GEO POLYGONS TO SCREEN
+       ───────────────────────────────────────────── */
+    let screenPolygons = []; // { rings: [[x,y]...], bbox: [minX,minY,maxX,maxY] }
+
+    function buildScreenPolygons(geoData) {
+      screenPolygons = [];
+      for (const feature of geoData.features) {
+        const g = feature.geometry;
+        if (!g) continue;
+
+        const polysToAdd = g.type === "Polygon" ? [g.coordinates] : g.type === "MultiPolygon" ? g.coordinates : [];
+
+        for (const poly of polysToAdd) {
+          // Outer ring is poly[0]
+          const outer = poly[0];
+          if (!outer || outer.length < 3) continue;
+
+          const screenRing = outer.map(([lng, lat]) => project(lng, lat));
+
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          for (const [x, y] of screenRing) {
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
+
+          screenPolygons.push({
+            ring: screenRing,
+            bbox: [minX, minY, maxX, maxY],
+          });
+        }
+      }
+    }
+
+    function isLand(x, y) {
+      for (const p of screenPolygons) {
+        const b = p.bbox;
+        if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue;
+        if (pointInRing(x, y, p.ring)) return true;
+      }
+      return false;
+    }
+
+    /* ─────────────────────────────────────────────
+       RENDER LAND DOTS
+       ───────────────────────────────────────────── */
+    let landDots = []; // [{x, y, ru: bool}]
+
+    // Russia approximate bounding box (in lng/lat) for highlighting
+    function isInRussianRegion(x, y) {
+      // Russia roughly: lng 30-180, lat 42-80
+      const lng = ((x - mapX) / mapW) * 360 - 180;
+      const lat = 90 - ((y - mapY) / mapH) * 180;
+      return lng >= 28 && lng <= 180 && lat >= 42 && lat <= 80;
+    }
+
+    function generateDots() {
+      const STEP = window.innerWidth < 768 ? 6 : 5;
+      landDots = [];
+      const startX = Math.floor(mapX / STEP) * STEP;
+      const startY = Math.floor(mapY / STEP) * STEP;
+      const endX = mapX + mapW;
+      const endY = mapY + mapH;
+
+      for (let y = startY; y <= endY; y += STEP) {
+        for (let x = startX; x <= endX; x += STEP) {
+          if (isLand(x, y)) {
+            landDots.push({
+              x,
+              y,
+              ru: isInRussianRegion(x, y),
+            });
+          }
+        }
+      }
+    }
+
+    function renderDots() {
+      ctx.clearRect(0, 0, viewportW, viewportH);
+
+      const r = 1.2;
+      // Non-RU dots first
+      ctx.fillStyle = "rgba(80, 80, 80, 0.85)";
+      for (const d of landDots) {
+        if (d.ru) continue;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // RU region dots brighter
+      ctx.fillStyle = "rgba(160, 160, 160, 0.95)";
+      for (const d of landDots) {
+        if (!d.ru) continue;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    /* ─────────────────────────────────────────────
+       ROUTES + MARKERS (SVG overlay)
+       ───────────────────────────────────────────── */
+    const ORIGIN = { id: "MSK", name: "MOSCOW · ENTRY", lat: 55.7558, lng: 37.6176 };
+    const DESTINATIONS = [
+      { id: "AMS", name: "AMSTERDAM",  lat: 52.3676, lng: 4.9041 },
+      { id: "FRA", name: "FRANKFURT",  lat: 50.1109, lng: 8.6821 },
+      { id: "LON", name: "LONDON",     lat: 51.5074, lng: -0.1278 },
+      { id: "NYC", name: "NEW YORK",   lat: 40.7128, lng: -74.006 },
+      { id: "TYO", name: "TOKYO",      lat: 35.6762, lng: 139.6503 },
+      { id: "SIN", name: "SINGAPORE",  lat: 1.3521,  lng: 103.8198 },
+      { id: "SAO", name: "SAO PAULO",  lat: -23.5505, lng: -46.6333 },
+    ];
+
+    function svgEl(tag, attrs = {}) {
+      const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+      return e;
+    }
+
+    function renderOverlay() {
+      // Clear
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+      const [ox, oy] = project(ORIGIN.lng, ORIGIN.lat);
+
+      // Routes — curved arcs
+      const routesGroup = svgEl("g", { id: "routes" });
+      const routeIds = [];
+
+      DESTINATIONS.forEach((dest, idx) => {
+        const [dx, dy] = project(dest.lng, dest.lat);
+        const midX = (ox + dx) / 2;
+        const midY = (oy + dy) / 2;
+        const dxL = dx - ox;
+        const dyL = dy - oy;
+        const len = Math.sqrt(dxL * dxL + dyL * dyL);
+        const perpX = -dyL / len;
+        const perpY = dxL / len;
+        const curveAmount = len * 0.18;
+        const curveDir = -1;
+        const cx = midX + perpX * curveAmount * curveDir;
+        const cy = midY + perpY * curveAmount * curveDir;
+
+        const pathD = `M ${ox.toFixed(1)} ${oy.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${dx.toFixed(1)} ${dy.toFixed(1)}`;
+
+        const path = svgEl("path", {
+          d: pathD,
+          class: "route-line",
+          id: `route-${dest.id}`,
+        });
+        routesGroup.appendChild(path);
+        routeIds.push(`route-${dest.id}`);
+
+        setTimeout(() => path.classList.add("visible"), 800 + idx * 150);
+
+        // Animated packet
+        const packet = svgEl("circle", { r: 3, class: "packet" });
+        const motion = svgEl("animateMotion", {
+          dur: `${3.5 + idx * 0.2}s`,
+          repeatCount: "indefinite",
+          rotate: "auto",
+          begin: `${1.5 + idx * 0.4}s`,
+        });
+        const mpath = svgEl("mpath");
+        mpath.setAttributeNS("http://www.w3.org/1999/xlink", "href", `#route-${dest.id}`);
+        mpath.setAttribute("href", `#route-${dest.id}`);
+        motion.appendChild(mpath);
+        packet.appendChild(motion);
+        routesGroup.appendChild(packet);
+      });
+
+      svg.appendChild(routesGroup);
+
+      // Origin marker
+      const oG = svgEl("g", { transform: `translate(${ox} ${oy})` });
+      const pulse1 = svgEl("circle", { r: 5, cx: 0, cy: 0, class: "origin-pulse" });
+      const pulse2 = svgEl("circle", { r: 5, cx: 0, cy: 0, class: "origin-pulse" });
+      pulse2.style.animationDelay = "1s";
+      const ring = svgEl("circle", { r: 6, cx: 0, cy: 0, class: "origin-ring" });
+      const core = svgEl("circle", { r: 2.5, cx: 0, cy: 0, class: "origin-core" });
+      oG.appendChild(pulse1);
+      oG.appendChild(pulse2);
+      oG.appendChild(ring);
+      oG.appendChild(core);
+      svg.appendChild(oG);
+
+      const oLabel = svgEl("text", {
+        x: ox + 14,
+        y: oy + 4,
+        class: "city-label origin",
+      });
+      oLabel.textContent = ORIGIN.name;
+      svg.appendChild(oLabel);
+
+      // Destination markers + labels
+      DESTINATIONS.forEach((dest, idx) => {
+        const [dx, dy] = project(dest.lng, dest.lat);
+        const g = svgEl("g", { transform: `translate(${dx} ${dy})` });
+
+        const dPulse = svgEl("circle", { r: 4, cx: 0, cy: 0, class: "dest-pulse" });
+        dPulse.style.animationDelay = `${idx * 0.4}s`;
+        const dDot = svgEl("circle", { r: 3, cx: 0, cy: 0, class: "dest-dot" });
+
+        g.appendChild(dPulse);
+        g.appendChild(dDot);
+        svg.appendChild(g);
+
+        const labelOffsetX = dest.lng < 0 ? -10 : 10;
+        const anchor = dest.lng < 0 ? "end" : "start";
+        const label = svgEl("text", {
+          x: dx + labelOffsetX,
+          y: dy + 3,
+          class: "city-label",
+          "text-anchor": anchor,
+        });
+        label.textContent = dest.id;
+        svg.appendChild(label);
+      });
+    }
+
+    /* ─────────────────────────────────────────────
+       INIT
+       ───────────────────────────────────────────── */
+    function init() {
+      if (typeof am5geodata_worldLow === "undefined") {
+        loadingEl.textContent = "[ ERROR: GEODATA NOT LOADED ]";
+        loadingEl.style.color = "var(--accent)";
+        return;
+      }
+
+      setupViewport();
+      buildScreenPolygons(am5geodata_worldLow);
+
+      // Generate dots in a microtask so loading text shows
+      requestAnimationFrame(() => {
+        const t0 = performance.now();
+        generateDots();
+        const t1 = performance.now();
+        console.log(`[PRSLOY] dots: ${landDots.length} in ${(t1-t0).toFixed(0)}ms`);
+
+        renderDots();
+        renderOverlay();
+
+        loadingEl.style.display = "none";
+      });
+    }
+
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        loadingEl.style.display = "flex";
+        loadingEl.textContent = "[ RECALCULATING ]";
+        requestAnimationFrame(() => {
+          setupViewport();
+          buildScreenPolygons(am5geodata_worldLow);
+          generateDots();
+          renderDots();
+          renderOverlay();
+          loadingEl.style.display = "none";
+        });
+      }, 250);
+    });
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>

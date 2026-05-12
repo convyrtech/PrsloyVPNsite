@@ -1,0 +1,148 @@
+
+@import url(https://fonts.bunny.net/css?family=familjen-grotesk:700);
+
+:root {
+  --crack-delay: 3s;
+  --crack-duration: 100ms;
+}
+
+body {
+  height: 100dvh;
+  margin: 0;
+
+  display: grid;
+  place-items: center;
+
+  background-color: #000;
+}
+
+svg {
+  max-width: 1000px;
+  max-height: 100%;
+}
+
+#title-text {
+  animation-name: scale, blur, quiver, shake;
+  animation-duration: 3s, 142ms, 100ms, 50ms;
+  animation-iteration-count: 1, 14, 10, 20;
+  animation-delay: 0s, 1s, 1s, 2s;
+  animation-direction: normal, alternate-reverse, alternate-reverse,
+    alternate-reverse;
+  animation-timing-function: linear, linear, ease-in, ease-in;
+  animation-fill-mode: forwards, none, forwards, forwards;
+
+  transform-origin: center;
+}
+
+#title-left {
+  --crack-clip: polygon(
+    7.76% 9.16%,
+    18.81% 39.67%,
+    27.09% 45.26%,
+    41.57% 66.95%,
+    43.11% 84.74%,
+    20.18% 84.74%,
+    -2.07% 85.26%,
+    -1.55% 11.69%
+  );
+
+  animation-name: crack-left;
+  animation-delay: var(--crack-delay);
+  animation-duration: var(--crack-duration);
+  animation-fill-mode: forwards;
+}
+
+#title-right {
+  --crack-clip: polygon(
+    70% 24.4%,
+    100.52% 23.9%,
+    100.52% 88.3%,
+    64.31% 87.8%,
+    43.96% 42.04%,
+    40.33% 27.3%
+  );
+
+  animation-name: crack-right;
+  animation-delay: var(--crack-delay);
+  animation-duration: var(--crack-duration);
+  animation-fill-mode: forwards;
+}
+
+#title-middle {
+  --crack-clip: polygon(
+    41.73% 23.68%,
+    48.4% 38.16%,
+    55.62% 59.29%,
+    65.64% 78.93%,
+    65.44% 86.84%,
+    43.28% 86.84%,
+    43.88% 69.39%,
+    38.63% 66.75%,
+    26.69% 46.24%,
+    21.12% 44.58%,
+    18.23% 43.47%,
+    14.06% 23.7%
+  );
+
+  animation-name: crack;
+  animation-delay: var(--crack-delay);
+  animation-duration: var(--crack-duration);
+  animation-fill-mode: forwards;
+}
+
+#crack {
+  animation-name: show;
+  animation-delay: var(--crack-delay);
+  animation-duration: var(--crack-duration);
+  animation-fill-mode: forwards;
+}
+
+@keyframes scale {
+  to {
+    scale: 1.05;
+  }
+}
+
+@keyframes blur {
+  to {
+    filter: blur(0.1em);
+  }
+}
+
+@keyframes quiver {
+  to {
+    translate: 0 -1px;
+  }
+}
+
+@keyframes shake {
+  to {
+    translate: 0 -5px;
+  }
+}
+
+@keyframes crack {
+  to {
+    clip-path: var(--crack-clip);
+  }
+}
+
+@keyframes crack-right {
+  to {
+    clip-path: var(--crack-clip);
+    translate: 1% -1%;
+  }
+}
+
+@keyframes crack-left {
+  to {
+    clip-path: var(--crack-clip);
+    translate: -0.45% 0.35%;
+  }
+}
+
+@keyframes show {
+  to {
+    opacity: 1;
+  }
+}
