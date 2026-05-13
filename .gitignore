@@ -62,3 +62,6 @@ next-env.d.ts
 .cache/
 
 .vercel
+
+# session/dev screenshot artifacts (not source-of-truth)
+/preview/
