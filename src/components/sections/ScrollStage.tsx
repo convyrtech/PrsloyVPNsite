@@ -159,7 +159,7 @@ export function ScrollStage() {
           className="absolute z-20 text-center px-lg
                      bottom-[clamp(72px,14vh,140px)] left-0 right-0
                      md:left-auto md:px-0 md:bottom-3xl md:right-2xl
-                     md:max-w-md md:text-right"
+                     md:max-w-2xl md:text-right"
           style={{ x: headlineX, opacity: headlineOpacity, willChange: "transform, opacity" }}
         >
           <h1 className="font-body font-light text-text-display
