@@ -11,7 +11,6 @@ export async function LegalLayout({ kind, locale }: { kind: LegalKind; locale: s
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
       <article className="max-w-2xl mx-auto px-lg flex flex-col gap-2xl">
-        {/* ─── LABEL + UPDATED DATE ─── */}
         <header className="flex flex-col gap-md">
           <div className="flex items-center justify-between">
             <SectionLabel>{t("label")}</SectionLabel>
@@ -32,21 +31,17 @@ export async function LegalLayout({ kind, locale }: { kind: LegalKind; locale: s
 
         <div className="h-px bg-border-visible/40" />
 
-        {/* ─── SECTIONS ─── */}
-        <div className="flex flex-col gap-2xl">
-          {sections.map((section, i) => (
-            <section key={i} className="flex flex-col gap-md">
-              <h2 className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
-                {String(i + 1).padStart(2, "0")} · {section.h}
-              </h2>
-              <p className="font-body text-body text-text-secondary leading-[1.65]">
-                {section.p}
-              </p>
-            </section>
-          ))}
-        </div>
+        {sections.map((section, i) => (
+          <section key={i} className="flex flex-col gap-md">
+            <h2 className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
+              {String(i + 1).padStart(2, "0")} · {section.h}
+            </h2>
+            <p className="font-body text-body text-text-secondary leading-[1.65]">
+              {section.p}
+            </p>
+          </section>
+        ))}
 
-        {/* ─── CONTACT FOOTER ─── */}
         <div className="pt-xl border-t border-border-visible flex flex-col sm:flex-row sm:items-center sm:justify-between gap-md">
           <span className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
             {t("contact_label")}

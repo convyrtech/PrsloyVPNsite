@@ -22,7 +22,6 @@ export default async function SetupPage({
       <div className="max-w-2xl mx-auto px-lg flex flex-col gap-3xl">
         <SectionLabel>{t("label")}</SectionLabel>
 
-        {/* ─── HEADLINE ─── */}
         <header className="flex flex-col gap-md">
           <h1
             className="font-body font-bold text-text-display leading-[1.05] tracking-[-0.02em] break-words"
@@ -35,7 +34,6 @@ export default async function SetupPage({
           </p>
         </header>
 
-        {/* ─── STEPS ─── */}
         <ol className="flex flex-col gap-2xl">
           {steps.map((step, i) => (
             <li key={i} className="flex flex-col gap-md border border-border-visible rounded-[20px] p-xl">
@@ -73,7 +71,6 @@ export default async function SetupPage({
           ))}
         </ol>
 
-        {/* ─── TROUBLESHOOTING ─── */}
         <section className="flex flex-col gap-md p-xl bg-surface rounded-[20px]">
           <h3 className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
             {t("troubleshooting_label")}
@@ -83,7 +80,6 @@ export default async function SetupPage({
           </p>
         </section>
 
-        {/* ─── FOOTER LINKS ─── */}
         <div className="pt-xl border-t border-border-visible flex flex-col sm:flex-row sm:items-center sm:justify-between gap-md">
           <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
             <span className="text-text-disabled">{t("no_key_label")}</span>

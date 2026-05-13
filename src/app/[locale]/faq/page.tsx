@@ -31,7 +31,6 @@ export default async function FaqPage({
       <div className="max-w-2xl mx-auto px-lg flex flex-col gap-3xl">
         <SectionLabel>{t("label")}</SectionLabel>
 
-        {/* ─── HEADLINE ─── */}
         <header className="flex flex-col gap-md">
           <h1
             className="font-body font-bold text-text-display leading-[1.05] tracking-[-0.02em] break-words"
@@ -44,37 +43,33 @@ export default async function FaqPage({
           </p>
         </header>
 
-        {/* ─── CATEGORIES ─── */}
-        <div className="flex flex-col gap-3xl">
-          {grouped.map((group) => (
-            <section key={group.id} className="flex flex-col gap-lg">
-              <div className="flex items-center gap-md">
-                <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
-                  {group.label}
-                </span>
-                <span className="h-px flex-1 bg-border-visible/40" />
-                <span className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
-                  {String(group.items.length).padStart(2, "0")}
-                </span>
-              </div>
+        {grouped.map((group) => (
+          <section key={group.id} className="flex flex-col gap-lg">
+            <div className="flex items-center gap-md">
+              <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
+                {group.label}
+              </span>
+              <span className="h-px flex-1 bg-border-visible/40" />
+              <span className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
+                {String(group.items.length).padStart(2, "0")}
+              </span>
+            </div>
 
-              <div className="flex flex-col gap-xl">
-                {group.items.map((item, i) => (
-                  <div key={i} className="flex flex-col gap-sm">
-                    <h2 className="font-body font-bold text-text-display text-subheading leading-[1.3]">
-                      {item.q}
-                    </h2>
-                    <p className="font-body text-body text-text-secondary leading-[1.65]">
-                      {item.a}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
+            <div className="flex flex-col gap-xl">
+              {group.items.map((item, i) => (
+                <div key={i} className="flex flex-col gap-sm">
+                  <h2 className="font-body font-bold text-text-display text-subheading leading-[1.3]">
+                    {item.q}
+                  </h2>
+                  <p className="font-body text-body text-text-secondary leading-[1.65]">
+                    {item.a}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
 
-        {/* ─── FOOTER ─── */}
         <div className="pt-xl border-t border-border-visible flex flex-col sm:flex-row sm:items-center sm:justify-between gap-md">
           <span className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
             {t("still_have")}

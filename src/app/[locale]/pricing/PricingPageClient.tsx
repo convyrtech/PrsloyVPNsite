@@ -66,7 +66,6 @@ export function PricingPageClient({ locale }: { locale: string }) {
       <div className="max-w-2xl mx-auto px-lg flex flex-col gap-3xl">
         <SectionLabel>{t("label")}</SectionLabel>
 
-        {/* ─── HEADLINE ─── */}
         <header className="flex flex-col gap-md">
           <h1
             className="font-body font-bold text-text-display leading-[1.05] tracking-[-0.02em] break-words"
@@ -80,7 +79,6 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </p>
         </header>
 
-        {/* ─── PRICE CARD ─── */}
         <section className="border border-border-visible rounded-[24px] p-2xl flex flex-col gap-xl">
           <PeriodSwitcher
             value={period}
@@ -120,7 +118,6 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </div>
         </section>
 
-        {/* ─── INCLUDES GRID ─── */}
         <section className="flex flex-col gap-md">
           <DividerLabel>{tShared("includes")}</DividerLabel>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-xl gap-y-md">
@@ -133,7 +130,6 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </div>
         </section>
 
-        {/* ─── WAITLIST FORM ─── */}
         <section className="flex flex-col gap-lg border border-border-visible rounded-[24px] p-2xl bg-surface">
           <DividerLabel>{t("waitlist_label")}</DividerLabel>
           <h2 className="font-body font-bold text-text-display text-heading">
@@ -208,7 +204,6 @@ export function PricingPageClient({ locale }: { locale: string }) {
           )}
         </section>
 
-        {/* ─── HOW IT WORKS ─── */}
         <section className="flex flex-col gap-lg">
           <DividerLabel>{t("how_label")}</DividerLabel>
           <ol className="flex flex-col gap-lg">
@@ -218,7 +213,6 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </ol>
         </section>
 
-        {/* ─── BOTTOM LINKS ─── */}
         <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-md
                             pt-xl border-t border-border-visible">
           <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
@@ -244,9 +238,6 @@ export function PricingPageClient({ locale }: { locale: string }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   Period switcher
-   ───────────────────────────────────────────── */
 function PeriodSwitcher({
   value,
   onChange,
@@ -281,9 +272,6 @@ function PeriodSwitcher({
   );
 }
 
-/* ─────────────────────────────────────────────
-   Step row in "How it works"
-   ───────────────────────────────────────────── */
 function Step({ n, title, body }: { n: string; title: string; body: string }) {
   return (
     <li className="flex gap-lg">

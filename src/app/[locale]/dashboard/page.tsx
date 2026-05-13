@@ -26,7 +26,6 @@ export default async function DashboardPage({
       <div className="max-w-3xl mx-auto px-lg flex flex-col gap-3xl">
         <SectionLabel>{t("label")}</SectionLabel>
 
-        {/* ─── HEADLINE ─── */}
         <header className="flex flex-col gap-md">
           <h1
             className="font-body font-bold text-text-display leading-[1.05] tracking-[-0.02em] break-words"
@@ -39,7 +38,6 @@ export default async function DashboardPage({
           </p>
         </header>
 
-        {/* ─── PRIMARY CTA ─── */}
         <section className="border border-border-visible rounded-[24px] p-2xl bg-surface
                             flex flex-col items-center text-center gap-md">
           <a
@@ -84,7 +82,6 @@ export default async function DashboardPage({
           </div>
         </section>
 
-        {/* ─── WEB DASHBOARD SOON ─── */}
         <section className="border border-dashed border-border-visible rounded-[20px] p-xl
                             flex flex-col gap-md">
           <div className="flex items-center gap-sm">
@@ -98,7 +95,6 @@ export default async function DashboardPage({
           </p>
         </section>
 
-        {/* ─── FOOTER LINK ─── */}
         <div className="pt-xl border-t border-border-visible flex items-center gap-sm
                         font-mono text-label uppercase tracking-[0.08em]">
           <span className="text-text-disabled">{t("no_key_label")}</span>
