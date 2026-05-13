@@ -83,28 +83,28 @@ export function ScrollStage() {
   // ── LAUNCH STRIP — visible at load
   const stripOpacity = useTransform(scrollYProgress, [0.12, 0.22], [1, 0], { clamp: true });
 
-  // ── HANDSHAKE PANEL — overlap with hero exit, no dead frame
+  // ── HANDSHAKE PANEL — symmetric cross-fade with globe at 0.55→0.65
   const handshakeOpacity = useTransform(
     scrollYProgress,
-    [0.22, 0.32, 0.58, 0.66],
+    [0.22, 0.32, 0.55, 0.65],
     [0, 1, 1, 0],
     { clamp: true }
   );
   const handshakeScale = useTransform(scrollYProgress, [0.22, 0.32], [0.92, 1], { clamp: true });
-  const handshakeProgress = useTransform(scrollYProgress, [0.30, 0.55], [0, 1], { clamp: true });
+  const handshakeProgress = useTransform(scrollYProgress, [0.30, 0.52], [0, 1], { clamp: true });
 
   // ── GLOBE LAYER ──
-  // Peak scale 0.78 instead of 1.0 — was eating 80% of viewport, now feels
-  // contained. Exit shrink 0.92→1.0 sends it flying up & out before next act.
+  // Mirror handshake exit envelope (0.55→0.65) so cross-fade is symmetric:
+  // at 0.60, handshake=0.5 AND globe=0.5 — clean cross, no dip.
   const globeOpacity = useTransform(
     scrollYProgress,
-    [0.58, 0.72, 0.92, 1.0],
+    [0.55, 0.65, 0.92, 1.0],
     [0, 1, 1, 0],
     { clamp: true }
   );
   const globeScale = useTransform(
     scrollYProgress,
-    [0.58, 0.80, 0.92, 1.0],
+    [0.55, 0.75, 0.92, 1.0],
     [0.25, 0.78, 0.78, 0.32],
     { clamp: true }
   );
@@ -114,11 +114,11 @@ export function ScrollStage() {
     ["0%", "-22%"],
     { clamp: true }
   );
-  const globeRotate = useTransform(scrollYProgress, [0.58, 0.80], [-12, 0], { clamp: true });
+  const globeRotate = useTransform(scrollYProgress, [0.55, 0.75], [-12, 0], { clamp: true });
 
   // ── GLOBE OVERLAY UI ──
-  // Compressed window so overlay fully fades before globe departs (was 0.78-0.95)
-  const overlayProgress = useTransform(scrollYProgress, [0.78, 0.88, 0.92, 1.0], [0, 1, 1, 0], { clamp: true });
+  // Globe fully visible at 0.65; give it 0.05 to settle, then bring overlay 0.70→0.82.
+  const overlayProgress = useTransform(scrollYProgress, [0.70, 0.82, 0.92, 1.0], [0, 1, 1, 0], { clamp: true });
 
   // (removed: stuck-logo was redundant with the shrunken HeroParticles
   //  during 0.18–0.35; from 0.40+ the screen is occupied by handshake/globe
@@ -128,14 +128,15 @@ export function ScrollStage() {
     <section
       ref={stageRef}
       className="w-full bg-black"
-      // Explicit `position: relative` (avoid relying on Tailwind class —
-      // motion's useScroll warns when target has computed `position: static`)
-      // Taller scroll range = more gentle progression per wheel tick.
-      // Combined with the spring above, motion feels deliberate, not jerky.
-      style={{ height: "420vh", position: "relative" }}
+      // Cap section height so scroll-density (px per scroll-progress unit)
+      // stays in a usable range across viewports. On a 600px-tall mobile
+      // 420vh = 2520px; on a 1440px tall monitor 420vh = 6048px. The clamp
+      // keeps acts feeling consistent on both ends.
+      style={{ height: "clamp(2800px, 420vh, 4800px)", position: "relative" }}
     >
       <div
-        className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black"
+        className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black
+                   pt-[clamp(72px,8vh,112px)]"
         style={{ perspective: 1400 }}
       >
         {/* ─────── LAYER 1: HERO PARTICLES ─────── */}

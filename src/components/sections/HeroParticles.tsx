@@ -74,7 +74,10 @@ export function HeroParticles({ text = "PRSLOY" }: { text?: string }) {
       oc.fillStyle = "#fff";
       oc.textAlign = "center";
       oc.textBaseline = "middle";
-      oc.fillText(text, width / 2, height / 2);
+      // Anchor wordmark in upper third so its visual position is consistent
+      // across portrait / landscape / square aspect ratios. Hero text lives
+      // in the lower third (bottom-positioned), so they never compete.
+      oc.fillText(text, width / 2, height * 0.38);
 
       const data = oc.getImageData(0, 0, width, height).data;
       const density = window.innerWidth < 768 ? 4 : 3;

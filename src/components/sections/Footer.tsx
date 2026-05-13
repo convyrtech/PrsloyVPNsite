@@ -215,28 +215,28 @@ export function Footer() {
       {/* 1. HEARTBEAT — two traveling pulses */}
       <HeartbeatLine />
 
-      {/* 2. CLOSING HEADLINE + CTA — same horizontal band, Z-pattern */}
-      <div className="px-lg md:px-2xl mt-2xl md:mt-[100px] max-w-[1400px] mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-2xl md:gap-xl">
+      {/* 2. CLOSING HEADLINE + CTA — stack on tablet & narrower, side-by-side from lg+ */}
+      <div className="px-lg md:px-2xl mt-2xl md:mt-[100px] max-w-[1400px] mx-auto overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-2xl lg:gap-xl">
           <motion.h2
             initial={{ opacity: 0, y: 24 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
             className="font-body font-bold italic text-text-display
-                       text-[clamp(56px,11vw,160px)] leading-[0.85]
-                       tracking-[-0.04em] flex-1"
+                       text-[clamp(40px,8vw,96px)] leading-[0.9]
+                       tracking-[-0.03em] flex-1 min-w-0 break-words"
           >
             {t("closing_line1")}
             <br />
             {t("closing_line2")}
           </motion.h2>
 
-          {/* CTA aligned to bottom of headline (same baseline as DEPART.) */}
+          {/* CTA stacks below on <lg viewports so the headline never squeezes it off-screen */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex flex-col items-start md:items-end gap-sm shrink-0 md:pb-md"
+            className="flex flex-col items-start lg:items-end gap-sm shrink-0 lg:pb-md"
           >
             <motion.button
               type="button"
@@ -401,9 +401,9 @@ export function Footer() {
         >
           <h3
             className="font-body font-bold italic leading-[0.82]
-                       tracking-[-0.06em] select-none whitespace-nowrap overflow-hidden"
+                       tracking-[-0.06em] select-none whitespace-nowrap overflow-hidden max-w-full"
             style={{
-              fontSize: "clamp(70px, 17vw, 240px)",
+              fontSize: "clamp(64px, 14vw, 180px)",
               color: "transparent",
               WebkitTextStroke: "1px rgba(255,255,255,0.55)",
             }}

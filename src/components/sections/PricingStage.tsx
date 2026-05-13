@@ -118,8 +118,10 @@ export function PricingStage() {
       // no need for a long preamble after the NOTHING void.
       style={{ height: "220vh", position: "relative" }}
     >
-      <div className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black flex items-center justify-center">
-        <div className="relative w-full max-w-3xl px-lg flex flex-col items-center text-center">
+      <div className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black flex items-center justify-center
+                      pt-[clamp(80px,10vh,128px)] pb-[clamp(40px,6vh,80px)]">
+        <div className="relative w-full max-w-3xl px-lg flex flex-col items-center text-center max-h-full overflow-y-auto
+                        [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {/* ── IGNITION PIXEL — single bright dot that explodes into $ ── */}
           <motion.div
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2

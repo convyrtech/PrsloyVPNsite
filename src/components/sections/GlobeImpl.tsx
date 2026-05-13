@@ -140,16 +140,25 @@ export function GlobeImpl({ chrome = true }: { chrome?: boolean }) {
       const scene = new THREE.Scene();
       scene.background = null;
 
-      const camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 0.1, 1000);
-      // Distance chosen so the 80-radius globe fits ~85% of viewport height
-      // with margin on top/bottom (no clipping at common aspect ratios).
-      camera.position.z = 360;
+      const FOV = 35;
+      const RADIUS = 80;
+      // Target: globe diameter = ~70% of MIN(viewport-w, viewport-h).
+      // Without this, fixed camera.z=360 made globe spill off portrait phones
+      // (where horizontal visible width is much smaller than vertical).
+      const computeCameraZ = (w: number, h: number): number => {
+        const aspect = w / h;
+        const limiting = Math.min(1, aspect);
+        const targetFraction = aspect < 1 ? 0.7 : 0.65;
+        const tanHalfFov = Math.tan((FOV * Math.PI / 180) / 2);
+        return ((RADIUS * 2) / targetFraction) / (2 * tanHalfFov * limiting);
+      };
+
+      const camera = new THREE.PerspectiveCamera(FOV, container.clientWidth / container.clientHeight, 0.1, 2000);
+      camera.position.z = computeCameraZ(container.clientWidth, container.clientHeight);
 
       const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
       renderer.setSize(container.clientWidth, container.clientHeight, false);
       renderer.setPixelRatio(dpr);
-
-      const RADIUS = 80;
       const globe = new THREE.Group();
       scene.add(globe);
 
@@ -440,9 +449,12 @@ export function GlobeImpl({ chrome = true }: { chrome?: boolean }) {
       window.addEventListener("touchend", onTouchEnd);
 
       const onResize = () => {
-        camera.aspect = container.clientWidth / container.clientHeight;
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        camera.aspect = w / h;
+        camera.position.z = computeCameraZ(w, h);
         camera.updateProjectionMatrix();
-        renderer.setSize(container.clientWidth, container.clientHeight, false);
+        renderer.setSize(w, h, false);
       };
       window.addEventListener("resize", onResize);
 
