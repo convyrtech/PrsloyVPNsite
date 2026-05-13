@@ -16,9 +16,16 @@ import { DividerLabel } from "@/components/ui/DividerLabel";
 import {
   type Period,
   type Payment,
+  PERIODS,
   PRICE_BY_PERIOD,
   formatConversion,
 } from "@/lib/pricing";
+
+const PERIOD_LABEL_KEYS: Record<Period, string> = {
+  "1mo": "period_1m",
+  "6mo": "period_6m",
+  "1yr": "period_12m",
+};
 
 /**
  * PricingStage — third cinematic act after NOTHING erosion.
@@ -275,20 +282,15 @@ function PeriodControl({
   onChange: (v: Period) => void;
 }) {
   const t = useTranslations("pricing");
-  const items: { id: typeof value; label: string }[] = [
-    { id: "1mo", label: t("period_1m") },
-    { id: "6mo", label: t("period_6m") },
-    { id: "1yr", label: t("period_12m") },
-  ];
   return (
     <div className="inline-flex border border-border-visible rounded-full p-[3px] relative">
-      {items.map((item) => {
-        const active = value === item.id;
+      {PERIODS.map((id) => {
+        const active = value === id;
         return (
           <button
-            key={item.id}
+            key={id}
             type="button"
-            onClick={() => onChange(item.id)}
+            onClick={() => onChange(id)}
             className={`
               relative px-lg py-2 font-mono text-label uppercase tracking-[0.08em]
               rounded-full transition-colors duration-200 ease-out-nothing
@@ -302,7 +304,7 @@ function PeriodControl({
                 transition={{ type: "spring", stiffness: 400, damping: 32 }}
               />
             )}
-            <span className="relative z-10">{item.label}</span>
+            <span className="relative z-10">{t(PERIOD_LABEL_KEYS[id])}</span>
           </button>
         );
       })}
