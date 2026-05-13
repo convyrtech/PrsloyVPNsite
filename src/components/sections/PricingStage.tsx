@@ -61,12 +61,13 @@ export function PricingStage() {
   const basePrice = PRICE_BY_PERIOD[period];
   const conversionText = formatConversion(period, payMethod);
 
-  // ── Phase envelopes ───────────────────────────
-  // Ignition pixel — fires at the very first frame, no dark preamble
-  const ignitionScale = useTransform(scrollYProgress, [0, 0.10], [0, 18], { clamp: true });
+  // ── Phase envelopes — compressed so first scroll into the section
+  //    immediately reveals the price (no empty-screen dwelling) ──
+  // Ignition pixel — fires immediately, gone by 0.06
+  const ignitionScale = useTransform(scrollYProgress, [0, 0.06], [0, 18], { clamp: true });
   const ignitionOpacity = useTransform(
     scrollYProgress,
-    [0, 0.05, 0.09, 0.13],
+    [0, 0.02, 0.05, 0.08],
     [0, 1, 1, 0],
     { clamp: true }
   );
@@ -74,54 +75,54 @@ export function PricingStage() {
   // Dust particles converging
   const dustOpacity = useTransform(
     scrollYProgress,
-    [0, 0.08, 0.20],
+    [0, 0.05, 0.12],
     [0, 0.7, 0],
     { clamp: true }
   );
 
-  // Price ($5 + /MONTH)
-  const priceOpacity = useTransform(scrollYProgress, [0.08, 0.18], [0, 1], { clamp: true });
-  const priceY = useTransform(scrollYProgress, [0.08, 0.18], [40, 0], { clamp: true });
-  const priceScale = useTransform(scrollYProgress, [0.08, 0.18], [0.6, 1], { clamp: true });
-  const monthOpacity = useTransform(scrollYProgress, [0.16, 0.25], [0, 1], { clamp: true });
+  // Price ($5 + /MONTH) — visible by ~0.10
+  const priceOpacity = useTransform(scrollYProgress, [0.04, 0.10], [0, 1], { clamp: true });
+  const priceY = useTransform(scrollYProgress, [0.04, 0.10], [40, 0], { clamp: true });
+  const priceScale = useTransform(scrollYProgress, [0.04, 0.10], [0.6, 1], { clamp: true });
+  const monthOpacity = useTransform(scrollYProgress, [0.08, 0.14], [0, 1], { clamp: true });
 
   // Top label
-  const labelOpacity = useTransform(scrollYProgress, [0.22, 0.34], [0, 1], { clamp: true });
-  const labelY = useTransform(scrollYProgress, [0.22, 0.34], [-12, 0], { clamp: true });
+  const labelOpacity = useTransform(scrollYProgress, [0.10, 0.18], [0, 1], { clamp: true });
+  const labelY = useTransform(scrollYProgress, [0.10, 0.18], [-12, 0], { clamp: true });
 
   // Period segmented control
-  const periodOpacity = useTransform(scrollYProgress, [0.24, 0.36], [0, 1], { clamp: true });
-  const periodY = useTransform(scrollYProgress, [0.24, 0.36], [-20, 0], { clamp: true });
+  const periodOpacity = useTransform(scrollYProgress, [0.12, 0.20], [0, 1], { clamp: true });
+  const periodY = useTransform(scrollYProgress, [0.12, 0.20], [-20, 0], { clamp: true });
 
   // Crypto pills
-  const cryptoOpacity = useTransform(scrollYProgress, [0.30, 0.44], [0, 1], { clamp: true });
-  const cryptoY = useTransform(scrollYProgress, [0.30, 0.44], [24, 0], { clamp: true });
+  const cryptoOpacity = useTransform(scrollYProgress, [0.18, 0.28], [0, 1], { clamp: true });
+  const cryptoY = useTransform(scrollYProgress, [0.18, 0.28], [24, 0], { clamp: true });
 
   // Conversion line
-  const convOpacity = useTransform(scrollYProgress, [0.36, 0.48], [0, 1], { clamp: true });
+  const convOpacity = useTransform(scrollYProgress, [0.24, 0.32], [0, 1], { clamp: true });
 
   // Features grid
-  const includesOpacity = useTransform(scrollYProgress, [0.40, 0.52], [0, 1], { clamp: true });
-  const featuresOpacity = useTransform(scrollYProgress, [0.44, 0.64], [0, 1], { clamp: true });
-  const featuresY = useTransform(scrollYProgress, [0.44, 0.64], [16, 0], { clamp: true });
+  const includesOpacity = useTransform(scrollYProgress, [0.30, 0.40], [0, 1], { clamp: true });
+  const featuresOpacity = useTransform(scrollYProgress, [0.34, 0.48], [0, 1], { clamp: true });
+  const featuresY = useTransform(scrollYProgress, [0.34, 0.48], [16, 0], { clamp: true });
 
-  // CTA + guarantee
-  const ctaOpacity = useTransform(scrollYProgress, [0.60, 0.80], [0, 1], { clamp: true });
-  const ctaY = useTransform(scrollYProgress, [0.60, 0.80], [32, 0], { clamp: true });
-  const guaranteeOpacity = useTransform(scrollYProgress, [0.72, 0.90], [0, 1], { clamp: true });
+  // CTA + guarantee — visible by mid-scroll, hold to end
+  const ctaOpacity = useTransform(scrollYProgress, [0.46, 0.60], [0, 1], { clamp: true });
+  const ctaY = useTransform(scrollYProgress, [0.46, 0.60], [32, 0], { clamp: true });
+  const guaranteeOpacity = useTransform(scrollYProgress, [0.56, 0.70], [0, 1], { clamp: true });
 
   return (
     <section
       ref={stageRef}
       className="w-full bg-black"
-      // Compressed from 350vh — content starts assembling immediately,
-      // no need for a long preamble after the NOTHING void.
-      style={{ height: "220vh", position: "relative" }}
+      // 160vh: shorter than original 350vh and previous 220vh. Long sticky
+      // sections feel "stuck" if scroll-density is too low. Bounded so it
+      // feels like one purposeful pull, not three idle screen-heights.
+      style={{ height: "160vh", position: "relative" }}
     >
       <div className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black flex items-center justify-center
                       pt-[clamp(80px,10vh,128px)] pb-[clamp(40px,6vh,80px)]">
-        <div className="relative w-full max-w-3xl px-lg flex flex-col items-center text-center max-h-full overflow-y-auto
-                        [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="relative w-full max-w-3xl px-lg flex flex-col items-center text-center">
           {/* ── IGNITION PIXEL — single bright dot that explodes into $ ── */}
           <motion.div
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2

@@ -66,10 +66,12 @@ export function ScrollStage() {
   }, [rawProgress, shouldMountGlobe]);
 
   // ── HERO PARTICLES (scale + drift to top-left) ──
-  const heroScale = useTransform(scrollYProgress, [0.18, 0.35], [1, 0.4], { clamp: true });
-  const heroX = useTransform(scrollYProgress, [0.18, 0.35], ["0%", "-32%"], { clamp: true });
-  const heroY = useTransform(scrollYProgress, [0.18, 0.35], ["0%", "-34%"], { clamp: true });
-  const heroOpacity = useTransform(scrollYProgress, [0.30, 0.40], [1, 0], { clamp: true });
+  // Faster fade-out (was 0.30→0.40) — the slow 10% dissolution looked
+  // "crooked" because particles drifted as dust for half a screen of scroll.
+  const heroScale = useTransform(scrollYProgress, [0.18, 0.30], [1, 0.4], { clamp: true });
+  const heroX = useTransform(scrollYProgress, [0.18, 0.30], ["0%", "-32%"], { clamp: true });
+  const heroY = useTransform(scrollYProgress, [0.18, 0.30], ["0%", "-34%"], { clamp: true });
+  const heroOpacity = useTransform(scrollYProgress, [0.22, 0.30], [1, 0], { clamp: true });
 
   // ── HEADLINE BLOCK ──
   // Plain text — peels off via x/opacity during evaporation phase.
@@ -96,29 +98,32 @@ export function ScrollStage() {
   // ── GLOBE LAYER ──
   // Mirror handshake exit envelope (0.55→0.65) so cross-fade is symmetric:
   // at 0.60, handshake=0.5 AND globe=0.5 — clean cross, no dip.
+  // Hold globe almost to section end (0.97→1.0) so there's no dead-screen
+  // dwelling between sections.
   const globeOpacity = useTransform(
     scrollYProgress,
-    [0.55, 0.65, 0.92, 1.0],
+    [0.55, 0.65, 0.97, 1.0],
     [0, 1, 1, 0],
     { clamp: true }
   );
   const globeScale = useTransform(
     scrollYProgress,
-    [0.55, 0.75, 0.92, 1.0],
-    [0.25, 0.78, 0.78, 0.32],
+    [0.55, 0.75, 0.97, 1.0],
+    [0.25, 0.78, 0.78, 0.55],
     { clamp: true }
   );
   const globeY = useTransform(
     scrollYProgress,
-    [0.92, 1.0],
-    ["0%", "-22%"],
+    [0.97, 1.0],
+    ["0%", "-12%"],
     { clamp: true }
   );
   const globeRotate = useTransform(scrollYProgress, [0.55, 0.75], [-12, 0], { clamp: true });
 
   // ── GLOBE OVERLAY UI ──
-  // Globe fully visible at 0.65; give it 0.05 to settle, then bring overlay 0.70→0.82.
-  const overlayProgress = useTransform(scrollYProgress, [0.70, 0.82, 0.92, 1.0], [0, 1, 1, 0], { clamp: true });
+  // Hold overlay until section end so the user doesn't see dead screen before
+  // NothingStage starts.
+  const overlayProgress = useTransform(scrollYProgress, [0.70, 0.82, 0.97, 1.0], [0, 1, 1, 0], { clamp: true });
 
   // (removed: stuck-logo was redundant with the shrunken HeroParticles
   //  during 0.18–0.35; from 0.40+ the screen is occupied by handshake/globe
