@@ -3,25 +3,17 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
+import { PaymentPills } from "@/components/pricing/PaymentPills";
+import { FeatureCell } from "@/components/pricing/FeatureCell";
+import {
+  type Period,
+  type Payment,
+  PERIODS,
+  PRICE_BY_PERIOD,
+  formatConversion,
+} from "@/lib/pricing";
 
-type Period = "1mo" | "6mo" | "1yr";
-type Payment = "SBP" | "CARD" | "BTC" | "ETH" | "TON" | "USDT";
 type FormState = "idle" | "submitting" | "success" | "error";
-
-const PRICE_BY_PERIOD: Record<Period, number> = {
-  "1mo": 5,
-  "6mo": 4,
-  "1yr": 3,
-};
-
-const RATE_TO_USD: Record<Payment, { mult: number; precision: number; unit: string; prefix: boolean }> = {
-  SBP:  { mult: 90,      precision: 0, unit: "₽",    prefix: true  },
-  CARD: { mult: 1,       precision: 0, unit: "$",    prefix: true  },
-  BTC:  { mult: 0.00017, precision: 5, unit: "BTC",  prefix: false },
-  ETH:  { mult: 0.0021,  precision: 4, unit: "ETH",  prefix: false },
-  TON:  { mult: 1.85,    precision: 2, unit: "TON",  prefix: false },
-  USDT: { mult: 1,       precision: 2, unit: "USDT", prefix: false },
-};
 
 export function PricingPageClient({ locale }: { locale: string }) {
   const t = useTranslations("pricing_page");
@@ -34,9 +26,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
   const [errorMsg, setErrorMsg] = useState<string>("");
 
   const basePrice = PRICE_BY_PERIOD[period];
-  const rate = RATE_TO_USD[payment];
-  const display = (basePrice * rate.mult).toFixed(rate.precision);
-  const conversionText = rate.prefix ? `≈ ${rate.unit}${display}` : `≈ ${display} ${rate.unit}`;
+  const conversionText = formatConversion(period, payment);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -269,10 +259,9 @@ function PeriodSwitcher({
   onChange: (v: Period) => void;
   labels: Record<Period, string>;
 }) {
-  const items: Period[] = ["1mo", "6mo", "1yr"];
   return (
     <div className="self-center inline-flex border border-border-visible rounded-full p-[3px]">
-      {items.map((id) => {
+      {PERIODS.map((id) => {
         const active = value === id;
         return (
           <button
@@ -291,78 +280,6 @@ function PeriodSwitcher({
           </button>
         );
       })}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Payment method pills
-   ───────────────────────────────────────────── */
-function PaymentPills({
-  value,
-  onChange,
-}: {
-  value: Payment;
-  onChange: (v: Payment) => void;
-}) {
-  const fiat: Payment[] = ["SBP", "CARD"];
-  const crypto: Payment[] = ["BTC", "ETH", "TON", "USDT"];
-  return (
-    <div className="flex items-center gap-md flex-wrap justify-center">
-      <div className="flex gap-sm">
-        {fiat.map((m) => (
-          <PaymentPill key={m} method={m} active={value === m} onClick={() => onChange(m)} />
-        ))}
-      </div>
-      <div className="hidden sm:block w-px h-5 bg-border-visible" aria-hidden="true" />
-      <div className="flex gap-sm flex-wrap justify-center">
-        {crypto.map((m) => (
-          <PaymentPill key={m} method={m} active={value === m} onClick={() => onChange(m)} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PaymentPill({
-  method,
-  active,
-  onClick,
-}: {
-  method: Payment;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`
-        relative px-md py-2 font-mono text-label uppercase tracking-[0.08em]
-        rounded-full border
-        transition-colors duration-150 ease-out-nothing
-        ${active
-          ? "bg-text-display text-black border-text-display"
-          : "border-border-visible text-text-secondary hover:text-text-primary hover:border-text-secondary"}
-      `}
-    >
-      {method}
-    </button>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Feature cell
-   ───────────────────────────────────────────── */
-function FeatureCell({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-disabled mb-1">
-        {label}
-      </div>
-      <div className="font-mono text-body-sm text-text-display tracking-[0.02em]">
-        {value}
-      </div>
     </div>
   );
 }

@@ -10,43 +10,14 @@ import {
 } from "motion/react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-
-const PAYMENT_METHODS = ["SBP", "CARD", "BTC", "ETH", "TON", "USDT"] as const;
-type PayMethod = (typeof PAYMENT_METHODS)[number];
-
-// Display amount per 1 USD per method — fiat shown in local units, crypto in coins
-const RATES: Record<PayMethod, number> = {
-  SBP: 90,        // 1 USD ≈ 90 RUB
-  CARD: 1,        // 1 USD = $1
-  BTC: 0.00017,
-  ETH: 0.0021,
-  TON: 1.85,
-  USDT: 1,
-};
-const RATE_PRECISION: Record<PayMethod, number> = {
-  SBP: 0,
-  CARD: 0,
-  BTC: 5,
-  ETH: 4,
-  TON: 2,
-  USDT: 2,
-};
-const RATE_UNIT: Record<PayMethod, string> = {
-  SBP: "₽",
-  CARD: "$",
-  BTC: "BTC",
-  ETH: "ETH",
-  TON: "TON",
-  USDT: "USDT",
-};
-const UNIT_AS_PREFIX: Record<PayMethod, boolean> = {
-  SBP: true,
-  CARD: true,
-  BTC: false,
-  ETH: false,
-  TON: false,
-  USDT: false,
-};
+import { PaymentPills } from "@/components/pricing/PaymentPills";
+import { FeatureCell } from "@/components/pricing/FeatureCell";
+import {
+  type Period,
+  type Payment,
+  PRICE_BY_PERIOD,
+  formatConversion,
+} from "@/lib/pricing";
 
 /**
  * PricingStage — third cinematic act after NOTHING erosion.
@@ -76,14 +47,11 @@ export function PricingStage() {
     restDelta: 0.0005,
   });
 
-  const [period, setPeriod] = useState<"1mo" | "6mo" | "1yr">("1mo");
-  const [payMethod, setPayMethod] = useState<PayMethod>("SBP");
+  const [period, setPeriod] = useState<Period>("1mo");
+  const [payMethod, setPayMethod] = useState<Payment>("SBP");
 
-  const basePrice = period === "1mo" ? 5 : period === "6mo" ? 4 : 3;
-  const payAmountRaw = basePrice * RATES[payMethod];
-  const payAmount = payAmountRaw.toFixed(RATE_PRECISION[payMethod]);
-  const payUnit = RATE_UNIT[payMethod];
-  const payUnitPrefix = UNIT_AS_PREFIX[payMethod];
+  const basePrice = PRICE_BY_PERIOD[period];
+  const conversionText = formatConversion(period, payMethod);
 
   // ── Phase envelopes ───────────────────────────
   // Ignition pixel — fires at the very first frame, no dark preamble
@@ -223,9 +191,7 @@ export function PricingStage() {
               className="font-mono text-body-sm text-text-primary tracking-[0.04em]"
               style={{ opacity: convOpacity }}
             >
-              {payUnitPrefix
-                ? `≈ ${payUnit}${payAmount}`
-                : `≈ ${payAmount} ${payUnit}`}
+              {conversionText}
             </motion.div>
           </motion.div>
 
@@ -311,8 +277,8 @@ function PeriodControl({
   value,
   onChange,
 }: {
-  value: "1mo" | "6mo" | "1yr";
-  onChange: (v: "1mo" | "6mo" | "1yr") => void;
+  value: Period;
+  onChange: (v: Period) => void;
 }) {
   const t = useTranslations("pricing");
   const items: { id: typeof value; label: string }[] = [
@@ -346,80 +312,6 @@ function PeriodControl({
           </button>
         );
       })}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Payment method pills (SBP, CARD, BTC, ETH, TON, USDT)
-   Visually grouped: fiat first (with subtle separator) then crypto.
-   ───────────────────────────────────────────── */
-function PaymentPills({
-  value,
-  onChange,
-}: {
-  value: PayMethod;
-  onChange: (v: PayMethod) => void;
-}) {
-  const fiat: PayMethod[] = ["SBP", "CARD"];
-  const crypto: PayMethod[] = ["BTC", "ETH", "TON", "USDT"];
-
-  return (
-    <div className="flex items-center gap-md flex-wrap justify-center">
-      <div className="flex gap-sm">
-        {fiat.map((m) => (
-          <Pill key={m} method={m} active={value === m} onClick={() => onChange(m)} />
-        ))}
-      </div>
-      <div className="w-px h-5 bg-border-visible" aria-hidden="true" />
-      <div className="flex gap-sm">
-        {crypto.map((m) => (
-          <Pill key={m} method={m} active={value === m} onClick={() => onChange(m)} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Pill({
-  method,
-  active,
-  onClick,
-}: {
-  method: PayMethod;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`
-        relative px-md py-2 font-mono text-label uppercase tracking-[0.08em]
-        rounded-full border
-        transition-colors duration-150 ease-out-nothing
-        ${active
-          ? "bg-text-display text-black border-text-display"
-          : "border-border-visible text-text-secondary hover:text-text-primary hover:border-text-secondary"}
-      `}
-    >
-      {method}
-    </button>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Feature cell
-   ───────────────────────────────────────────── */
-function FeatureCell({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-disabled mb-1">
-        {label}
-      </div>
-      <div className="font-mono text-body-sm text-text-display tracking-[0.02em]">
-        {value}
-      </div>
     </div>
   );
 }
