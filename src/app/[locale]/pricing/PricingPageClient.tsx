@@ -139,7 +139,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </div>
         </section>
 
-        <section className="flex flex-col gap-lg border border-border-visible rounded-[24px] p-2xl bg-surface">
+        <section className="flex flex-col gap-lg border border-border-visible rounded-[24px] p-2xl">
           <DividerLabel>{t("waitlist_label")}</DividerLabel>
           <h2 className="font-body font-bold text-text-display text-heading">
             {t("waitlist_title")}
