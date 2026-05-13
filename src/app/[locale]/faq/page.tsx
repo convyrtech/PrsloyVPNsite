@@ -55,15 +55,21 @@ export default async function FaqPage({
               </span>
             </div>
 
-            <div className="flex flex-col gap-xl">
+            <div className="flex flex-col">
               {group.items.map((item, i) => (
-                <div key={i} className="flex flex-col gap-sm">
-                  <h2 className="font-body font-bold text-text-display text-subheading leading-[1.3]">
-                    {item.q}
-                  </h2>
-                  <p className="font-body text-body text-text-secondary leading-[1.65]">
-                    {item.a}
-                  </p>
+                <div key={i} className={`flex gap-md ${i > 0 ? "pt-xl mt-xl border-t border-border-visible/40" : ""}`}>
+                  <span className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled
+                                   flex-shrink-0 pt-1 w-[24px]">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div className="flex flex-col gap-sm flex-1">
+                    <h2 className="font-body font-bold text-text-display text-subheading leading-[1.3]">
+                      {item.q}
+                    </h2>
+                    <p className="font-body text-body text-text-secondary leading-[1.65]">
+                      {item.a}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
