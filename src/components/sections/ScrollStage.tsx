@@ -157,14 +157,13 @@ export function ScrollStage() {
             Desktop (md+): pinned to bottom-right, max-w-md, right-aligned. */}
         <motion.div
           className="absolute z-20 text-center px-lg
-                     bottom-[clamp(72px,14vh,140px)] left-0 right-0
-                     md:left-auto md:px-0 md:bottom-3xl md:right-2xl
-                     md:max-w-2xl md:text-right"
+                     bottom-[clamp(72px,12vh,120px)] left-0 right-0
+                     md:px-0 md:max-w-2xl md:mx-auto"
           style={{ x: headlineX, opacity: headlineOpacity, willChange: "transform, opacity" }}
         >
           <h1 className="font-body font-light text-text-display
-                         text-[clamp(20px,5.6vw,64px)] leading-[1.1] tracking-[-0.02em]
-                         text-center md:text-right break-words max-w-full">
+                         text-[clamp(22px,3.5vw,48px)] leading-[1.15] tracking-[-0.02em]
+                         text-center break-words max-w-full">
             <span className="block">{t("headline_line1")}</span>
             <span className="block font-medium">{t("headline_line2")}</span>
           </h1>

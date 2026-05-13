@@ -58,9 +58,11 @@ export function HeroParticles({ text = "PRSLOY" }: { text?: string }) {
       const oc = off.getContext("2d");
       if (!oc) return;
 
-      // Pick font size to fit ~70% of width
-      const targetWidth = width * 0.78;
-      let fontSize = Math.min(280, Math.max(80, width / 4.2));
+      // Pick font size that fits ~70% of width — wordmark stays readable.
+      // Hero text now sits BELOW the particle (bottom-center), so the wordmark
+      // can use the full horizontal space without colliding.
+      const targetWidth = width * 0.7;
+      let fontSize = Math.min(240, Math.max(72, width / 5));
       // Doto font (variable, 700 for thicker dots)
       oc.font = `700 ${fontSize}px "Doto", monospace`;
       let measured = oc.measureText(text).width;
