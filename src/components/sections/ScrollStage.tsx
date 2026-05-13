@@ -157,7 +157,7 @@ export function ScrollStage() {
             Desktop (md+): pinned to bottom-right, max-w-md, right-aligned. */}
         <motion.div
           className="absolute z-20 text-center px-lg
-                     bottom-[clamp(72px,12vh,120px)] left-0 right-0
+                     bottom-[clamp(96px,22vh,200px)] left-0 right-0
                      md:px-0 md:max-w-2xl md:mx-auto"
           style={{ x: headlineX, opacity: headlineOpacity, willChange: "transform, opacity" }}
         >
