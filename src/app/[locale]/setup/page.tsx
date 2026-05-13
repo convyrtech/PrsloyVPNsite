@@ -85,7 +85,7 @@ export default async function SetupPage({
             <span className="text-text-disabled">{t("no_key_label")}</span>
             <Link
               href="/pricing"
-              className="text-text-display hover:opacity-80 transition-opacity"
+              className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80 transition-opacity"
             >
               {t("get_key_link")} →
             </Link>
@@ -96,7 +96,7 @@ export default async function SetupPage({
               href={TELEGRAM_BOT_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-text-display hover:opacity-80 transition-opacity"
+              className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80 transition-opacity"
             >
               {t("telegram_link")} →
             </a>

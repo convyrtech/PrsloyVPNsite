@@ -215,7 +215,8 @@ export function Header() {
               onClick={() => setMobileOpen((v) => !v)}
               aria-label={mobileOpen ? t("menu_close") : t("menu_open")}
               aria-expanded={mobileOpen}
-              className="font-mono text-label uppercase text-text-secondary tracking-[0.08em]
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center
+                         font-mono text-label uppercase text-text-secondary tracking-[0.08em]
                          hover:text-text-display transition-colors duration-150"
             >
               {mobileOpen ? t("menu_close") : t("menu_open")}
@@ -329,11 +330,12 @@ function BuyCta({ label, compact = false }: { label: string; compact?: boolean }
     <Link
       href="/pricing"
       className={`
+        inline-flex items-center justify-center
         bg-text-display text-black font-mono uppercase tracking-[0.08em]
         rounded-full
         hover:opacity-90 active:scale-[0.98]
         transition-all duration-150 ease-out-nothing
-        ${compact ? "px-md py-1 text-[10px]" : "px-lg py-2 text-label"}
+        ${compact ? "px-md min-h-[44px] text-[10px]" : "px-lg min-h-[44px] text-label"}
       `}
     >
       [ {label} ]

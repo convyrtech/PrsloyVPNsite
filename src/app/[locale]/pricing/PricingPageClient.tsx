@@ -165,7 +165,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
                   }}
                   disabled={state === "submitting"}
                   className="flex-1 bg-black border border-border-visible rounded-full
-                             px-lg py-3 font-mono text-body-sm tracking-[0.02em]
+                             px-lg min-h-[44px] font-mono text-body-sm tracking-[0.02em]
                              text-text-display placeholder:text-text-disabled
                              focus:outline-none focus:border-text-display
                              disabled:opacity-60
@@ -175,7 +175,8 @@ export function PricingPageClient({ locale }: { locale: string }) {
                   type="submit"
                   disabled={state === "submitting"}
                   className="bg-text-display text-black font-mono uppercase tracking-[0.08em]
-                             px-xl py-3 rounded-full text-label
+                             px-xl min-h-[44px] inline-flex items-center justify-center
+                             rounded-full text-label
                              hover:opacity-90 active:scale-[0.98]
                              disabled:opacity-60 disabled:cursor-wait
                              transition-all duration-150 ease-out-nothing
@@ -226,7 +227,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
                             pt-xl border-t border-border-visible">
           <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
             <span className="text-text-disabled">{t("faq_label")}</span>
-            <Link href="/faq" className="text-text-display hover:opacity-80 transition-opacity">
+            <Link href="/faq" className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80 transition-opacity">
               {t("faq_link")} →
             </Link>
           </div>
@@ -236,7 +237,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
               href={TELEGRAM_BOT_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-text-display hover:opacity-80 transition-opacity"
+              className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80 transition-opacity"
             >
               {t("telegram_link")} →
             </a>
@@ -266,7 +267,8 @@ function PeriodSwitcher({
             type="button"
             onClick={() => onChange(id)}
             className={`
-              px-lg py-2 font-mono text-label uppercase tracking-[0.08em] rounded-full
+              px-lg min-h-[44px] inline-flex items-center justify-center
+              font-mono text-label uppercase tracking-[0.08em] rounded-full
               transition-colors duration-200 ease-out-nothing
               ${active
                 ? "bg-text-display text-black"

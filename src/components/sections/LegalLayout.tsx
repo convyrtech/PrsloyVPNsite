@@ -50,7 +50,8 @@ export async function LegalLayout({ kind, locale }: { kind: LegalKind; locale: s
             href={TELEGRAM_BOT_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-mono text-label uppercase tracking-[0.08em] text-text-display
+            className="inline-flex items-center min-h-[44px]
+                       font-mono text-label uppercase tracking-[0.08em] text-text-display
                        hover:opacity-80 transition-opacity"
           >
             {t("contact_link")} →

@@ -40,7 +40,8 @@ function Pill({
       type="button"
       onClick={onClick}
       className={`
-        relative px-md py-2 font-mono text-label uppercase tracking-[0.08em]
+        relative px-md min-h-[44px] inline-flex items-center justify-center
+        font-mono text-label uppercase tracking-[0.08em]
         rounded-full border
         transition-colors duration-150 ease-out-nothing
         ${active
