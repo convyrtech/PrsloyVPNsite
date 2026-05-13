@@ -1,0 +1,7 @@
+node_modules
+.next
+.git
+.qa-tmp
+preview
+_audit
+backend
