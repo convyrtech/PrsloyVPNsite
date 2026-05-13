@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { PaymentPills } from "@/components/pricing/PaymentPills";
 import { FeatureCell } from "@/components/pricing/FeatureCell";
+import { DividerLabel } from "@/components/ui/DividerLabel";
 import {
   type Period,
   type Payment,
@@ -196,15 +197,8 @@ export function PricingStage() {
           </motion.div>
 
           {/* ── INCLUDES divider ── */}
-          <motion.div
-            className="w-full flex items-center gap-md mb-lg"
-            style={{ opacity: includesOpacity }}
-          >
-            <div className="h-px flex-1 bg-border-visible/40" />
-            <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
-              {t("includes")}
-            </span>
-            <div className="h-px flex-1 bg-border-visible/40" />
+          <motion.div className="w-full mb-lg" style={{ opacity: includesOpacity }}>
+            <DividerLabel>{t("includes")}</DividerLabel>
           </motion.div>
 
           {/* ── FEATURE GRID ── */}

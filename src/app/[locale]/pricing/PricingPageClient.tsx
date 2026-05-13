@@ -5,6 +5,9 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { PaymentPills } from "@/components/pricing/PaymentPills";
 import { FeatureCell } from "@/components/pricing/FeatureCell";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import { DividerLabel } from "@/components/ui/DividerLabel";
+import { TELEGRAM_BOT_URL } from "@/lib/links";
 import {
   type Period,
   type Payment,
@@ -61,13 +64,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
       <div className="max-w-2xl mx-auto px-lg flex flex-col gap-3xl">
-        {/* ─── LABEL ─── */}
-        <div className="flex items-center gap-md">
-          <span className="inline-block w-[28px] h-px bg-border-visible" />
-          <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
-            {t("label")}
-          </span>
-        </div>
+        <SectionLabel>{t("label")}</SectionLabel>
 
         {/* ─── HEADLINE ─── */}
         <header className="flex flex-col gap-md">
@@ -233,7 +230,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
           <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
             <span className="text-text-disabled">{t("telegram_label")}</span>
             <a
-              href="https://t.me/prsloy_bot"
+              href={TELEGRAM_BOT_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-text-display hover:opacity-80 transition-opacity"
@@ -280,21 +277,6 @@ function PeriodSwitcher({
           </button>
         );
       })}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Divider with centered label
-   ───────────────────────────────────────────── */
-function DividerLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-md">
-      <div className="h-px flex-1 bg-border-visible/40" />
-      <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
-        {children}
-      </span>
-      <div className="h-px flex-1 bg-border-visible/40" />
     </div>
   );
 }

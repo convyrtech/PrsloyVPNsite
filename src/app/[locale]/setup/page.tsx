@@ -1,5 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/routing";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import { TELEGRAM_BOT_URL } from "@/lib/links";
 
 type StepLink = { label: string; url: string };
 type Step = { title: string; body: string; links: StepLink[] };
@@ -18,13 +20,7 @@ export default async function SetupPage({
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
       <div className="max-w-2xl mx-auto px-lg flex flex-col gap-3xl">
-        {/* ─── LABEL ─── */}
-        <div className="flex items-center gap-md">
-          <span className="inline-block w-[28px] h-px bg-border-visible" />
-          <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
-            {t("label")}
-          </span>
-        </div>
+        <SectionLabel>{t("label")}</SectionLabel>
 
         {/* ─── HEADLINE ─── */}
         <header className="flex flex-col gap-md">
@@ -101,7 +97,7 @@ export default async function SetupPage({
           <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
             <span className="text-text-disabled">{t("telegram_label")}</span>
             <a
-              href="https://t.me/prsloy_bot"
+              href={TELEGRAM_BOT_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-text-display hover:opacity-80 transition-opacity"

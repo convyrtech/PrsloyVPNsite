@@ -1,4 +1,6 @@
 import { getTranslations } from "next-intl/server";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import { TELEGRAM_BOT_URL } from "@/lib/links";
 
 export type LegalKind = "privacy" | "terms";
 
@@ -12,12 +14,7 @@ export async function LegalLayout({ kind, locale }: { kind: LegalKind; locale: s
         {/* ─── LABEL + UPDATED DATE ─── */}
         <header className="flex flex-col gap-md">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-md">
-              <span className="inline-block w-[28px] h-px bg-border-visible" />
-              <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
-                {t("label")}
-              </span>
-            </div>
+            <SectionLabel>{t("label")}</SectionLabel>
             <span className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
               {t("updated")}
             </span>
@@ -55,7 +52,7 @@ export async function LegalLayout({ kind, locale }: { kind: LegalKind; locale: s
             {t("contact_label")}
           </span>
           <a
-            href="https://t.me/prsloy_bot"
+            href={TELEGRAM_BOT_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="font-mono text-label uppercase tracking-[0.08em] text-text-display
