@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { PricingPageClient } from "./PricingPageClient";
 
 export default async function PricingPage({
   params,
@@ -8,11 +9,5 @@ export default async function PricingPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  return (
-    <main className="min-h-screen flex items-center justify-center">
-      <p className="font-mono text-label uppercase text-text-disabled">
-        [ PRICING · COMING SOON ]
-      </p>
-    </main>
-  );
+  return <PricingPageClient locale={locale} />;
 }

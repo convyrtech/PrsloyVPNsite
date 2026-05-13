@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { LegalLayout } from "@/components/sections/LegalLayout";
 
 export default async function TermsPage({
   params,
@@ -7,12 +8,5 @@ export default async function TermsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-
-  return (
-    <main className="min-h-screen flex items-center justify-center">
-      <p className="font-mono text-label uppercase text-text-disabled">
-        [ TERMS · COMING SOON ]
-      </p>
-    </main>
-  );
+  return <LegalLayout kind="terms" locale={locale} />;
 }
