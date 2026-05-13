@@ -8,7 +8,6 @@ import { Link } from "@/i18n/routing";
 import { HeroParticles } from "@/components/sections/HeroParticles";
 import { HandshakePanel } from "@/components/sections/HandshakePanel";
 import { GlobeUIOverlay } from "@/components/sections/GlobeUIOverlay";
-import { RevealText } from "@/components/animations/RevealText";
 
 const GlobeImpl = dynamic(
   () => import("./GlobeImpl").then((m) => m.GlobeImpl),
@@ -73,10 +72,7 @@ export function ScrollStage() {
   const heroOpacity = useTransform(scrollYProgress, [0.30, 0.40], [1, 0], { clamp: true });
 
   // ── HEADLINE BLOCK ──
-  // Headline is fully revealed at first frame — no scroll required.
-  // Pass constant 1 to RevealText so chars are immediately visible.
-  // Exit anim handled separately via headlineX + headlineOpacity below.
-  const headlineEnter = useTransform(scrollYProgress, [0, 1], [1, 1]);
+  // Plain text — peels off via x/opacity during evaporation phase.
   const headlineX = useTransform(scrollYProgress, [0.15, 0.28], [0, 200], { clamp: true });
   const headlineOpacity = useTransform(scrollYProgress, [0.15, 0.27], [1, 0], { clamp: true });
 
@@ -157,30 +153,32 @@ export function ScrollStage() {
         </motion.div>
 
         {/* ─────── LAYER 2: HERO HEADLINE + SUB + CTA ─────── */}
+        {/* Mobile: centered, padded both sides — prevents overflow.
+            Desktop (md+): pinned to bottom-right, max-w-md, right-aligned. */}
         <motion.div
-          className="absolute bottom-2xl right-lg md:bottom-3xl md:right-2xl
-                     z-20 max-w-md text-right"
+          className="absolute z-20 text-center px-lg
+                     bottom-[clamp(72px,14vh,140px)] left-0 right-0
+                     md:left-auto md:px-0 md:bottom-3xl md:right-2xl
+                     md:max-w-md md:text-right"
           style={{ x: headlineX, opacity: headlineOpacity, willChange: "transform, opacity" }}
         >
           <h1 className="font-body font-light text-text-display
-                         text-[clamp(36px,5vw,64px)] leading-[1.05] tracking-[-0.02em]
-                         flex flex-col items-end">
-            <span className="block">
-              <RevealText text={t("headline_line1")} progress={headlineEnter} />
-            </span>
-            <span className="block font-medium">
-              <RevealText text={t("headline_line2")} progress={headlineEnter} />
-            </span>
+                         text-[clamp(20px,5.6vw,64px)] leading-[1.1] tracking-[-0.02em]
+                         text-center md:text-right break-words max-w-full">
+            <span className="block">{t("headline_line1")}</span>
+            <span className="block font-medium">{t("headline_line2")}</span>
           </h1>
 
           <motion.p
-            className="mt-lg font-mono text-label uppercase text-text-secondary tracking-[0.08em]"
+            className="mt-md md:mt-lg font-mono text-label uppercase text-text-secondary
+                       break-words max-w-full"
             style={{ opacity: ctaOpacity }}
           >
             {t("sub_price")}
           </motion.p>
           <motion.p
-            className="mt-xs font-mono text-label uppercase text-text-disabled tracking-[0.08em]"
+            className="mt-xs font-mono text-label uppercase text-text-disabled
+                       break-words max-w-full"
             style={{ opacity: ctaOpacity }}
           >
             {t("sub_features")}
@@ -189,7 +187,7 @@ export function ScrollStage() {
           <motion.div style={{ y: ctaY, opacity: ctaOpacity }}>
             <Link
               href="/pricing"
-              className="inline-block mt-xl bg-text-display text-black
+              className="inline-block mt-lg md:mt-xl bg-text-display text-black
                          font-mono text-body-sm uppercase tracking-[0.08em]
                          px-xl py-md rounded-full pointer-events-auto
                          hover:opacity-90 active:scale-[0.98]
