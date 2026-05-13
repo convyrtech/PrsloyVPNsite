@@ -81,7 +81,9 @@ export function PricingPageClient({ locale }: { locale: string }) {
             style={{ fontSize: "clamp(28px, 6vw, 56px)" }}
           >
             <span className="block">{t("headline_line1")}</span>
-            <span className="block text-text-secondary">{t("headline_line2")}</span>
+            {t("headline_line2") && (
+              <span className="block text-text-secondary">{t("headline_line2")}</span>
+            )}
           </h1>
           <p className="font-mono text-body-sm uppercase tracking-[0.08em] text-text-disabled">
             {t("subheadline")}

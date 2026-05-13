@@ -165,7 +165,9 @@ export function ScrollStage() {
                          text-[clamp(22px,3.5vw,48px)] leading-[1.15] tracking-[-0.02em]
                          text-center break-words max-w-full">
             <span className="block">{t("headline_line1")}</span>
-            <span className="block font-medium">{t("headline_line2")}</span>
+            {t("headline_line2") && (
+              <span className="block font-medium">{t("headline_line2")}</span>
+            )}
           </h1>
 
           <motion.p
