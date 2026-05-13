@@ -8,6 +8,7 @@ import { FeatureCell } from "@/components/pricing/FeatureCell";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { DividerLabel } from "@/components/ui/DividerLabel";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
+import { isValidEmail } from "@/lib/validation";
 import {
   type Period,
   type Payment,
@@ -34,6 +35,14 @@ export function PricingPageClient({ locale }: { locale: string }) {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (state === "submitting") return;
+
+    const trimmed = email.trim();
+    if (!isValidEmail(trimmed)) {
+      setErrorMsg(t("error_invalid_email"));
+      setState("error");
+      return;
+    }
+
     setState("submitting");
     setErrorMsg("");
 
@@ -41,7 +50,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, period, payment, locale }),
+        body: JSON.stringify({ email: trimmed, period, payment, locale }),
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
 
@@ -140,7 +149,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </p>
 
           {state !== "success" ? (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-md">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-md" noValidate>
               <div className="flex flex-col sm:flex-row gap-sm">
                 <input
                   type="email"

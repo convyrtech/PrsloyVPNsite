@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
+import { isValidEmail } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_BODY_BYTES = 2048;
 
 type WaitlistBody = {
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   }
 
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-  if (!email || !EMAIL_REGEX.test(email) || email.length > 254) {
+  if (!isValidEmail(email)) {
     return NextResponse.json(
       { ok: false, error: "invalid_email" },
       { status: 400 }
