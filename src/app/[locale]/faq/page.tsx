@@ -13,6 +13,7 @@ export default async function FaqPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "faq_page" });
+  const tHeader = await getTranslations({ locale, namespace: "header" });
 
   const items = (t.raw("items") as FaqItem[]) ?? [];
   const categories = (t.raw("categories") as Record<string, string>) ?? {};
@@ -88,7 +89,7 @@ export default async function FaqPage({
               className="font-mono text-label uppercase tracking-[0.08em] text-text-display
                          hover:opacity-80 transition-opacity"
             >
-              ТАРИФ →
+              {tHeader("nav_pricing")} →
             </Link>
             <a
               href="https://t.me/prsloy_bot"
