@@ -1,18 +1,18 @@
 {
   "meta": {
-    "title": "PRSLOY — The internet, unfiltered.",
-    "description": "Anonymous VPN. Crypto-only payments. $5/month. 12 countries. Zero logs. Setup in 60 seconds.",
-    "ogTitle": "PRSLOY · The internet, unfiltered.",
-    "ogDescription": "Anonymous VPN. $5/mo. Pay in crypto. No KYC. No logs."
+    "title": "PRSLOY — VPN without blocks",
+    "description": "Invite-only VPN. One key — no settings, no server picking. Works with Happ. Crypto only, no KYC.",
+    "ogTitle": "PRSLOY · VPN without blocks",
+    "ogDescription": "Invite-only access. One key. No settings."
   },
   "hero": {
-    "status_label": "ALL SYSTEMS",
-    "headline_line1": "The internet,",
-    "headline_line2": "we forgot.",
-    "sub_price": "$5/MO · PAY IN CRYPTO",
-    "sub_features": "NO KYC · NO LOGS · NO APP",
-    "cta": "GET YOUR KEY · $5",
-    "launch_strip": "DAY 1 · LAUNCH WEEK · BE FIRST",
+    "status_label": "CLOSED BETA",
+    "headline_line1": "VPN without blocks.",
+    "headline_line2": "Invite-only.",
+    "sub_price": "$5/MO · CRYPTO ONLY",
+    "sub_features": "NO SETTINGS · HAPP / HIDDIFY",
+    "cta": "GET A KEY · $5",
+    "launch_strip": "BETA · WEEK 1 · DAY 1",
     "scroll_hint": "SCROLL"
   },
   "header": {
@@ -20,8 +20,8 @@
     "nav_faq": "FAQ",
     "nav_blog": "BLOG",
     "nav_dashboard": "DASHBOARD",
-    "status_short": "ALL SYSTEMS GO",
-    "status_full": "LAUNCH WEEK · BE FIRST · DAY 1",
+    "status_short": "CLOSED BETA",
+    "status_full": "INVITE-ONLY · WEEK 1",
     "cta_buy": "BUY · $5",
     "menu_open": "MENU",
     "menu_close": "CLOSE"
@@ -29,39 +29,39 @@
   "bridge": {
     "label_top": "ESTABLISHING CONNECTION",
     "progress_label": "HANDSHAKE",
-    "city_list": "AMS · FRA · LON · NYC · TYO · SIN · SAO",
+    "city_list": "MSK · BER · SOF · NYC",
     "label_bottom": "CONNECTION ESTABLISHED",
-    "scroll_cue": "GLOBAL NETWORK"
+    "scroll_cue": "NETWORK"
   },
   "globe_exit": {
     "scroll_cue": "BEYOND THE NETWORK"
   },
   "globe": {
-    "label": "GLOBAL INFRASTRUCTURE",
+    "label": "INFRASTRUCTURE",
     "title_line1": "One key.",
-    "title_line2_strong": "Every continent.",
-    "subtitle": "Connect anywhere. Pick the closest exit. Or rotate them daily — same price, same key.",
-    "metric_routing": "ROUTING",
-    "metric_routing_value": "MULTI-HOP",
-    "metric_logs": "LOGS",
-    "metric_logs_value": "ZERO",
+    "title_line2_strong": "Stable route.",
+    "subtitle": "Your key is tuned for your network. If a node drops — the exit IP fails over automatically. No reconfiguration.",
+    "metric_routing": "ROUTE",
+    "metric_routing_value": "DOUBLE-HOP",
+    "metric_logs": "ACCESS",
+    "metric_logs_value": "INVITE-ONLY",
     "metric_status": "STATUS",
-    "metric_status_value": "LAUNCH WEEK",
-    "legend_entry": "ENTRY",
-    "legend_exit": "EXIT NODE",
-    "legend_active": "LIVE TRAFFIC",
-    "hint_desktop": "DRAG TO ROTATE · HOVER NODES",
-    "hint_touch": "DRAG TO ROTATE · TAP NODES",
-    "loading": "BUILDING GLOBE",
+    "metric_status_value": "BETA",
+    "legend_entry": "ENTRY · RU",
+    "legend_exit": "EXIT · EU/US",
+    "legend_active": "YOUR ROUTE",
+    "hint_desktop": "DRAG TO ROTATE · HOVER A NODE",
+    "hint_touch": "DRAG TO ROTATE · TAP A NODE",
+    "loading": "BUILDING THE GLOBE",
     "fallback": "INFRASTRUCTURE PREVIEW UNAVAILABLE · WEBGL REQUIRED",
-    "cta": "GET YOUR KEY · $5"
+    "cta": "GET A KEY · $5"
   },
   "nothing": {
-    "label": "DOUBLE-HOP ENCRYPTION",
+    "label": "DOUBLE-HOP · WHITELIST BYPASS",
     "your_isp_sees": "YOUR ISP SEES",
     "nothing_word": "NOTHING",
-    "meta_route": "Your data. Their problem.",
-    "meta_invisible": "ZERO LOGS · ZERO TRACES · ZERO TRUST",
+    "meta_route": "Your destination. Not their business.",
+    "meta_invisible": "ENTRY: RU · EXIT: ABROAD · DOUBLE-HOP",
     "scroll_cue": "PRICING"
   },
   "pricing": {
@@ -69,50 +69,291 @@
     "period_1m": "1 MO",
     "period_6m": "6 MO",
     "period_12m": "1 YR",
-    "per_month": "/ MONTH",
-    "everything_included": "Everything included.",
-    "promo_text": "LAUNCH PRICE · REGULAR ${original}",
-    "includes": "INCLUDES",
-    "feature_encryption": "ENCRYPTION",
-    "feature_encryption_value": "MILITARY",
-    "feature_devices": "DEVICES",
-    "feature_devices_value": "UNLIMITED",
-    "feature_speed": "SPEED",
-    "feature_speed_value": "NO LIMITS",
-    "feature_servers": "SERVERS",
-    "feature_servers_value": "12 COUNTRIES",
-    "feature_logs": "LOGS",
-    "feature_logs_value": "ZERO",
+    "per_month": "/ MO",
+    "everything_included": "One key. One route.",
+    "promo_text": "PROMO · USUALLY ${original}",
+    "includes": "INCLUDED",
+    "feature_encryption": "ROUTE",
+    "feature_encryption_value": "DOUBLE-HOP",
+    "feature_devices": "CLIENT",
+    "feature_devices_value": "HAPP / HIDDIFY",
+    "feature_speed": "SETUP",
+    "feature_speed_value": "TUNED FOR YOU",
+    "feature_servers": "NETWORK",
+    "feature_servers_value": "RU → EU/US",
+    "feature_logs": "ACCESS",
+    "feature_logs_value": "INVITE-ONLY",
     "feature_support": "SUPPORT",
-    "feature_support_value": "TELEGRAM 24/7",
-    "cta": "GET YOUR KEY",
-    "cta_meta": "60 SEC TO CONNECT",
-    "guarantee": "Pay in crypto · No KYC · No emails · Refund in 7 days"
+    "feature_support_value": "TELEGRAM",
+    "cta": "GET A KEY",
+    "cta_meta": "DELIVERED AFTER PAYMENT",
+    "guarantee": "Crypto only · No KYC · No email"
   },
   "faq": {
     "label": "QUESTIONS",
-    "see_all": "ALL 12 QUESTIONS",
-    "q1": "Do you use whitelist routing?",
-    "a1": "Yes. RU traffic enters through a whitelisted entry node, then hops to an exit server in EU / Asia / US. Your ISP sees an outbound connection to a legal IP — not your real destination. That's the double-hop.",
-    "q2": "Do you keep dead servers running for weeks like other VPNs?",
-    "a2": "No. Health-check every 60 seconds: latency, throughput, packet-loss, block-detection. If a node dies, the exit-IP in your key rotates automatically. Cheap VPNs check manually once a day — we're continuous.",
-    "q3": "Where's your app?",
-    "a3": "Today: your key works in 60 seconds with Happ / Hiddify / NekoBox. In development: native Android client built on Happ. Apple pulled half the VPN apps from RU App Store last year — your client is independent of their stores."
+    "see_all": "ALL QUESTIONS",
+    "q1": "How does the block bypass work?",
+    "a1": "Traffic from Russia enters through a whitelisted Russian entry node, then hops to an exit abroad. Your ISP sees a legal Russian IP — not your real destination. That's double-hop.",
+    "q2": "What if a node goes down?",
+    "a2": "If the exit becomes unavailable, the route fails over to a backup automatically. No need to reconfigure your key.",
+    "q3": "Where's the app?",
+    "a3": "Today — the key works in Happ, Hiddify or NekoBox. Our own client is in development. The key doesn't depend on the App Store or Google Play."
+  },
+  "pricing_page": {
+    "label": "PRICING",
+    "headline_line1": "VPN without blocks.",
+    "headline_line2": "Invite-only.",
+    "subheadline": "One key. One route. No settings.",
+    "promo_strip": "PROMO · USUALLY $7/MO",
+    "waitlist_label": "GET AN INVITE",
+    "waitlist_title": "Payments open in days",
+    "waitlist_description": "We're wiring up Rollypay (cards, crypto, SBP). Drop your email — we'll send a link the moment the gateway is live.",
+    "email_placeholder": "your@email.com",
+    "submit": "LEAVE EMAIL",
+    "submitting": "SENDING...",
+    "no_spam": "No spam. Just the invite link.",
+    "success_title": "Got it.",
+    "success_description": "We'll send the payment link the moment the gateway is live. No newsletters.",
+    "error_title": "Didn't send",
+    "error_description": "Try again in a minute or message us on Telegram.",
+    "error_invalid_email": "That looks invalid — check and resend.",
+    "how_label": "HOW IT WORKS",
+    "step_1_title": "Pay",
+    "step_1_body": "Click the link from the email. Pay by card, crypto or SBP via Rollypay.",
+    "step_2_title": "Key",
+    "step_2_body": "Get a personal key. The route is already tuned for your network.",
+    "step_3_title": "Connect",
+    "step_3_body": "Open Happ, paste the key, hit connect. Works immediately.",
+    "telegram_label": "Already have an invite?",
+    "telegram_link": "Open in Telegram",
+    "faq_label": "More questions?",
+    "faq_link": "Full FAQ"
+  },
+  "setup_page": {
+    "label": "SETUP",
+    "title": "Connect in 60 seconds",
+    "subtitle": "Three steps. No settings, no server picking. Works in Happ, Hiddify or NekoBox — pick what's comfortable.",
+    "platforms_label": "PLATFORMS",
+    "step_label_prefix": "STEP",
+    "steps": [
+      {
+        "title": "Install a client",
+        "body": "Grab Happ from the App Store / Google Play / GitHub. It's an open-source client built for our protocol. Alternatives: Hiddify or NekoBox — the same key works in all of them.",
+        "links": [
+          { "label": "Happ · iOS", "url": "https://apps.apple.com/app/happ-proxy-utility/id6504287215" },
+          { "label": "Happ · Android", "url": "https://play.google.com/store/apps/details?id=com.happproxy" },
+          { "label": "Happ · macOS / Windows / Linux", "url": "https://happ.su/" }
+        ]
+      },
+      {
+        "title": "Paste the key",
+        "body": "After payment you get a personal link. Open it on a device with Happ — the client picks up the key automatically. Or copy the link and paste it into Happ via 'Add from clipboard'.",
+        "links": []
+      },
+      {
+        "title": "Hit connect",
+        "body": "In Happ, select the profile you just added and tap the connect button. You're online in 1-3 seconds. The route is already tuned — no need to pick servers.",
+        "links": []
+      }
+    ],
+    "troubleshooting_label": "IF IT WON'T CONNECT",
+    "troubleshooting_body": "Restart Happ. Make sure you're on the latest version. If it still won't work — message us on Telegram with a screenshot of the error, we reply within an hour.",
+    "no_key_label": "No key yet?",
+    "get_key_link": "Get a key",
+    "telegram_label": "Got a question?",
+    "telegram_link": "Telegram"
+  },
+  "dashboard_page": {
+    "label": "DASHBOARD",
+    "title": "Manage your subscription",
+    "subtitle": "Right now management lives in the Telegram bot — check key status, renew, regenerate the key, download the config. The web dashboard ships in the next release.",
+    "telegram_cta_label": "SIGN IN WITH TELEGRAM",
+    "telegram_cta_meta": "One-tap auth",
+    "what_label": "WHAT'S IN THERE",
+    "feature_status_title": "Key status",
+    "feature_status_body": "Whether your key is active, valid until when, how much traffic is left (if there's a cap).",
+    "feature_renew_title": "Renew",
+    "feature_renew_body": "Pay for a new period without regenerating the key. The route is preserved, devices stay connected.",
+    "feature_regen_title": "Regenerate",
+    "feature_regen_body": "If the key leaked or broke — issue a new one in one tap. The old one is automatically revoked.",
+    "feature_config_title": "Download config",
+    "feature_config_body": "Link or QR code for adding it to a new client. All your devices run off the same key.",
+    "feature_support_title": "Support",
+    "feature_support_body": "Direct chat with an engineer. Not a bot, not autoresponders — a real person who sees your key and the infrastructure.",
+    "feature_history_title": "History",
+    "feature_history_body": "Payments and renewals list. No traffic telemetry — billing only.",
+    "web_soon_label": "WEB DASHBOARD",
+    "web_soon_body": "Once Rollypay web payment is live we'll add a browser dashboard — same features straight on the site, no Telegram detour.",
+    "no_key_label": "No key yet?",
+    "get_key_link": "Get a key"
+  },
+  "faq_page": {
+    "label": "FAQ",
+    "title": "What you need to know",
+    "subtitle": "No marketing fluff. Direct answers to what people usually ask.",
+    "categories": {
+      "product": "PRODUCT",
+      "tech": "HOW IT WORKS",
+      "payment": "PAYMENT & ACCESS",
+      "trust": "PRIVACY"
+    },
+    "items": [
+      {
+        "category": "product",
+        "q": "What is PRSLOY?",
+        "a": "An invite-only VPN. You get one key — we've already tuned the route for your network. Paste it into Happ or Hiddify and connect. No server picking, no panel, no fuss."
+      },
+      {
+        "category": "product",
+        "q": "Why invite-only and not for everyone?",
+        "a": "Because mass-market VPNs are slow VPNs. The more people on a single node, the faster it gets blocked and the worse the speed. We keep a small base so routes live longer and run faster."
+      },
+      {
+        "category": "product",
+        "q": "Where's the app?",
+        "a": "Today — the key works in Happ, Hiddify or NekoBox. Our own client is in development. This is actually a plus: the key doesn't depend on the App Store or Google Play, which periodically pull VPN apps from RU stores."
+      },
+      {
+        "category": "tech",
+        "q": "How does block bypass work?",
+        "a": "Russian traffic enters through a Russian entry node that sits on the providers' whitelist. Then it hops to an exit abroad. Your ISP sees a legal Russian IP — your real destination stays two hops away."
+      },
+      {
+        "category": "tech",
+        "q": "What if a node goes down?",
+        "a": "Watchdogs check nodes regularly. If an exit becomes unavailable, the route fails over to a backup automatically. No need to reconfigure your key."
+      },
+      {
+        "category": "tech",
+        "q": "What if Russia blocks the entry node?",
+        "a": "We bring up a new entry in a new subnet, the whitelist expands, your keys keep working. That's an ops job, not a user job — there's nothing for you to do."
+      },
+      {
+        "category": "tech",
+        "q": "How many devices can I use?",
+        "a": "One key works on any number of your devices simultaneously — phone + laptop + tablet + home router. No limit, as long as you're not handing the key to strangers."
+      },
+      {
+        "category": "payment",
+        "q": "How do I pay?",
+        "a": "We're wiring up the Rollypay gateway — it'll accept SBP, cards and crypto (BTC, ETH, USDT, TON). Until the gateway is live, leave your email — we'll send you a link first."
+      },
+      {
+        "category": "payment",
+        "q": "What about refunds?",
+        "a": "If the key doesn't work in the first 24 hours after payment — full refund. After that — case by case via Telegram. We don't make complex conditions: if something went wrong, message us and we'll fix it."
+      },
+      {
+        "category": "payment",
+        "q": "How do I get an invite?",
+        "a": "There's a form on the pricing page — leave your email. When the gateway is live, we'll send a payment link. The key is delivered within minutes after payment."
+      },
+      {
+        "category": "trust",
+        "q": "What data do you store?",
+        "a": "Only what's needed to issue the key: your Telegram ID (if you register through the bot) or email (if through the site), your key identifier in Marzneshin, the subscription end date. We don't write activity logs (what you open, where you go) — we don't need them."
+      },
+      {
+        "category": "trust",
+        "q": "Can I trust you?",
+        "a": "Honestly — without an independent audit, no VPN deserves 100% trust. What we can say honestly: the key works without logging your traffic, payment goes through an encrypted gateway without forwarding payment data to us, and we have no technical ability to see the contents of your connections."
+      }
+    ],
+    "still_have": "Still have questions?",
+    "telegram_link": "Message us on Telegram"
+  },
+  "legal": {
+    "privacy": {
+      "label": "PRIVACY",
+      "title": "What we know about you",
+      "updated": "Updated: May 13, 2026",
+      "intro": "This is not a corporate privacy policy with 40 clauses. Here's an honest list of what we collect, why, and how long we keep it.",
+      "sections": [
+        {
+          "h": "WHAT WE COLLECT",
+          "p": "Only what's needed for the service to work: your Telegram ID (if you register through the bot) OR email (if you leave it on the site form), your key identifier in our provisioning system, subscription start and end date. That's it."
+        },
+        {
+          "h": "WHAT WE DON'T COLLECT",
+          "p": "Activity logs (DNS queries, visited sites, peer IPs). Payment data (cards, account numbers) — these go directly to the payment gateway. Biometrics, contacts, geolocation. There are no email newsletters or marketing trackers on the site."
+        },
+        {
+          "h": "PAYMENT",
+          "p": "Payments are processed by an external gateway (Rollypay for cards/SBP, direct crypto wallets for BTC/ETH/USDT/TON). We only see the transaction status (success/fail) and amount — not the credentials. Those are kept by the payment provider under their rules."
+        },
+        {
+          "h": "RETENTION",
+          "p": "Your key record lives while the subscription is active + 90 days (in case of renewal). After that — deleted. Email from the waitlist form is kept until we send you the invite link, then deleted within 30 days if you don't subscribe."
+        },
+        {
+          "h": "THIRD PARTIES",
+          "p": "Payment gateway (see above). Telegram (if you register through the bot — Telegram sees the fact of interaction with the bot). Hosting (virtual machines and the control panel sit with an infrastructure provider that has no access to your traffic content)."
+        },
+        {
+          "h": "YOUR RIGHTS",
+          "p": "You can request deletion of any of your data — message us on Telegram. After identity verification (via the payment token), we delete within 7 days. You can choose not to give an email — register through the Telegram bot instead."
+        },
+        {
+          "h": "CHANGES",
+          "p": "If we change something — we update the date at the top and post in the Telegram channel. We don't slip in material changes silently."
+        }
+      ],
+      "contact_label": "Privacy questions",
+      "contact_link": "Message us on Telegram"
+    },
+    "terms": {
+      "label": "TERMS",
+      "title": "Rules of use",
+      "updated": "Updated: May 13, 2026",
+      "intro": "Short rules. This is not an enterprise SLA — these are beta-service terms written so they can actually be read.",
+      "sections": [
+        {
+          "h": "WHAT YOU GET",
+          "p": "One key for connecting to our VPN infrastructure. Validity period — the chosen subscription period (1 / 6 / 12 months). The route is tuned for your network and updates automatically when nodes fail."
+        },
+        {
+          "h": "WHAT YOU CAN USE IT FOR",
+          "p": "Personal use: bypassing blocks, protecting traffic on public Wi-Fi, accessing content. Sharing the key with people close to you on your devices is fine. Distributing it publicly or reselling it — not allowed."
+        },
+        {
+          "h": "WHAT YOU CAN'T USE IT FOR",
+          "p": "Spam and DDoS. Attacks on infrastructure (ours or anyone else's). Distributing malware. Automated scraping above reasonable limits (thousands of requests per second). The operator reserves the right to disable the key without refund in case of abuse — but we'll ask first, then disable."
+        },
+        {
+          "h": "AVAILABILITY",
+          "p": "The service is in closed beta. We do everything we can to keep routes up 24/7, but we can't guarantee 100% uptime — that would be a lie. If a node falls, the route switches; if something stays down for a long time, we compensate by extending the subscription."
+        },
+        {
+          "h": "PAYMENT AND REFUNDS",
+          "p": "Payment is upfront for the chosen period. If the key doesn't work in the first 24 hours after payment — full refund. After that — case by case via Telegram. Crypto payments are refunded in the same coin, fiat ones to the original card/account."
+        },
+        {
+          "h": "TERMINATION",
+          "p": "You can stop renewing at any time — just don't pay. We can stop servicing the key in case of these terms being violated — after notifying you on Telegram. If we terminate without your fault — we refund the unused portion of the payment."
+        },
+        {
+          "h": "LIABILITY",
+          "p": "We provide a technical service. What you do through the VPN is your responsibility. We're not responsible for the content of the sites you reach. A VPN doesn't make you anonymous — it only protects traffic from your provider."
+        }
+      ],
+      "contact_label": "Terms questions",
+      "contact_link": "Message us on Telegram"
+    }
   },
   "footer": {
     "departure_label": "DEPARTURE BOARD",
-    "departure_sub": "LIVE EXIT NODES · UPDATING",
+    "departure_sub": "EXIT NODES",
     "closing_line1": "STOP ASKING.",
-    "closing_line2": "DEPART.",
-    "cta": "GET YOUR KEY",
-    "cta_meta": "$5/MONTH · 60 SEC TO CONNECT",
-    "command_label": "COMMAND PANEL",
+    "closing_line2": "GET A KEY.",
+    "cta": "GET A KEY",
+    "cta_meta": "$5/MO · CRYPTO ONLY",
+    "command_label": "PANEL",
     "metric_status": "STATUS",
-    "metric_status_value": "ALL SYSTEMS GO",
-    "metric_uptime": "UPTIME",
-    "metric_uptime_value": "99.97%",
-    "metric_nodes": "NODES",
-    "metric_nodes_value": "142 LIVE",
+    "metric_status_value": "BETA · DAY 1",
+    "metric_uptime": "ACCESS",
+    "metric_uptime_value": "INVITE-ONLY",
+    "metric_nodes": "CLIENT",
+    "metric_nodes_value": "HAPP · HIDDIFY",
     "metric_launch": "LAUNCH",
     "metric_launch_value": "WEEK 1 · DAY 1",
     "nav_pricing": "PRICING",
@@ -123,7 +364,7 @@
     "nav_terms": "TERMS",
     "telegram": "TELEGRAM",
     "copyright": "© 2026 PRSLOY",
-    "version": "v0.1.0",
+    "version": "BETA",
     "wordmark_meta": "BUILT ON THE OPEN INTERNET"
   }
 }
