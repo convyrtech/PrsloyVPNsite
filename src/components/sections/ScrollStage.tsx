@@ -154,17 +154,22 @@ export function ScrollStage() {
         </motion.div>
 
         {/* ─────── LAYER 2: HERO HEADLINE + SUB + CTA ─────── */}
-        {/* Mobile: centered, padded both sides — prevents overflow.
-            Desktop (md+): pinned to bottom-right, max-w-md, right-aligned. */}
+        {/* Composition strategy that holds at every viewport:
+            - Particle PRSLOY lives in the upper third (HeroParticles renders
+              at height*0.38). Always centered horizontally.
+            - Hero text lives in the lower band — bottom-center on mobile
+              (no horizontal real-estate to put it in a corner), bottom-RIGHT
+              on md+ (cinematic Nothing-style positioning).
+            - Different vertical bands = no collision regardless of widths. */}
         <motion.div
           className="absolute z-20 text-center px-lg
-                     bottom-[clamp(96px,22vh,200px)] left-0 right-0
-                     md:px-0 md:max-w-2xl md:mx-auto"
+                     bottom-[clamp(96px,18vh,180px)] left-0 right-0
+                     md:left-auto md:px-0 md:right-2xl md:max-w-md md:text-right"
           style={{ x: headlineX, opacity: headlineOpacity, willChange: "transform, opacity" }}
         >
           <h1 className="font-body font-light text-text-display
-                         text-[clamp(22px,3.5vw,48px)] leading-[1.15] tracking-[-0.02em]
-                         text-center break-words max-w-full">
+                         text-[clamp(22px,3.2vw,44px)] leading-[1.15] tracking-[-0.02em]
+                         text-center md:text-right break-words max-w-full">
             <span className="block">{t("headline_line1")}</span>
             {t("headline_line2") && (
               <span className="block font-medium">{t("headline_line2")}</span>
