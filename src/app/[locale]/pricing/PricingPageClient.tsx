@@ -7,6 +7,7 @@ import { PaymentPills } from "@/components/pricing/PaymentPills";
 import { FeatureCell } from "@/components/pricing/FeatureCell";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { DividerLabel } from "@/components/ui/DividerLabel";
+import { RevealOnView } from "@/components/ui/RevealOnView";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
 import { isValidEmail } from "@/lib/validation";
 import {
@@ -73,23 +74,28 @@ export function PricingPageClient({ locale }: { locale: string }) {
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
       <div className="max-w-2xl mx-auto px-lg flex flex-col gap-3xl">
-        <SectionLabel>{t("label")}</SectionLabel>
+        <RevealOnView y={12}>
+          <SectionLabel>{t("label")}</SectionLabel>
+        </RevealOnView>
 
-        <header className="flex flex-col gap-md">
-          <h1
-            className="font-body font-bold text-text-display leading-[1.05] tracking-[-0.02em] break-words"
-            style={{ fontSize: "clamp(28px, 6vw, 56px)" }}
-          >
-            <span className="block">{t("headline_line1")}</span>
-            {t("headline_line2") && (
-              <span className="block text-text-secondary">{t("headline_line2")}</span>
-            )}
-          </h1>
-          <p className="font-mono text-body-sm uppercase tracking-[0.08em] text-text-disabled">
-            {t("subheadline")}
-          </p>
-        </header>
+        <RevealOnView delay={0.05}>
+          <header className="flex flex-col gap-lg">
+            <h1
+              className="font-body font-bold text-text-display leading-[0.95] tracking-[-0.03em] break-words"
+              style={{ fontSize: "clamp(36px, 7vw, 72px)" }}
+            >
+              <span className="block">{t("headline_line1")}</span>
+              {t("headline_line2") && (
+                <span className="block text-text-secondary">{t("headline_line2")}</span>
+              )}
+            </h1>
+            <p className="font-mono text-body-sm uppercase tracking-[0.08em] text-text-disabled max-w-md">
+              {t("subheadline")}
+            </p>
+          </header>
+        </RevealOnView>
 
+        <RevealOnView delay={0.1}>
         <section className="border border-border-visible rounded-[24px] p-2xl flex flex-col gap-xl">
           <PeriodSwitcher
             value={period}
@@ -128,7 +134,9 @@ export function PricingPageClient({ locale }: { locale: string }) {
             </div>
           </div>
         </section>
+        </RevealOnView>
 
+        <RevealOnView>
         <section className="flex flex-col gap-md">
           <DividerLabel>{tShared("includes")}</DividerLabel>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-xl gap-y-md">
@@ -140,7 +148,9 @@ export function PricingPageClient({ locale }: { locale: string }) {
             <FeatureCell label={tShared("feature_support")}    value={tShared("feature_support_value")} />
           </div>
         </section>
+        </RevealOnView>
 
+        <RevealOnView>
         <section className="flex flex-col gap-lg border border-border-visible rounded-[24px] p-2xl">
           <DividerLabel>{t("waitlist_label")}</DividerLabel>
           <h2 className="font-body font-bold text-text-display text-heading">
@@ -215,7 +225,9 @@ export function PricingPageClient({ locale }: { locale: string }) {
             </div>
           )}
         </section>
+        </RevealOnView>
 
+        <RevealOnView>
         <section className="flex flex-col gap-lg">
           <DividerLabel>{t("how_label")}</DividerLabel>
           <ol className="flex flex-col gap-lg">
@@ -224,7 +236,9 @@ export function PricingPageClient({ locale }: { locale: string }) {
             <Step n="03" title={t("step_3_title")} body={t("step_3_body")} />
           </ol>
         </section>
+        </RevealOnView>
 
+        <RevealOnView>
         <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-md
                             pt-xl border-t border-border-visible">
           <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
@@ -245,6 +259,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
             </a>
           </div>
         </section>
+        </RevealOnView>
       </div>
     </main>
   );

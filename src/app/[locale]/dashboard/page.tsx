@@ -1,16 +1,21 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { SectionLabel } from "@/components/ui/SectionLabel";
+import { RevealOnView } from "@/components/ui/RevealOnView";
+import { DotoNumber } from "@/components/ui/DotoNumber";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
 
-const FEATURES = [
-  "status",
-  "renew",
-  "regen",
-  "config",
-  "support",
-  "history",
-] as const;
+// Status indicator per feature — first two get green pulse (live), rest are
+// quiet utilities. Breaks the 6-uniform-cards grid into one moment of
+// instrumentation accent (Section 2.6: variance in exactly one place).
+const FEATURES: { id: string; pulse: boolean }[] = [
+  { id: "status",  pulse: true },
+  { id: "renew",   pulse: true },
+  { id: "regen",   pulse: false },
+  { id: "config",  pulse: false },
+  { id: "support", pulse: false },
+  { id: "history", pulse: false },
+];
 
 export default async function DashboardPage({
   params,
@@ -24,20 +29,28 @@ export default async function DashboardPage({
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
       <div className="max-w-3xl mx-auto px-lg flex flex-col gap-3xl">
-        <SectionLabel>{t("label")}</SectionLabel>
+        <RevealOnView y={12}>
+          <SectionLabel>{t("label")}</SectionLabel>
+        </RevealOnView>
 
-        <header className="flex flex-col gap-md">
-          <h1
-            className="font-body font-bold text-text-display leading-[1.05] tracking-[-0.02em] break-words"
-            style={{ fontSize: "clamp(28px, 5vw, 48px)" }}
-          >
-            {t("title")}
-          </h1>
-          <p className="font-body text-body text-text-secondary leading-[1.55] max-w-2xl">
-            {t("subtitle")}
-          </p>
-        </header>
+        <RevealOnView delay={0.05}>
+          <header className="flex flex-col gap-lg">
+            <div className="flex items-end justify-between gap-lg flex-wrap">
+              <h1
+                className="font-body font-bold text-text-display leading-[0.95] tracking-[-0.03em] break-words flex-1 min-w-0"
+                style={{ fontSize: "clamp(36px, 7vw, 72px)" }}
+              >
+                {t("title")}
+              </h1>
+              <DotoNumber value="06" unit="OPS" />
+            </div>
+            <p className="font-body text-body text-text-secondary leading-[1.55] max-w-2xl">
+              {t("subtitle")}
+            </p>
+          </header>
+        </RevealOnView>
 
+        <RevealOnView delay={0.1}>
         <section className="border border-border-visible rounded-[24px] p-2xl bg-surface
                             flex flex-col items-center text-center gap-md">
           <a
@@ -56,32 +69,44 @@ export default async function DashboardPage({
             {t("telegram_cta_meta")}
           </p>
         </section>
+        </RevealOnView>
 
-        {/* ─── WHAT'S INSIDE ─── */}
+        <RevealOnView>
         <section className="flex flex-col gap-lg">
           <div className="flex items-center gap-md">
             <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
               {t("what_label")}
             </span>
             <span className="h-px flex-1 bg-border-visible/40" />
+            <span className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
+              {String(FEATURES.length).padStart(2, "0")}
+            </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
-            {FEATURES.map((id) => (
+            {FEATURES.map((feat, i) => (
+              <RevealOnView key={feat.id} delay={0.04 * i} y={16}>
               <article
-                key={id}
-                className="flex flex-col gap-sm border border-border-visible rounded-[16px] p-lg"
+                className="flex flex-col gap-sm border border-border-visible rounded-[16px] p-lg h-full"
               >
-                <h3 className="font-body font-bold text-text-display text-subheading leading-[1.3]">
-                  {t(`feature_${id}_title`)}
-                </h3>
+                <div className="flex items-center gap-sm">
+                  {feat.pulse && (
+                    <span className="inline-block w-[6px] h-[6px] rounded-full bg-success animate-pulse shrink-0" />
+                  )}
+                  <h3 className="font-body font-bold text-text-display text-subheading leading-[1.3]">
+                    {t(`feature_${feat.id}_title`)}
+                  </h3>
+                </div>
                 <p className="font-body text-body-sm text-text-secondary leading-[1.6]">
-                  {t(`feature_${id}_body`)}
+                  {t(`feature_${feat.id}_body`)}
                 </p>
               </article>
+              </RevealOnView>
             ))}
           </div>
         </section>
+        </RevealOnView>
 
+        <RevealOnView>
         <section className="border border-dashed border-border-visible rounded-[20px] p-xl
                             flex flex-col gap-md">
           <div className="flex items-center gap-sm">
@@ -94,7 +119,9 @@ export default async function DashboardPage({
             {t("web_soon_body")}
           </p>
         </section>
+        </RevealOnView>
 
+        <RevealOnView>
         <div className="pt-xl border-t border-border-visible flex items-center gap-sm
                         font-mono text-label uppercase tracking-[0.08em]">
           <span className="text-text-disabled">{t("no_key_label")}</span>
@@ -105,6 +132,7 @@ export default async function DashboardPage({
             {t("get_key_link")} →
           </Link>
         </div>
+        </RevealOnView>
       </div>
     </main>
   );
