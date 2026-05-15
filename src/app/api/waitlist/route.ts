@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { isValidEmail } from "@/lib/validation";
+import { sendTransactionalEmail } from "@/lib/email";
+import {
+  buildWaitlistConfirmationEmail,
+  buildWaitlistNotifyEmail,
+} from "@/lib/waitlist-email";
 
 export const runtime = "nodejs";
 
@@ -69,6 +74,36 @@ export async function POST(req: Request) {
       cache: "no-store",
       keepalive: true,
     }).catch((err) => console.warn("[waitlist] telegram notify failed", err));
+  }
+
+  const confirmationEmail = buildWaitlistConfirmationEmail({ email, period, payment, locale, ts });
+  const emailResults = [
+    sendTransactionalEmail({
+      to: email,
+      subject: confirmationEmail.subject,
+      html: confirmationEmail.html,
+      text: confirmationEmail.text,
+    }),
+  ];
+
+  const notifyEmail = process.env.WAITLIST_NOTIFY_EMAIL?.trim().toLowerCase();
+  if (notifyEmail && isValidEmail(notifyEmail)) {
+    const adminEmail = buildWaitlistNotifyEmail({ email, period, payment, locale, ts });
+    emailResults.push(
+      sendTransactionalEmail({
+        to: notifyEmail,
+        subject: adminEmail.subject,
+        html: adminEmail.html,
+        text: adminEmail.text,
+        replyTo: email,
+      })
+    );
+  }
+
+  for (const result of await Promise.all(emailResults)) {
+    if (!result.ok && !result.skipped) {
+      console.warn("[waitlist] email notify failed", result);
+    }
   }
 
   return NextResponse.json({ ok: true });
