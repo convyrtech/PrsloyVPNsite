@@ -73,7 +73,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
 
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
-      <div className="max-w-2xl mx-auto px-lg flex flex-col gap-3xl">
+      <div className="max-w-6xl mx-auto px-lg flex flex-col gap-3xl">
         <RevealOnView y={12}>
           <SectionLabel>{t("label")}</SectionLabel>
         </RevealOnView>
@@ -95,6 +95,8 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </header>
         </RevealOnView>
 
+        {/* MAIN ROW — price card + feature grid, side-by-side on desktop */}
+        <div className="grid gap-3xl lg:gap-xl lg:grid-cols-2 lg:items-start">
         <RevealOnView delay={0.1}>
         <section className="border border-border-visible rounded-[24px] p-2xl flex flex-col gap-xl">
           <PeriodSwitcher
@@ -149,7 +151,10 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </div>
         </section>
         </RevealOnView>
+        </div>
 
+        {/* SECONDARY ROW — waitlist + how-it-works, side-by-side on desktop */}
+        <div className="grid gap-3xl lg:gap-xl lg:grid-cols-2 lg:items-start">
         <RevealOnView>
         <section className="flex flex-col gap-lg border border-border-visible rounded-[24px] p-2xl">
           <DividerLabel>{t("waitlist_label")}</DividerLabel>
@@ -237,6 +242,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </ol>
         </section>
         </RevealOnView>
+        </div>
 
         <RevealOnView>
         <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-md
