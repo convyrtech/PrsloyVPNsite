@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useMotionValueEvent, type MotionValue } from "motion/react";
 
 type Pixel = {
@@ -87,9 +87,10 @@ export function TextErosion({
     };
 
     const sample = async () => {
-      const w = stateRef.current.width;
-      const h = stateRef.current.height;
-      if (w === 0 || h === 0) return;
+      try {
+        const w = stateRef.current.width;
+        const h = stateRef.current.height;
+        if (w === 0 || h === 0) return;
 
       // Read EXACT typography from the matched DOM element so canvas
       // text aligns pixel-for-pixel with the DOM version we're replacing.
@@ -99,14 +100,15 @@ export function TextErosion({
       let letterSpacing = "0px";
       let domBox: DOMRect | null = null;
 
-      if (matchEl) {
-        const cs = window.getComputedStyle(matchEl);
-        fontFamily = cs.fontFamily;
-        fontWeight = cs.fontWeight;
-        fontSize = parseFloat(cs.fontSize);
-        letterSpacing = cs.letterSpacing;
-        domBox = matchEl.getBoundingClientRect();
-      }
+        if (matchEl) {
+          const cs = window.getComputedStyle(matchEl);
+          fontFamily = cs.fontFamily;
+          fontWeight = cs.fontWeight;
+          fontSize = parseFloat(cs.fontSize);
+          if (!Number.isFinite(fontSize) || fontSize <= 0) fontSize = 160;
+          letterSpacing = cs.letterSpacing === "normal" ? "0px" : cs.letterSpacing;
+          domBox = matchEl.getBoundingClientRect();
+        }
 
       // Wait for the actual font + weight requested.
       // Bypass wait if font is already loaded — avoids needless RAF lag
@@ -147,8 +149,12 @@ export function TextErosion({
         cx = domBox.left + domBox.width / 2 - wrapBox.left;
 
         const m = oc.measureText(text);
-        const ascent = m.actualBoundingBoxAscent;
-        const descent = m.actualBoundingBoxDescent;
+        const ascent = Number.isFinite(m.actualBoundingBoxAscent)
+          ? m.actualBoundingBoxAscent
+          : fontSize * 0.75;
+        const descent = Number.isFinite(m.actualBoundingBoxDescent)
+          ? m.actualBoundingBoxDescent
+          : fontSize * 0.25;
         const glyphCentreFromBaseline = (ascent - descent) / 2;
 
         // DOM glyph centre, in canvas coords:
@@ -156,7 +162,8 @@ export function TextErosion({
         // baseline = centre + half(ascent-descent)
         baselineY = domCentreY + glyphCentreFromBaseline;
       }
-      oc.fillText(text, cx, baselineY);
+        if (!Number.isFinite(cx) || !Number.isFinite(baselineY)) return;
+        oc.fillText(text, cx, baselineY);
 
       const data = oc.getImageData(0, 0, w, h).data;
       // Sample on a grid (2px) for performance
@@ -240,15 +247,21 @@ export function TextErosion({
           });
         }
       }
-      stateRef.current.pixels = pixels;
-      stateRef.current.particles = [];
+        stateRef.current.pixels = pixels;
+        stateRef.current.particles = [];
+      } catch (err) {
+        stateRef.current.pixels = [];
+        stateRef.current.particles = [];
+        console.warn("[TextErosion] canvas sampling disabled", err);
+      }
     };
 
     const animate = () => {
-      const s = stateRef.current;
-      const w = s.width;
-      const h = s.height;
-      ctx.clearRect(0, 0, w, h);
+      try {
+        const s = stateRef.current;
+        const w = s.width;
+        const h = s.height;
+        ctx.clearRect(0, 0, w, h);
 
       const p = s.progress;
       const erosionProg = Math.max(0, Math.min(1, p));
@@ -312,8 +325,13 @@ export function TextErosion({
         writeIdx++;
       }
       particles.length = writeIdx;
-      ctx.globalAlpha = 1;
-
+        ctx.globalAlpha = 1;
+      } catch (err) {
+        stateRef.current.pixels = [];
+        stateRef.current.particles = [];
+        ctx.globalAlpha = 1;
+        console.warn("[TextErosion] animation frame skipped", err);
+      }
       rafId = requestAnimationFrame(animate);
     };
 
