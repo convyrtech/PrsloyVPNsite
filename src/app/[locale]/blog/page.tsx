@@ -33,11 +33,11 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
   en: {
     metaTitle: "PRSLOY · Devlog",
     metaDescription:
-      "An open PRSLOY build log for partners and early investors: what already works, what we fixed, and what stands between us and paid launch.",
-    label: "PARTNER DEVLOG",
+      "An open PRSLOY build log: what already works, what we fixed, and what stands between us and paid launch.",
+    label: "DEVLOG",
     title: "What changed this week",
     subtitle:
-      "An open log for partners and early investors. No pitch deck, no promises — only what is already in production: what started working, what we fixed, and what still stands between us and paid launch.",
+      "An open build log. No pitch deck, no promises — only what is already in production: what started working, what we fixed, and what still stands between us and paid launch.",
     liveLabel: "LIVE",
     issueLabel: "FIXED",
     nextLabel: "NEXT",
@@ -136,17 +136,17 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
     ],
     footerLabel: "WHY PUBLIC",
     footerText:
-      "PRSLOY is still in beta. This log exists so partners and investors see real progress, not a presentation. What works is written down; what does not is said plainly.",
+      "PRSLOY is still in beta. This log keeps progress honest — what works is written down, what does not is said plainly.",
     cta: "SEE PRICING",
   },
   ru: {
     metaTitle: "PRSLOY · Дневник разработки",
     metaDescription:
-      "Открытый дневник разработки PRSLOY для партнёров и первых инвесторов: что уже работает, что починили и что осталось до платного запуска.",
+      "Открытый дневник разработки PRSLOY: что уже работает, что починили и что осталось до платного запуска.",
     label: "ДНЕВНИК РАЗРАБОТКИ",
     title: "Что изменилось за неделю",
     subtitle:
-      "Открытый дневник для партнёров и первых инвесторов. Без презентаций и обещаний — только то, что уже в продакшене: что заработало, что починили и что пока отделяет нас от платного запуска.",
+      "Открытый дневник разработки. Без презентаций и обещаний — только то, что уже в продакшене: что заработало, что починили и что пока отделяет нас от платного запуска.",
     liveLabel: "LIVE",
     issueLabel: "FIXED",
     nextLabel: "NEXT",
@@ -245,7 +245,7 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
     ],
     footerLabel: "ЗАЧЕМ ПУБЛИЧНО",
     footerText:
-      "PRSLOY ещё в бете. Этот дневник — чтобы партнёры и инвесторы видели настоящий прогресс, а не презентацию. Что работает — то и написано; чего ещё нет — так и сказано.",
+      "PRSLOY ещё в бете. Этот дневник держит прогресс честным: что работает — то и написано; чего ещё нет — так и сказано.",
     cta: "СМОТРЕТЬ ТАРИФ",
   },
 };
