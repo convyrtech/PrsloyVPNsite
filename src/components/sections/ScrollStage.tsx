@@ -21,8 +21,8 @@ const GlobeImpl = dynamic(
  * progress into a continuous cinematic sequence.
  *
  * Phase map (scrollYProgress):
- *   0.00 — 0.18  HERO IDLE        (particles + headline at rest)
- *   0.18 — 0.32  EVAPORATION      (headline peels right; particles shrink+drift)
+ *   0.00 — 0.15  HERO IDLE        (particles + headline at rest)
+ *   0.15 — 0.30  DISASSEMBLY      (wordmark scatters to chaos; headline fades)
  *   0.32 — 0.62  HANDSHAKE        (mechanical loading panel)
  *   0.55 — 0.78  GLOBE EMERGES    (3D scene mounts, scales up)
  *   0.78 — 0.95  GLOBE UI APPEARS (label, metrics, CTA reveal)
@@ -65,21 +65,20 @@ export function ScrollStage() {
     return unsub;
   }, [rawProgress, shouldMountGlobe]);
 
-  // ── HERO PARTICLES (scale + drift to top-left) ──
-  // Faster fade-out (was 0.30→0.40) — the slow 10% dissolution looked
-  // "crooked" because particles drifted as dust for half a screen of scroll.
-  const heroScale = useTransform(scrollYProgress, [0.18, 0.30], [1, 0.4], { clamp: true });
-  const heroX = useTransform(scrollYProgress, [0.18, 0.30], ["0%", "-32%"], { clamp: true });
-  const heroY = useTransform(scrollYProgress, [0.18, 0.30], ["0%", "-34%"], { clamp: true });
-  const heroOpacity = useTransform(scrollYProgress, [0.22, 0.30], [1, 0], { clamp: true });
+  // ── HERO PARTICLES ──
+  // Exit = the wordmark disassembles back into chaos, mirroring its assembly
+  // on load. The scatter is per-particle (driven inside HeroParticles by this
+  // progress) — no blob-flight transform on the layer, so it never fights the
+  // headline's exit direction.
+  const exitProgress = useTransform(scrollYProgress, [0.15, 0.30], [0, 1], { clamp: true });
 
   // ── HEADLINE BLOCK ──
-  // Plain text — peels off via x/opacity during evaporation phase.
-  const headlineX = useTransform(scrollYProgress, [0.15, 0.28], [0, 200], { clamp: true });
+  // Percussive exit: fades in place with a small downward tick — same axis as
+  // the particle dispersion, no opposing horizontal slide.
+  const headlineY = useTransform(scrollYProgress, [0.15, 0.27], [0, 8], { clamp: true });
   const headlineOpacity = useTransform(scrollYProgress, [0.15, 0.27], [1, 0], { clamp: true });
 
-  // CTA + sub-text — visible at load, exit during evaporation
-  const ctaY = useTransform(scrollYProgress, [0.15, 0.27], [0, 40], { clamp: true });
+  // Sub-text + CTA fade out together with the headline block.
   const ctaOpacity = useTransform(scrollYProgress, [0.15, 0.27], [1, 0], { clamp: true });
 
   // ── LAUNCH STRIP — visible at load
@@ -145,18 +144,9 @@ export function ScrollStage() {
         style={{ perspective: 1400 }}
       >
         {/* ─────── LAYER 1: HERO PARTICLES ─────── */}
-        <motion.div
-          className="absolute inset-0 z-10 origin-center"
-          style={{
-            scale: heroScale,
-            x: heroX,
-            y: heroY,
-            opacity: heroOpacity,
-            willChange: "transform, opacity",
-          }}
-        >
-          <HeroParticles text="PRSLOY" />
-        </motion.div>
+        <div className="absolute inset-0 z-10">
+          <HeroParticles text="PRSLOY" exitProgress={exitProgress} />
+        </div>
 
         {/* ─────── LAYER 2: HERO HEADLINE + SUB + CTA ─────── */}
         {/* Composition strategy that holds at every viewport:
@@ -170,7 +160,7 @@ export function ScrollStage() {
           className="absolute z-20 text-center px-lg
                      bottom-[clamp(96px,18vh,180px)] left-0 right-0
                      md:left-auto md:px-0 md:right-2xl md:max-w-md md:text-right"
-          style={{ x: headlineX, opacity: headlineOpacity, willChange: "transform, opacity" }}
+          style={{ y: headlineY, opacity: headlineOpacity, willChange: "transform, opacity" }}
         >
           <h1 className="font-body font-light text-text-display
                          text-[clamp(22px,3.2vw,44px)] leading-[1.15] tracking-[-0.02em]
@@ -196,7 +186,7 @@ export function ScrollStage() {
             {t("sub_features")}
           </motion.p>
 
-          <motion.div style={{ y: ctaY, opacity: ctaOpacity }}>
+          <motion.div style={{ opacity: ctaOpacity }}>
             <Link
               href="/pricing"
               className="inline-block mt-lg md:mt-xl bg-text-display text-black

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { MotionValue } from "motion/react";
 
 type Particle = {
   tx: number;
@@ -12,17 +13,30 @@ type Particle = {
   vx: number;
   vy: number;
   phase: number;
+  sx: number;
+  sy: number;
 };
 
 type Mouse = { x: number; y: number; active: boolean };
 
 /**
- * Particle PRSLOY — assembles from chaos, breathes, repels cursor.
+ * Particle PRSLOY — assembles from chaos, breathes, repels cursor, and
+ * disassembles back into chaos on scroll (driven by `exitProgress`).
  * Render this absolutely-positioned behind hero text content.
  */
-export function HeroParticles({ text = "PRSLOY" }: { text?: string }) {
+export function HeroParticles({
+  text = "PRSLOY",
+  exitProgress,
+}: {
+  text?: string;
+  exitProgress?: MotionValue<number>;
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
+  // Kept in a ref so the RAF loop always reads the live MotionValue without
+  // re-running the effect.
+  const exitRef = useRef(exitProgress);
+  exitRef.current = exitProgress;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -108,6 +122,11 @@ export function HeroParticles({ text = "PRSLOY" }: { text?: string }) {
               vx: reuse ? reuse.vx : 0,
               vy: reuse ? reuse.vy : 0,
               phase: Math.random() * Math.PI * 2,
+              // Scatter vector for the exit disassembly: radially outward from
+              // the wordmark centre, biased upward. Each particle keeps its
+              // own vector so the breakup reads as chaos, not a slide.
+              sx: (x - width / 2) * 0.9 + (Math.random() - 0.5) * width * 0.55,
+              sy: -(Math.random() * height * 0.5) - height * 0.12,
             });
           }
         }
@@ -147,9 +166,13 @@ export function HeroParticles({ text = "PRSLOY" }: { text?: string }) {
       const t = now * 0.001;
       const elapsed = (now - startTime) / 1000;
 
-      // Strong assembly pull at start, settles into idle physics
-      const spring = elapsed < 2.0 ? 0.12 : 0.06;
+      const exit = exitRef.current ? exitRef.current.get() : 0;
+
+      // Strong assembly pull at start, settles into idle physics. During the
+      // exit, stiffen the spring so the scatter tracks the scroll position.
+      const spring = exit > 0 || elapsed < 2.0 ? 0.12 : 0.06;
       const friction = elapsed < 2.0 ? 0.78 : 0.84;
+      const TWO_PI = Math.PI * 2;
 
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = "#FFFFFF";
@@ -157,14 +180,26 @@ export function HeroParticles({ text = "PRSLOY" }: { text?: string }) {
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
+        // Per-particle exit progress — staggered by phase so the wordmark
+        // breaks up as a ripple, not all at once. smoothstep for an eased feel.
+        let pe = 0;
+        if (exit > 0) {
+          const delay = (p.phase / TWO_PI) * 0.35;
+          pe = (exit - delay) / (1 - delay);
+          pe = pe < 0 ? 0 : pe > 1 ? 1 : pe;
+          pe = pe * pe * (3 - 2 * pe);
+        }
+
         // Slow horizontal sine wave through the text
         const wave = Math.sin(t * 0.6 + p.ox * 0.006) * 1.4;
-        const tx = p.ox;
-        const ty = p.oy + wave;
+        // Exit displaces the target outward along the scatter vector.
+        const tx = p.ox + p.sx * pe;
+        const ty = p.oy + wave + p.sy * pe;
 
-        // Subtle brownian jitter
-        const jx = (Math.random() - 0.5) * 0.25;
-        const jy = (Math.random() - 0.5) * 0.25;
+        // Brownian jitter — amplifies as the particle scatters (order → chaos)
+        const chaos = 1 + pe * 7;
+        const jx = (Math.random() - 0.5) * 0.25 * chaos;
+        const jy = (Math.random() - 0.5) * 0.25 * chaos;
 
         // Cursor repulsion
         let pushX = 0;
@@ -190,8 +225,12 @@ export function HeroParticles({ text = "PRSLOY" }: { text?: string }) {
         p.x += p.vx;
         p.y += p.vy;
 
-        ctx.fillRect(p.x | 0, p.y | 0, 2, 2);
+        if (pe < 0.98) {
+          ctx.globalAlpha = 1 - pe;
+          ctx.fillRect(p.x | 0, p.y | 0, 2, 2);
+        }
       }
+      ctx.globalAlpha = 1;
 
       rafId = requestAnimationFrame(animate);
     };
