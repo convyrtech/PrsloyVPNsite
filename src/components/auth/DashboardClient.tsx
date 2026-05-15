@@ -64,7 +64,11 @@ export function DashboardClient({
           error?: string;
         };
         if (!alive) return;
-        if (data.error === "auth_not_configured") {
+        if (
+          data.error === "auth_not_configured" ||
+          data.error === "kv_not_configured" ||
+          data.error === "auth_secret_not_configured"
+        ) {
           setState({ kind: "not_configured" });
         } else {
           setState({ kind: "ready", user: data.user ?? null });

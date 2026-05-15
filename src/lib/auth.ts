@@ -224,13 +224,13 @@ export async function grantAccess(
   const user = await getUserByEmail(email);
   if (!user) throw new AuthError("not_found");
 
+  const subscriptionUrl = opts.subscriptionUrl?.trim() || user.subscriptionUrl;
+  if (!subscriptionUrl) throw new AuthError("subscription_url_required");
+
   const slug = user.vpnSlug ?? randomBytes(8).toString("hex");
   user.accessStatus = "active";
   user.vpnSlug = slug;
-  user.subscriptionUrl =
-    opts.subscriptionUrl?.trim() ||
-    user.subscriptionUrl ||
-    `https://sub.prsloy.online/${slug}`;
+  user.subscriptionUrl = subscriptionUrl;
   user.updatedAt = new Date().toISOString();
   await saveUser(user);
 

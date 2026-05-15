@@ -30,6 +30,24 @@ npm run start -- --port 3020
 - `TELEGRAM_BOT_TOKEN` + `TELEGRAM_NOTIFY_CHAT_ID` — forward waitlist signups to a Telegram chat. Without them the endpoint still logs every signup to `console.log` (visible in Vercel logs).
 - `NEXT_PUBLIC_SITE_URL` — overrides default for canonical / OG URLs.
 
+## Manual VPN grant
+
+Payments and VPN-panel provisioning are not automated yet. For beta access:
+
+1. Create the real subscription/config link in the VPN panel.
+2. Open `/ru/admin/grant`.
+3. Enter `ADMIN_SECRET`, the user's email, and the real VPN subscription/config URL.
+4. Submit. The user's `/ru/dashboard` will show active access and the link.
+
+Required production env vars:
+
+- `AUTH_SECRET`
+- `ADMIN_SECRET`
+- one Redis REST URL/token pair:
+  - `KV_REST_API_URL` + `KV_REST_API_TOKEN`, or
+  - `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`, or
+  - `UPSTASH_REDIS_REST_KV_REST_API_URL` + `UPSTASH_REDIS_REST_KV_REST_API_TOKEN`
+
 ## Repo layout
 
 ```

@@ -57,6 +57,12 @@ export async function POST(req: Request) {
     if (err instanceof AuthError && err.code === "not_found") {
       return NextResponse.json({ ok: false, error: "user_not_found" }, { status: 404 });
     }
+    if (err instanceof AuthError && err.code === "subscription_url_required") {
+      return NextResponse.json(
+        { ok: false, error: "subscription_url_required" },
+        { status: 400 }
+      );
+    }
     console.warn("[admin] grant failed", err);
     return NextResponse.json({ ok: false, error: "grant_failed" }, { status: 500 });
   }
