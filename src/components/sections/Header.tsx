@@ -156,8 +156,11 @@ export function Header() {
             }}
           />
 
-          {/* Notch content */}
-          <div className="relative z-10 flex flex-col items-center justify-center gap-1 h-full pt-2">
+          {/* Notch content — the wordmark links home */}
+          <Link
+            href="/"
+            className="relative z-10 flex flex-col items-center justify-center gap-1 h-full pt-2"
+          >
             <div
               className="font-display tracking-[0.15em] leading-none"
               style={{
@@ -176,7 +179,7 @@ export function Header() {
               <span className="relative inline-flex w-[6px] h-[6px] rounded-full pulse-dot" />
               <span>{t("status_short")}</span>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* HEADER ROW — nav spreads outward from the centre as the header opens */}
