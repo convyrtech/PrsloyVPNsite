@@ -217,6 +217,26 @@ export async function createVerificationTokenForEmail(email: string): Promise<{
   return { user: publicUser(user), token };
 }
 
+export async function grantAccess(
+  email: string,
+  opts: { subscriptionUrl?: string } = {}
+): Promise<PublicAuthUser> {
+  const user = await getUserByEmail(email);
+  if (!user) throw new AuthError("not_found");
+
+  const slug = user.vpnSlug ?? randomBytes(8).toString("hex");
+  user.accessStatus = "active";
+  user.vpnSlug = slug;
+  user.subscriptionUrl =
+    opts.subscriptionUrl?.trim() ||
+    user.subscriptionUrl ||
+    `https://sub.prsloy.online/${slug}`;
+  user.updatedAt = new Date().toISOString();
+  await saveUser(user);
+
+  return publicUser(user);
+}
+
 export function isAuthSetupError(err: unknown) {
   return getAuthSetupErrorCode(err) !== null;
 }
