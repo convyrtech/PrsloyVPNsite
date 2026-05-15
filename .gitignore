@@ -66,3 +66,8 @@ next-env.d.ts
 # session/dev screenshot artifacts (not source-of-truth)
 /preview/
 /.qa-tmp/
+
+# internal working notes — never publish to this repo
+/findings.md
+/progress.md
+/task_plan.md
