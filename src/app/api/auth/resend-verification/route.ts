@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import {
   createVerificationTokenForEmail,
+  getAuthSetupErrorCode,
   getCurrentUser,
-  isAuthSetupError,
 } from "@/lib/auth";
 import { buildVerificationEmail } from "@/lib/auth-email";
 import { sendTransactionalEmail } from "@/lib/email";
@@ -51,8 +51,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: result.ok, skipped: !result.ok && result.skipped });
   } catch (err) {
-    if (isAuthSetupError(err)) {
-      return NextResponse.json({ ok: false, error: "auth_not_configured" }, { status: 503 });
+    const setupError = getAuthSetupErrorCode(err);
+    if (setupError) {
+      return NextResponse.json({ ok: false, error: setupError }, { status: 503 });
     }
     console.warn("[auth] resend verification failed", err);
     return NextResponse.json({ ok: false, error: "resend_failed" }, { status: 500 });

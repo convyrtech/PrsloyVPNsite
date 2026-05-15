@@ -14,6 +14,8 @@ type AuthCopy = {
   emailExists: string;
   credentials: string;
   notConfigured: string;
+  storageNotConfigured: string;
+  secretNotConfigured: string;
   generic: string;
 };
 
@@ -49,6 +51,8 @@ export function AuthForm({ mode, locale, copy }: AuthFormProps) {
         if (data.error === "email_exists") setError(copy.emailExists);
         else if (data.error === "invalid_credentials") setError(copy.credentials);
         else if (data.error === "invalid_email" || data.error === "invalid_password") setError(copy.invalid);
+        else if (data.error === "kv_not_configured") setError(copy.storageNotConfigured);
+        else if (data.error === "auth_secret_not_configured") setError(copy.secretNotConfigured);
         else if (data.error === "auth_not_configured") setError(copy.notConfigured);
         else setError(copy.generic);
         return;

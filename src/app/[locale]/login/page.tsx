@@ -75,6 +75,8 @@ export default async function LoginPage({
                   emailExists: t("email_exists"),
                   credentials: t("credentials"),
                   notConfigured: t("not_configured"),
+                  storageNotConfigured: t("storage_not_configured"),
+                  secretNotConfigured: t("secret_not_configured"),
                   generic: t("generic_error"),
                 }}
               />

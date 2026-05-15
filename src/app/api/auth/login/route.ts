@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import {
   AuthError,
   createSession,
+  getAuthSetupErrorCode,
   loginUser,
   SESSION_COOKIE,
-  isAuthSetupError,
 } from "@/lib/auth";
 
 export const runtime = "nodejs";
@@ -42,8 +42,9 @@ export async function POST(req: Request) {
     setSessionCookie(res, session);
     return res;
   } catch (err) {
-    if (isAuthSetupError(err)) {
-      return NextResponse.json({ ok: false, error: "auth_not_configured" }, { status: 503 });
+    const setupError = getAuthSetupErrorCode(err);
+    if (setupError) {
+      return NextResponse.json({ ok: false, error: setupError }, { status: 503 });
     }
     if (err instanceof AuthError) {
       return NextResponse.json({ ok: false, error: err.code }, { status: 401 });

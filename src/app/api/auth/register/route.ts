@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import {
   AuthError,
   createSession,
+  getAuthSetupErrorCode,
   issueVerificationToken,
   registerUser,
   SESSION_COOKIE,
-  isAuthSetupError,
 } from "@/lib/auth";
 import { buildVerificationEmail } from "@/lib/auth-email";
 import { sendTransactionalEmail } from "@/lib/email";
@@ -72,8 +72,9 @@ export async function POST(req: Request) {
     setSessionCookie(res, session);
     return res;
   } catch (err) {
-    if (isAuthSetupError(err)) {
-      return NextResponse.json({ ok: false, error: "auth_not_configured" }, { status: 503 });
+    const setupError = getAuthSetupErrorCode(err);
+    if (setupError) {
+      return NextResponse.json({ ok: false, error: setupError }, { status: 503 });
     }
     if (err instanceof AuthError) {
       const status = err.code === "email_exists" ? 409 : 400;

@@ -231,6 +231,8 @@
     "email_exists": "This email already has an account. Sign in instead.",
     "credentials": "Email or password is incorrect.",
     "not_configured": "Account storage is not connected yet.",
+    "storage_not_configured": "Redis storage is not visible. Check UPSTASH_REDIS_REST_KV_REST_API_URL and UPSTASH_REDIS_REST_KV_REST_API_TOKEN.",
+    "secret_not_configured": "AUTH_SECRET is missing or shorter than 32 characters.",
     "generic_error": "Could not complete the request. Try again in a minute.",
     "no_account": "NO ACCOUNT?",
     "has_account": "ALREADY REGISTERED?",

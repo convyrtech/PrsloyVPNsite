@@ -218,6 +218,13 @@ export async function createVerificationTokenForEmail(email: string): Promise<{
 }
 
 export function isAuthSetupError(err: unknown) {
-  return err instanceof KvNotConfiguredError ||
-    (err instanceof AuthError && err.code === "auth_secret_not_configured");
+  return getAuthSetupErrorCode(err) !== null;
+}
+
+export function getAuthSetupErrorCode(err: unknown) {
+  if (err instanceof KvNotConfiguredError) return "kv_not_configured";
+  if (err instanceof AuthError && err.code === "auth_secret_not_configured") {
+    return "auth_secret_not_configured";
+  }
+  return null;
 }

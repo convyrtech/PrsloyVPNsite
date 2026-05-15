@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { AuthError, isAuthSetupError, verifyEmailToken } from "@/lib/auth";
+import { AuthError, getAuthSetupErrorCode, verifyEmailToken } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -13,8 +13,9 @@ export async function GET(req: Request) {
     await verifyEmailToken(token);
     return NextResponse.redirect(`${siteUrl}/${locale}/dashboard?verified=1`);
   } catch (err) {
-    if (isAuthSetupError(err)) {
-      return NextResponse.redirect(`${siteUrl}/${locale}/dashboard?auth=not_configured`);
+    const setupError = getAuthSetupErrorCode(err);
+    if (setupError) {
+      return NextResponse.redirect(`${siteUrl}/${locale}/dashboard?auth=${setupError}`);
     }
     if (err instanceof AuthError) {
       return NextResponse.redirect(`${siteUrl}/${locale}/dashboard?verified=0`);
