@@ -80,7 +80,11 @@ export function HeroParticles({ text = "PRSLOY" }: { text?: string }) {
       oc.fillText(text, width / 2, height * 0.38);
 
       const data = oc.getImageData(0, 0, width, height).data;
-      const density = window.innerWidth < 768 ? 4 : 3;
+      // Mobile: density 2 (was 4). Doto is itself a dot-matrix glyph — at
+      // density 4 the sampling step was coarser than Doto's own dot spacing,
+      // so particles landed between dots and the wordmark read as noise.
+      // density 2 captures each Doto dot, so the letters resolve.
+      const density = window.innerWidth < 768 ? 2 : 3;
 
       const old = particles;
       particles = [];
