@@ -34,7 +34,7 @@ export function QuestionMark3D() {
 
       // Wait for the body font that we'll sample from
       try {
-        await document.fonts.load(`bold 600px "Space Grotesk"`);
+        await document.fonts.load(`bold 600px "IBM Plex Sans"`);
         await document.fonts.ready;
       } catch {}
 
@@ -47,7 +47,7 @@ export function QuestionMark3D() {
       const oc = off.getContext("2d");
       if (!oc) return;
       oc.fillStyle = "#fff";
-      oc.font = `bold 720px "Space Grotesk", system-ui, sans-serif`;
+      oc.font = `bold 720px "IBM Plex Sans", system-ui, sans-serif`;
       oc.textAlign = "center";
       oc.textBaseline = "middle";
       oc.fillText("?", SAMPLE_W / 2, SAMPLE_H / 2);

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Doto, Space_Grotesk, Space_Mono } from "next/font/google";
+import { Doto, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { routing, type Locale } from "@/i18n/routing";
 import { Header } from "@/components/sections/Header";
 import "@/app/globals.css";
@@ -18,15 +18,16 @@ const doto = Doto({
   display: "swap",
 });
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
+const plexSans = IBM_Plex_Sans({
+  subsets: ["latin", "cyrillic"],
+  weight: ["300", "400", "500", "700"],
   variable: "--font-body",
   display: "swap",
 });
 
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "700"],
   variable: "--font-mono",
   display: "swap",
 });
@@ -36,7 +37,14 @@ export function generateStaticParams() {
 }
 
 // Used for OG/canonical/sitemap URLs. Override via NEXT_PUBLIC_SITE_URL in env.
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://prsloy.com";
+function getSiteUrl() {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://www.prsloy.online";
+  try {
+    return new URL(raw);
+  } catch {
+    return new URL("https://www.prsloy.online");
+  }
+}
 
 export async function generateMetadata({
   params,
@@ -48,7 +56,7 @@ export async function generateMetadata({
   const otherLocale = locale === "en" ? "ru" : "en";
 
   return {
-    metadataBase: new URL(SITE_URL),
+    metadataBase: getSiteUrl(),
     title: t("title"),
     description: t("description"),
     alternates: {
@@ -99,7 +107,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${doto.variable} ${spaceGrotesk.variable} ${spaceMono.variable}`}
+      className={`${doto.variable} ${plexSans.variable} ${plexMono.variable}`}
     >
       <body>
         <NextIntlClientProvider messages={messages} locale={locale}>

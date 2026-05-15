@@ -93,7 +93,7 @@ export function TextErosion({
 
       // Read EXACT typography from the matched DOM element so canvas
       // text aligns pixel-for-pixel with the DOM version we're replacing.
-      let fontFamily = '"Space Grotesk", system-ui, sans-serif';
+      let fontFamily = '"IBM Plex Sans", system-ui, sans-serif';
       let fontWeight = "500";
       let fontSize = 160;
       let letterSpacing = "0px";
