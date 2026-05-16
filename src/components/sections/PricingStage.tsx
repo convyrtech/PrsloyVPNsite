@@ -24,10 +24,14 @@ const PERIOD_LABEL_KEYS: Record<Period, string> = {
   "1yr": "period_12m",
 };
 
+type DustParticle = { x: string; y: string; size: number };
+
+const DUST_PARTICLES = createDustParticles();
+
 /**
  * PricingStage — third cinematic act after NOTHING erosion.
  *
- * Tight emergence (220vh sticky) — content starts assembling instantly,
+ * Tight emergence (300vh sticky) — content starts assembling instantly,
  * no dark preamble (we just exited the NOTHING void, no need for more).
  *
  *   0.00–0.10  IGNITION   (bright pixel + dust converge)
@@ -46,10 +50,10 @@ export function PricingStage() {
     offset: ["start start", "end end"],
   });
   const scrollYProgress = useSpring(rawProgress, {
-    stiffness: 150,
-    damping: 34,
-    mass: 0.25,
-    restDelta: 0.0005,
+    stiffness: 190,
+    damping: 32,
+    mass: 0.2,
+    restDelta: 0.0003,
   });
 
   const [period, setPeriod] = useState<Period>("1mo");
@@ -61,7 +65,7 @@ export function PricingStage() {
   // Ignition pixel — fires immediately, gone by 0.12
   const ignitionScale = useTransform(scrollYProgress, [0, 0.10], [0, 18], { clamp: true });
   const ignitionOpacity = useTransform(
-    scrollYProgress,
+    rawProgress,
     [0, 0.03, 0.08, 0.12],
     [0, 1, 1, 0],
     { clamp: true }
@@ -69,53 +73,52 @@ export function PricingStage() {
 
   // Dust particles converging
   const dustOpacity = useTransform(
-    scrollYProgress,
+    rawProgress,
     [0, 0.08, 0.16],
     [0, 0.7, 0],
     { clamp: true }
   );
 
   // Price ($5 + /MONTH) — visible early, then the controls layer in
-  const priceOpacity = useTransform(scrollYProgress, [0.06, 0.16], [0, 1], { clamp: true });
+  const priceOpacity = useTransform(rawProgress, [0.06, 0.16], [0, 1], { clamp: true });
   const priceY = useTransform(scrollYProgress, [0.06, 0.16], [40, 0], { clamp: true });
   const priceScale = useTransform(scrollYProgress, [0.06, 0.16], [0.6, 1], { clamp: true });
-  const monthOpacity = useTransform(scrollYProgress, [0.14, 0.24], [0, 1], { clamp: true });
+  const monthOpacity = useTransform(rawProgress, [0.14, 0.24], [0, 1], { clamp: true });
 
   // Top label
-  const labelOpacity = useTransform(scrollYProgress, [0.16, 0.28], [0, 1], { clamp: true });
+  const labelOpacity = useTransform(rawProgress, [0.16, 0.28], [0, 1], { clamp: true });
   const labelY = useTransform(scrollYProgress, [0.16, 0.28], [-12, 0], { clamp: true });
 
   // Period segmented control
-  const periodOpacity = useTransform(scrollYProgress, [0.18, 0.30], [0, 1], { clamp: true });
+  const periodOpacity = useTransform(rawProgress, [0.18, 0.30], [0, 1], { clamp: true });
   const periodY = useTransform(scrollYProgress, [0.18, 0.30], [-20, 0], { clamp: true });
 
   // Beta access note
-  const cryptoOpacity = useTransform(scrollYProgress, [0.28, 0.42], [0, 1], { clamp: true });
+  const cryptoOpacity = useTransform(rawProgress, [0.28, 0.42], [0, 1], { clamp: true });
   const cryptoY = useTransform(scrollYProgress, [0.28, 0.42], [24, 0], { clamp: true });
 
   // Conversion line
-  const convOpacity = useTransform(scrollYProgress, [0.36, 0.48], [0, 1], { clamp: true });
+  const convOpacity = useTransform(rawProgress, [0.36, 0.48], [0, 1], { clamp: true });
 
   // Features grid
-  const includesOpacity = useTransform(scrollYProgress, [0.44, 0.56], [0, 1], { clamp: true });
-  const featuresOpacity = useTransform(scrollYProgress, [0.48, 0.64], [0, 1], { clamp: true });
-  const featuresY = useTransform(scrollYProgress, [0.48, 0.64], [16, 0], { clamp: true });
+  const includesOpacity = useTransform(rawProgress, [0.44, 0.56], [0, 1], { clamp: true });
+  const featuresOpacity = useTransform(rawProgress, [0.50, 0.68], [0, 1], { clamp: true });
+  const featuresY = useTransform(scrollYProgress, [0.50, 0.68], [16, 0], { clamp: true });
 
   // CTA + guarantee — visible by mid-scroll, hold to end
-  const ctaOpacity = useTransform(scrollYProgress, [0.62, 0.76], [0, 1], { clamp: true });
-  const ctaY = useTransform(scrollYProgress, [0.62, 0.76], [32, 0], { clamp: true });
-  const guaranteeOpacity = useTransform(scrollYProgress, [0.72, 0.84], [0, 1], { clamp: true });
+  const ctaOpacity = useTransform(rawProgress, [0.68, 0.82], [0, 1], { clamp: true });
+  const ctaY = useTransform(scrollYProgress, [0.68, 0.82], [32, 0], { clamp: true });
+  const guaranteeOpacity = useTransform(rawProgress, [0.80, 0.90], [0, 1], { clamp: true });
 
   return (
     <section
       ref={stageRef}
-      className="w-full bg-black"
+      className="relative w-full bg-black"
       // Bounded sticky section: long enough to feel premium, short enough
       // to avoid the "stuck on one screen" feeling.
       style={{
-        height: "clamp(1900px, 240vh, 2600px)",
-        marginTop: "-100vh",
-        position: "relative",
+        height: "clamp(2300px, 300vh, 3400px)",
+        marginTop: "-92vh",
       }}
     >
       <div className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black flex items-center justify-center
@@ -317,46 +320,47 @@ function PeriodControl({
    during the ignition phase
    ───────────────────────────────────────────── */
 function DustField({ opacity }: { opacity: MotionValue<number> }) {
-  // Pre-compute particle positions deterministically
-  const particles = (() => {
-    const out: { angle: number; dist: number; size: number; delay: number }[] = [];
-    let seed = 0xc0de;
-    const rng = () => {
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      return seed / 4294967296;
-    };
-    for (let i = 0; i < 60; i++) {
-      out.push({
-        angle: rng() * Math.PI * 2,
-        dist: 80 + rng() * 240,
-        size: rng() < 0.7 ? 1 : 2,
-        delay: rng() * 0.6,
-      });
-    }
-    return out;
-  })();
-
   return (
     <motion.svg
       className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none overflow-visible"
       style={{ opacity, width: "1px", height: "1px" }}
       aria-hidden="true"
     >
-      {particles.map((p, i) => {
-        const x = Math.cos(p.angle) * p.dist;
-        const y = Math.sin(p.angle) * p.dist;
-        return (
-          <rect
-            key={i}
-            x={x - p.size / 2}
-            y={y - p.size / 2}
-            width={p.size}
-            height={p.size}
-            fill="#ffffff"
-            opacity={0.7}
-          />
-        );
-      })}
+      {DUST_PARTICLES.map((p, i) => (
+        <rect
+          key={i}
+          x={p.x}
+          y={p.y}
+          width={p.size}
+          height={p.size}
+          fill="#ffffff"
+          opacity={0.7}
+        />
+      ))}
     </motion.svg>
   );
+}
+
+function createDustParticles(): DustParticle[] {
+  const out: DustParticle[] = [];
+  let seed = 0xc0de;
+  const rng = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+
+  for (let i = 0; i < 60; i++) {
+    const angle = rng() * Math.PI * 2;
+    const dist = 80 + rng() * 240;
+    const size = rng() < 0.7 ? 1 : 2;
+    const x = Math.cos(angle) * dist - size / 2;
+    const y = Math.sin(angle) * dist - size / 2;
+    out.push({
+      x: x.toFixed(3),
+      y: y.toFixed(3),
+      size,
+    });
+  }
+
+  return out;
 }

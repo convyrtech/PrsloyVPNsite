@@ -35,6 +35,7 @@
 
 html {
   background: var(--color-black);
+  position: relative;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

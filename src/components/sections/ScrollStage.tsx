@@ -42,10 +42,10 @@ export function ScrollStage() {
   // Smooth the scroll progress with a spring — gives inertial feel,
   // softens jerky wheel input. All useTransform below derive from this.
   const scrollYProgress = useSpring(rawProgress, {
-    stiffness: 150,
-    damping: 34,
-    mass: 0.25,
-    restDelta: 0.0005,
+    stiffness: 190,
+    damping: 32,
+    mass: 0.2,
+    restDelta: 0.0003,
   });
 
   useEffect(() => {
@@ -75,24 +75,24 @@ export function ScrollStage() {
   // ── HEADLINE BLOCK ──
   // Percussive exit: fades in place with a small downward tick — same axis as
   // the particle dispersion, no opposing horizontal slide.
-  const headlineY = useTransform(scrollYProgress, [0.15, 0.27], [0, 8], { clamp: true });
-  const headlineOpacity = useTransform(scrollYProgress, [0.15, 0.27], [1, 0], { clamp: true });
+  const headlineY = useTransform(scrollYProgress, [0.14, 0.24], [0, 8], { clamp: true });
+  const headlineOpacity = useTransform(rawProgress, [0.14, 0.24], [1, 0], { clamp: true });
 
   // Sub-text + CTA fade out together with the headline block.
-  const ctaOpacity = useTransform(scrollYProgress, [0.15, 0.27], [1, 0], { clamp: true });
+  const ctaOpacity = useTransform(rawProgress, [0.14, 0.24], [1, 0], { clamp: true });
 
   // ── LAUNCH STRIP — visible at load
-  const stripOpacity = useTransform(scrollYProgress, [0.12, 0.22], [1, 0], { clamp: true });
+  const stripOpacity = useTransform(rawProgress, [0.10, 0.18], [1, 0], { clamp: true });
 
   // ── HANDSHAKE PANEL — symmetric cross-fade with globe at 0.55→0.65
   const handshakeOpacity = useTransform(
-    scrollYProgress,
+    rawProgress,
     [0.22, 0.32, 0.55, 0.65],
     [0, 1, 1, 0],
     { clamp: true }
   );
   const handshakeScale = useTransform(scrollYProgress, [0.22, 0.32], [0.92, 1], { clamp: true });
-  const handshakeProgress = useTransform(scrollYProgress, [0.30, 0.52], [0, 1], { clamp: true });
+  const handshakeProgress = useTransform(scrollYProgress, [0.30, 0.56], [0, 1], { clamp: true });
 
   // ── GLOBE LAYER ──
   // Mirror handshake exit envelope (0.55→0.65) so cross-fade is symmetric:
@@ -100,29 +100,29 @@ export function ScrollStage() {
   // Hold globe almost to section end (0.97→1.0) so there's no dead-screen
   // dwelling between sections.
   const globeOpacity = useTransform(
-    scrollYProgress,
-    [0.55, 0.65, 0.88, 1.0],
+    rawProgress,
+    [0.54, 0.66, 0.86, 0.94],
     [0, 1, 1, 0],
     { clamp: true }
   );
   const globeScale = useTransform(
     scrollYProgress,
-    [0.55, 0.75, 0.88, 1.0],
-    [0.25, 0.78, 0.78, 0.65],
+    [0.54, 0.74, 0.86, 0.94],
+    [0.22, 0.80, 0.80, 0.68],
     { clamp: true }
   );
   const globeY = useTransform(
     scrollYProgress,
-    [0.88, 1.0],
+    [0.86, 0.94],
     ["0%", "-8%"],
     { clamp: true }
   );
-  const globeRotate = useTransform(scrollYProgress, [0.55, 0.75], [-12, 0], { clamp: true });
+  const globeRotate = useTransform(scrollYProgress, [0.54, 0.74], [-12, 0], { clamp: true });
 
   // ── GLOBE OVERLAY UI ──
   // Hold overlay until section end so the user doesn't see dead screen before
   // NothingStage starts.
-  const overlayProgress = useTransform(scrollYProgress, [0.70, 0.82, 0.88, 1.0], [0, 1, 1, 0], { clamp: true });
+  const overlayProgress = useTransform(rawProgress, [0.68, 0.82, 0.86, 0.92], [0, 1, 1, 0], { clamp: true });
 
   // (removed: stuck-logo was redundant with the shrunken HeroParticles
   //  during 0.18–0.35; from 0.40+ the screen is occupied by handshake/globe
@@ -131,12 +131,12 @@ export function ScrollStage() {
   return (
     <section
       ref={stageRef}
-      className="w-full bg-black"
+      className="relative w-full bg-black"
       // Cap section height so scroll-density (px per scroll-progress unit)
       // stays in a usable range across viewports. On a 600px-tall mobile
-      // 420vh = 2520px; on a 1440px tall monitor 420vh = 6048px. The clamp
+      // 460vh = 2760px; on a 1440px tall monitor 460vh = 6624px. The clamp
       // keeps acts feeling consistent on both ends.
-      style={{ height: "clamp(2800px, 420vh, 4800px)", position: "relative" }}
+      style={{ height: "clamp(3200px, 460vh, 5400px)" }}
     >
       <div
         className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black
