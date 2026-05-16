@@ -128,7 +128,6 @@ export function QuestionMark3D() {
 
       let lastTime = performance.now();
       let targetX = -0.15;
-      let targetY = 0;
 
       function animate() {
         const now = performance.now();
@@ -140,7 +139,6 @@ export function QuestionMark3D() {
 
         // Cursor adds gentle additional tilt (lerped)
         targetX = -0.15 + ptr.y * 0.2;
-        targetY += (ptr.x * 0.15 - (cloud.rotation.y % (Math.PI * 2) - cloud.rotation.y)) * 0;
         cloud.rotation.x += (targetX - cloud.rotation.x) * 0.04;
 
         renderer.render(scene, camera);

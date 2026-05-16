@@ -46,9 +46,9 @@ export function PricingStage() {
     offset: ["start start", "end end"],
   });
   const scrollYProgress = useSpring(rawProgress, {
-    stiffness: 90,
-    damping: 28,
-    mass: 0.4,
+    stiffness: 150,
+    damping: 34,
+    mass: 0.25,
     restDelta: 0.0005,
   });
 
@@ -114,7 +114,7 @@ export function PricingStage() {
       // to avoid the "stuck on one screen" feeling.
       style={{
         height: "clamp(1900px, 240vh, 2600px)",
-        marginTop: "clamp(-620px, -60vh, -460px)",
+        marginTop: "-100vh",
         position: "relative",
       }}
     >

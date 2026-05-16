@@ -41,9 +41,9 @@ export function NothingStage() {
     offset: ["start start", "end end"],
   });
   const scrollYProgress = useSpring(rawProgress, {
-    stiffness: 90,
-    damping: 28,
-    mass: 0.4,
+    stiffness: 150,
+    damping: 34,
+    mass: 0.25,
     restDelta: 0.0005,
   });
 
@@ -130,9 +130,9 @@ export function NothingStage() {
     <section
       ref={stageRef}
       className="w-full bg-black"
-      // Trimmed from 350vh — long void at the end was wasted scroll
-      // before next section's content emerged.
-      style={{ height: "270vh", marginTop: "clamp(-620px, -60vh, -460px)", position: "relative" }}
+      // Start exactly when the previous sticky viewport releases; this keeps
+      // the handoff deliberate without the extra black drift between acts.
+      style={{ height: "270vh", marginTop: "-100vh", position: "relative" }}
     >
       <div className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black flex items-center justify-center">
         {/* TOP LABEL */}

@@ -42,9 +42,9 @@ export function ScrollStage() {
   // Smooth the scroll progress with a spring — gives inertial feel,
   // softens jerky wheel input. All useTransform below derive from this.
   const scrollYProgress = useSpring(rawProgress, {
-    stiffness: 90,
-    damping: 28,
-    mass: 0.4,
+    stiffness: 150,
+    damping: 34,
+    mass: 0.25,
     restDelta: 0.0005,
   });
 
