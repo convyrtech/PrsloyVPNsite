@@ -185,12 +185,17 @@ export function Header() {
         {/* HEADER ROW — nav spreads outward from the centre as the header opens */}
         <div
           className="relative grid items-center px-md md:px-2xl"
-          style={{ height: `${BAR_H}px`, gridTemplateColumns: "1fr auto 1fr" }}
+          style={{
+            height: `${BAR_H}px`,
+            gridTemplateColumns: "1fr auto 1fr",
+            pointerEvents: "none",
+          }}
         >
           {/* LEFT NAV */}
           <nav
             className="hidden md:flex items-center gap-xl"
             style={{
+              justifySelf: "start",
               opacity: open ? 1 : 0,
               transform: open ? "translateX(0)" : "translateX(48px)",
               pointerEvents: open ? "auto" : "none",
@@ -211,6 +216,7 @@ export function Header() {
             className="md:hidden flex items-center"
             style={{
               opacity: open ? 1 : 0,
+              pointerEvents: open ? "auto" : "none",
               transition: `opacity 300ms ${EASE}`,
             }}
           >
@@ -230,6 +236,7 @@ export function Header() {
           <nav
             className="hidden md:flex items-center justify-end gap-lg"
             style={{
+              justifySelf: "end",
               opacity: open ? 1 : 0,
               transform: open ? "translateX(0)" : "translateX(-48px)",
               pointerEvents: open ? "auto" : "none",
