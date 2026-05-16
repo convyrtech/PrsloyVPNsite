@@ -1,18 +1,18 @@
 {
   "meta": {
-    "title": "PRSLOY — VPN without blocks",
-    "description": "Invite-only VPN. One key — no settings, no server picking. Works with Happ. Crypto only, no KYC.",
-    "ogTitle": "PRSLOY · VPN without blocks",
-    "ogDescription": "Invite-only access. One key. No settings."
+    "title": "PRSLOY — private access by invite",
+    "description": "Closed beta access to a private internet channel. Personal configuration, manual issuing, human support.",
+    "ogTitle": "PRSLOY · private access by invite",
+    "ogDescription": "Closed beta. Personal configuration. Access by request."
   },
   "hero": {
     "status_label": "CLOSED BETA",
-    "headline_line1": "The internet,",
-    "headline_line2": "we forgot.",
-    "sub_price": "$5/MO · CRYPTO ONLY",
-    "sub_features": "NO SETTINGS · HAPP / HIDDIFY",
-    "cta": "GET A KEY",
-    "launch_strip": "BETA · WEEK 1 · DAY 1",
+    "headline_line1": "Private access.",
+    "headline_line2": "Invite-only.",
+    "sub_price": "$5/MO · CLOSED BETA",
+    "sub_features": "PERSONAL CONFIGURATION · NO EXTRA SETUP",
+    "cta": "REQUEST INVITE",
+    "launch_strip": "PRIVATE BETA · INVITE ACCESS",
     "scroll_hint": "SCROLL"
   },
   "header": {
@@ -21,8 +21,9 @@
     "nav_blog": "BLOG",
     "nav_dashboard": "DASHBOARD",
     "status_short": "CLOSED BETA",
-    "status_full": "INVITE-ONLY · WEEK 1",
-    "cta_buy": "BUY · $5",
+    "status_full": "INVITE-ONLY · PRIVATE BETA",
+    "cta_buy": "INVITE · $5",
+    "cta_buy_compact": "INVITE",
     "menu_open": "MENU",
     "menu_close": "CLOSE"
   },
@@ -40,126 +41,124 @@
     "label": "INFRASTRUCTURE",
     "title_line1": "One key.",
     "title_line2_strong": "Stable route.",
-    "subtitle": "Your key is tuned for your network. If a node drops — the exit IP fails over automatically. No reconfiguration.",
-    "metric_routing": "ROUTE",
-    "metric_routing_value": "DOUBLE-HOP",
+    "subtitle": "We issue a personal configuration for your current network and keep the route under watch. If quality drops, support helps switch without setup chaos.",
+    "metric_routing": "CHANNEL",
+    "metric_routing_value": "MANAGED",
     "metric_logs": "ACCESS",
     "metric_logs_value": "INVITE-ONLY",
     "metric_status": "STATUS",
     "metric_status_value": "BETA",
-    "legend_entry": "ENTRY · RU",
-    "legend_exit": "EXIT · EU/US",
-    "legend_active": "YOUR ROUTE",
-    "hint_desktop": "DRAG TO ROTATE · HOVER A NODE",
-    "hint_touch": "DRAG TO ROTATE · TAP A NODE",
+    "legend_entry": "POINT A",
+    "legend_exit": "POINT B",
+    "legend_active": "PRIVATE CHANNEL",
+    "hint_desktop": "DRAG TO ROTATE · HOVER A POINT",
+    "hint_touch": "DRAG TO ROTATE · TAP A POINT",
     "loading": "BUILDING THE GLOBE",
     "fallback": "INFRASTRUCTURE PREVIEW UNAVAILABLE · WEBGL REQUIRED",
-    "cta": "GET A KEY · $5"
+    "cta": "REQUEST INVITE · $5"
   },
   "nothing": {
-    "label": "DOUBLE-HOP · WHITELIST BYPASS",
-    "your_isp_sees": "YOUR ISP SEES",
-    "nothing_word": "NOTHING",
-    "meta_route": "Your destination. Not their business.",
-    "meta_invisible": "ENTRY: RU · EXIT: ABROAD · DOUBLE-HOP",
-    "scroll_cue": "PRICING"
+    "label": "PRIVATE CHANNEL · CLOSED BETA",
+    "your_isp_sees": "YOUR CHANNEL STAYS",
+    "nothing_word": "PRIVATE",
+    "meta_route": "Personal configuration is issued manually.",
+    "meta_invisible": "PRIVATE ACCESS · MANAGED ROUTE · HUMAN SUPPORT",
+    "scroll_cue": "ACCESS"
   },
   "pricing": {
-    "label": "ONE PRICE.",
+    "label": "BETA ACCESS.",
     "period_1m": "1 MO",
     "period_6m": "6 MO",
     "period_12m": "1 YR",
     "per_month": "/ MO",
-    "everything_included": "One key. One route.",
-    "promo_text": "PROMO · USUALLY ${original}",
+    "everything_included": "One account. One configuration.",
+    "promo_text": "BETA ACCESS · LIMITED CAPACITY",
     "includes": "INCLUDED",
-    "feature_encryption": "ROUTE",
-    "feature_encryption_value": "DOUBLE-HOP",
-    "feature_devices": "CLIENT",
-    "feature_devices_value": "HAPP / HIDDIFY",
-    "feature_speed": "SETUP",
-    "feature_speed_value": "TUNED FOR YOU",
-    "feature_servers": "NETWORK",
-    "feature_servers_value": "RU → EU/US",
-    "feature_logs": "ACCESS",
+    "feature_encryption": "CHANNEL",
+    "feature_encryption_value": "MANAGED",
+    "feature_devices": "GUIDE",
+    "feature_devices_value": "IN DASHBOARD",
+    "feature_speed": "ISSUING",
+    "feature_speed_value": "MANUAL",
+    "feature_servers": "ACCESS",
+    "feature_servers_value": "PRIVATE BETA",
+    "feature_logs": "FORMAT",
     "feature_logs_value": "INVITE-ONLY",
     "feature_support": "SUPPORT",
     "feature_support_value": "TELEGRAM",
-    "cta": "GET A KEY",
-    "cta_meta": "DELIVERED AFTER PAYMENT",
-    "guarantee": "Crypto only · No KYC · No email"
+    "cta": "REQUEST INVITE",
+    "cta_meta": "MANUAL ISSUE DURING BETA",
+    "guarantee": "Email for invite · No newsletters · Human support",
+    "access_note": "Invite, configuration, and setup guide arrive after capacity check"
   },
   "faq": {
     "label": "QUESTIONS",
     "see_all": "ALL QUESTIONS",
-    "q1": "How does the block bypass work?",
-    "a1": "Traffic from Russia enters through a whitelisted Russian entry node, then hops to an exit abroad. Your ISP sees a legal Russian IP — not your real destination. That's double-hop.",
-    "q2": "What if a node goes down?",
-    "a2": "If the exit becomes unavailable, the route fails over to a backup automatically. No need to reconfigure your key.",
+    "q1": "What exactly do you issue?",
+    "a1": "A personal configuration for private connectivity and a short guide in the dashboard. We do not publish technical schemes or setup details on the public site.",
+    "q2": "Why invite-only?",
+    "a2": "It lets us control capacity and quality. Opening access slowly is better than onboarding more people than the infrastructure can comfortably handle.",
     "q3": "Where's the app?",
-    "a3": "Today — the key works in Happ, Hiddify or NekoBox. Our own client is in development. The key doesn't depend on the App Store or Google Play."
+    "a3": "For now we issue a compatible configuration and a guide. Our own client is in development, but access should not depend on a single app."
   },
   "pricing_page": {
     "label": "PRICING",
-    "headline_line1": "VPN without blocks.",
-    "headline_line2": "Invite-only.",
-    "subheadline": "One key. One route. No settings.",
-    "promo_strip": "PROMO · USUALLY $7/MO",
-    "waitlist_label": "GET AN INVITE",
-    "waitlist_title": "Payments open in days",
-    "waitlist_description": "We're wiring up Rollypay (cards, crypto, SBP). Drop your email — we'll send a link the moment the gateway is live.",
+    "headline_line1": "Private access by invite.",
+    "headline_line2": "",
+    "subheadline": "Personal configuration. Manual issue. No extra setup.",
+    "promo_strip": "BETA ACCESS · $5/MO",
+    "waitlist_label": "REQUEST INVITE",
+    "waitlist_title": "Beta access is issued manually",
+    "waitlist_description": "Leave your email — we check available capacity and send the next step. Public checkout stays closed for now: quality first, scale later.",
     "email_placeholder": "your@email.com",
-    "submit": "LEAVE EMAIL",
+    "submit": "REQUEST INVITE",
     "submitting": "SENDING...",
-    "no_spam": "No spam. Just the invite link.",
-    "success_title": "Got it.",
-    "success_description": "We'll send the payment link the moment the gateway is live. No newsletters.",
+    "no_spam": "No newsletters. Only access updates.",
+    "success_title": "Request received.",
+    "success_description": "We will send the next step when capacity is available for new access. No newsletters.",
     "error_title": "Didn't send",
     "error_description": "Try again in a minute or message us on Telegram.",
     "error_invalid_email": "That looks invalid — check and resend.",
-    "how_label": "HOW IT WORKS",
-    "step_1_title": "Pay",
-    "step_1_body": "Click the link from the email. Pay by card, crypto or SBP via Rollypay.",
-    "step_2_title": "Key",
-    "step_2_body": "Get a personal key. The route is already tuned for your network.",
-    "step_3_title": "Connect",
-    "step_3_body": "Open Happ, paste the key, hit connect. Works immediately.",
-    "telegram_label": "Already have an invite?",
-    "telegram_link": "Open in Telegram",
+    "how_label": "HOW TO GET ACCESS",
+    "step_1_title": "Request",
+    "step_1_body": "Leave your email. We see the request and check whether there is capacity for new access.",
+    "step_2_title": "Invite",
+    "step_2_body": "If the pool is open, we send the next step and attach access to your PRSLOY ID.",
+    "step_3_title": "Configuration",
+    "step_3_body": "Once issued, your dashboard shows a personal configuration and a short setup guide.",
+    "telegram_label": "Need support?",
+    "telegram_link": "Message us on Telegram",
     "faq_label": "More questions?",
-    "faq_link": "Full FAQ"
+    "faq_link": "Full FAQ",
+    "beta_note": "No public checkout yet: access is issued manually during private beta"
   },
   "setup_page": {
     "label": "SETUP",
-    "title": "Connect in 60 seconds",
-    "subtitle": "Three steps. No settings, no server picking. Works in Happ, Hiddify or NekoBox — pick what's comfortable.",
+    "title": "Setup appears after access is issued",
+    "subtitle": "During private beta we do not publish technical setup on the landing page. Once access is issued, your dashboard shows a personal configuration and short setup steps.",
     "platforms_label": "PLATFORMS",
     "step_label_prefix": "STEP",
     "steps": [
       {
-        "title": "Install a client",
-        "body": "Grab Happ from the App Store / Google Play / GitHub. It's an open-source client built for our protocol. Alternatives: Hiddify or NekoBox — the same key works in all of them.",
-        "links": [
-          { "label": "Happ · iOS", "url": "https://apps.apple.com/app/happ-proxy-utility/id6504287215" },
-          { "label": "Happ · Android", "url": "https://play.google.com/store/apps/details?id=com.happproxy" },
-          { "label": "Happ · macOS / Windows / Linux", "url": "https://happ.su/" }
-        ]
-      },
-      {
-        "title": "Paste the key",
-        "body": "After payment you get a personal link. Open it on a device with Happ — the client picks up the key automatically. Or copy the link and paste it into Happ via 'Add from clipboard'.",
+        "title": "Request invite",
+        "body": "Submit a request and verify your email. If capacity is available, we attach access to your PRSLOY ID.",
         "links": []
       },
       {
-        "title": "Hit connect",
-        "body": "In Happ, select the profile you just added and tap the connect button. You're online in 1-3 seconds. The route is already tuned — no need to pick servers.",
+        "title": "Open dashboard",
+        "body": "Once issued, your dashboard shows a personal configuration and a guide for your access.",
+        "links": []
+      },
+      {
+        "title": "Connect by guide",
+        "body": "Follow the dashboard steps. If something does not work, support will help manually.",
         "links": []
       }
     ],
     "troubleshooting_label": "IF IT WON'T CONNECT",
     "troubleshooting_body": "Restart Happ. Make sure you're on the latest version. If it still won't work — message us on Telegram with a screenshot of the error, we reply within an hour.",
-    "no_key_label": "No key yet?",
-    "get_key_link": "Get a key",
+    "no_key_label": "No access yet?",
+    "get_key_link": "Request invite",
     "telegram_label": "Got a question?",
     "telegram_link": "Telegram"
   },
@@ -183,17 +182,17 @@
     "feature_history_title": "History",
     "feature_history_body": "Payments and renewals list. No traffic telemetry — billing only.",
     "web_soon_label": "WEB DASHBOARD",
-    "web_soon_body": "Once Rollypay web payment is live we'll add a browser dashboard — same features straight on the site, no Telegram detour.",
-    "no_key_label": "No key yet?",
-    "get_key_link": "Get a key",
+    "web_soon_body": "Once manual issuing is stable, we will add more features directly in the browser dashboard — no Telegram detour.",
+    "no_key_label": "No access yet?",
+    "get_key_link": "Request invite",
     "setup_title": "ACCOUNT STORAGE IS NOT CONNECTED",
     "setup_body": "Email login is built into the site, but the production KV storage and AUTH_SECRET env are not configured yet.",
     "auth_required_label": "SIGN IN REQUIRED",
-    "auth_required_body": "Create a PRSLOY ID or sign in to see your account, email status, and VPN key state.",
+    "auth_required_body": "Create a PRSLOY ID or sign in to see your account, email status, and access key state.",
     "login_link": "SIGN IN",
     "register_link": "CREATE ACCOUNT",
     "verify_title": "EMAIL NOT VERIFIED",
-    "verify_body": "Verify your email so support can safely attach an invite and VPN key to this account.",
+    "verify_body": "Verify your email so support can safely attach an invite and access key to this account.",
     "verify_resend": "RESEND EMAIL",
     "verify_sent": "EMAIL SENT",
     "verify_error": "Could not send the email. Try again in a minute.",
@@ -204,12 +203,12 @@
     "access_label": "ACCESS",
     "access_active": "ACTIVE",
     "access_pending": "WAITING FOR INVITE",
-    "key_label": "VPN KEY",
+    "key_label": "ACCESS KEY",
     "key_ready": "ISSUED",
     "key_not_issued": "NOT ISSUED",
-    "vpn_section_label": "VPN ACCESS",
-    "key_ready_body": "Your subscription link is ready. Open it on a device with Happ or copy it into your client.",
-    "key_pending_body": "No VPN key is attached to this account yet. We can now identify you by email; the next step is attaching invite/key provisioning to this account.",
+    "vpn_section_label": "ACCESS",
+    "key_ready_body": "Your personal configuration is ready. Open the dashboard guide or copy the link into a compatible client.",
+    "key_pending_body": "No access key is attached to this account yet. We can now identify you by email; the next step is attaching invite issuing to this account.",
     "account_label": "ACCOUNT",
     "logout": "LOG OUT"
   },
@@ -242,73 +241,68 @@
   "faq_page": {
     "label": "FAQ",
     "title": "What you need to know",
-    "subtitle": "No marketing fluff. Direct answers to what people usually ask.",
+    "subtitle": "Direct answers without public technical instructions.",
     "categories": {
       "product": "PRODUCT",
-      "tech": "HOW IT WORKS",
-      "payment": "PAYMENT & ACCESS",
+      "tech": "ACCESS",
+      "payment": "INVITE",
       "trust": "PRIVACY"
     },
     "items": [
       {
         "category": "product",
         "q": "What is PRSLOY?",
-        "a": "An invite-only VPN. You get one key — we've already tuned the route for your network. Paste it into Happ or Hiddify and connect. No server picking, no panel, no fuss."
+        "a": "An invite-only private access service. Once issued, you get a personal configuration and a setup guide in your dashboard."
       },
       {
         "category": "product",
         "q": "Why invite-only and not for everyone?",
-        "a": "Because mass-market VPNs are slow VPNs. The more people on a single node, the faster it gets blocked and the worse the speed. We keep a small base so routes live longer and run faster."
+        "a": "Because quality matters more than growth. We open access in small pools so infrastructure stays calm and support can help each user."
       },
       {
         "category": "product",
         "q": "Where's the app?",
-        "a": "Today — the key works in Happ, Hiddify or NekoBox. Our own client is in development. This is actually a plus: the key doesn't depend on the App Store or Google Play, which periodically pull VPN apps from RU stores."
+        "a": "For now access works through a compatible configuration and dashboard guide. Our own client is in development, but access should not depend on a single app."
       },
       {
         "category": "tech",
-        "q": "How does block bypass work?",
-        "a": "Russian traffic enters through a Russian entry node that sits on the providers' whitelist. Then it hops to an exit abroad. Your ISP sees a legal Russian IP — your real destination stays two hops away."
+        "q": "How is the connection set up?",
+        "a": "We do not publish technical schemes publicly. For the user it is simple: account, personal configuration, and a guide after access is issued."
       },
       {
         "category": "tech",
-        "q": "What if a node goes down?",
-        "a": "Watchdogs check nodes regularly. If an exit becomes unavailable, the route fails over to a backup automatically. No need to reconfigure your key."
-      },
-      {
-        "category": "tech",
-        "q": "What if Russia blocks the entry node?",
-        "a": "We bring up a new entry in a new subnet, the whitelist expands, your keys keep working. That's an ops job, not a user job — there's nothing for you to do."
+        "q": "What if quality drops?",
+        "a": "We watch route quality and help switch if a specific configuration becomes unstable."
       },
       {
         "category": "tech",
         "q": "How many devices can I use?",
-        "a": "One key works on any number of your devices simultaneously — phone + laptop + tablet + home router. No limit, as long as you're not handing the key to strangers."
-      },
-      {
-        "category": "payment",
-        "q": "How do I pay?",
-        "a": "We're wiring up the Rollypay gateway — it'll accept SBP, cards and crypto (BTC, ETH, USDT, TON). Until the gateway is live, leave your email — we'll send you a link first."
-      },
-      {
-        "category": "payment",
-        "q": "What about refunds?",
-        "a": "If the key doesn't work in the first 24 hours after payment — full refund. After that — case by case via Telegram. We don't make complex conditions: if something went wrong, message us and we'll fix it."
+        "a": "The beta is meant for personal devices of one user. For family or team access, message support first."
       },
       {
         "category": "payment",
         "q": "How do I get an invite?",
-        "a": "There's a form on the pricing page — leave your email. When the gateway is live, we'll send a payment link. The key is delivered within minutes after payment."
+        "a": "Leave your email on the pricing page. If capacity is available, we send the next step and attach access to your PRSLOY ID."
+      },
+      {
+        "category": "payment",
+        "q": "How does payment work now?",
+        "a": "Public checkout is not open yet. During beta, access is issued manually: request first, capacity check, then the next step by email."
+      },
+      {
+        "category": "payment",
+        "q": "Why show $5/mo?",
+        "a": "It is the beta access reference price so positioning is clear. Automatic checkout comes only after manual issuing is stable."
       },
       {
         "category": "trust",
         "q": "What data do you store?",
-        "a": "Only what's needed to issue the key: your Telegram ID (if you register through the bot) or email (if through the site), your key identifier in Marzneshin, the subscription end date. We don't write activity logs (what you open, where you go) — we don't need them."
+        "a": "The minimum needed for account and access issuing: email, verification status, access status, and the technical identifier of the issued configuration."
       },
       {
         "category": "trust",
         "q": "Can I trust you?",
-        "a": "Honestly — without an independent audit, no VPN deserves 100% trust. What we can say honestly: the key works without logging your traffic, payment goes through an encrypted gateway without forwarding payment data to us, and we have no technical ability to see the contents of your connections."
+        "a": "No private access service deserves blind trust. Our honest stance: no magic promises, no unnecessary public schemes, and closed beta until quality is reliable."
       }
     ],
     "still_have": "Still have questions?",
@@ -331,7 +325,7 @@
         },
         {
           "h": "PAYMENT",
-          "p": "Payments are processed by an external gateway (Rollypay for cards/SBP, direct crypto wallets for BTC/ETH/USDT/TON). We only see the transaction status (success/fail) and amount — not the credentials. Those are kept by the payment provider under their rules."
+          "p": "Public payment is not open right now. During private beta, access is issued manually after request and capacity check. If a paid step appears, terms and the payment processor will be shown before payment."
         },
         {
           "h": "RETENTION",
@@ -339,7 +333,7 @@
         },
         {
           "h": "THIRD PARTIES",
-          "p": "Payment gateway (see above). Telegram (if you register through the bot — Telegram sees the fact of interaction with the bot). Hosting (virtual machines and the control panel sit with an infrastructure provider that has no access to your traffic content)."
+          "p": "Email service for confirmations and notifications, hosting for the site and infrastructure, Telegram if you message support. We do not share your activity history with third parties."
         },
         {
           "h": "YOUR RIGHTS",
@@ -361,11 +355,11 @@
       "sections": [
         {
           "h": "WHAT YOU GET",
-          "p": "One key for connecting to our VPN infrastructure. Validity period — the chosen subscription period (1 / 6 / 12 months). The route is tuned for your network and updates automatically when nodes fail."
+          "p": "A personal configuration for private access, access validity, and a dashboard guide. During private beta, issuing is manual so we can control quality."
         },
         {
           "h": "WHAT YOU CAN USE IT FOR",
-          "p": "Personal use: bypassing blocks, protecting traffic on public Wi-Fi, accessing content. Sharing the key with people close to you on your devices is fine. Distributing it publicly or reselling it — not allowed."
+          "p": "Personal secure connectivity, protecting data on public networks, and access to your work and personal resources. Publicly distributing or reselling the key is not allowed."
         },
         {
           "h": "WHAT YOU CAN'T USE IT FOR",
@@ -377,7 +371,7 @@
         },
         {
           "h": "PAYMENT AND REFUNDS",
-          "p": "Payment is upfront for the chosen period. If the key doesn't work in the first 24 hours after payment — full refund. After that — case by case via Telegram. Crypto payments are refunded in the same coin, fiat ones to the original card/account."
+          "p": "Public payment is closed for now. If access is issued through an individual paid step, payment and refund terms are fixed before payment. If something goes wrong, message support."
         },
         {
           "h": "TERMINATION",
@@ -385,7 +379,7 @@
         },
         {
           "h": "LIABILITY",
-          "p": "We provide a technical service. What you do through the VPN is your responsibility. We're not responsible for the content of the sites you reach. A VPN doesn't make you anonymous — it only protects traffic from your provider."
+          "p": "We provide a technical private access service. How you use the connection is your responsibility. The service does not make you anonymous and is not a security guarantee by itself."
         }
       ],
       "contact_label": "Terms questions",
@@ -393,21 +387,21 @@
     }
   },
   "footer": {
-    "departure_label": "DEPARTURE BOARD",
-    "departure_sub": "EXIT NODES",
-    "closing_line1": "STOP ASKING.",
-    "closing_line2": "GET A KEY.",
-    "cta": "GET A KEY",
-    "cta_meta": "$5/MO · CRYPTO ONLY",
+    "departure_label": "ACCESS STATUS",
+    "departure_sub": "PRIVATE BETA",
+    "closing_line1": "ACCESS",
+    "closing_line2": "BY INVITE.",
+    "cta": "REQUEST INVITE",
+    "cta_meta": "$5/MO · MANUAL ISSUE",
     "command_label": "PANEL",
     "metric_status": "STATUS",
-    "metric_status_value": "BETA · DAY 1",
+    "metric_status_value": "PRIVATE BETA",
     "metric_uptime": "ACCESS",
     "metric_uptime_value": "INVITE-ONLY",
-    "metric_nodes": "CLIENT",
-    "metric_nodes_value": "HAPP · HIDDIFY",
+    "metric_nodes": "FORMAT",
+    "metric_nodes_value": "DASHBOARD · GUIDE",
     "metric_launch": "LAUNCH",
-    "metric_launch_value": "WEEK 1 · DAY 1",
+    "metric_launch_value": "ACCESS BY REQUEST",
     "nav_pricing": "PRICING",
     "nav_faq": "FAQ",
     "nav_blog": "BLOG",
@@ -417,6 +411,6 @@
     "telegram": "TELEGRAM",
     "copyright": "© 2026 PRSLOY",
     "version": "BETA",
-    "wordmark_meta": "BUILT ON THE OPEN INTERNET"
+    "wordmark_meta": "BUILT FOR PRIVATE ACCESS"
   }
 }

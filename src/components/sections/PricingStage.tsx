@@ -10,15 +10,12 @@ import {
 } from "motion/react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { PaymentPills } from "@/components/pricing/PaymentPills";
 import { FeatureCell } from "@/components/pricing/FeatureCell";
 import { DividerLabel } from "@/components/ui/DividerLabel";
 import {
   type Period,
-  type Payment,
   PERIODS,
   PRICE_BY_PERIOD,
-  formatConversion,
 } from "@/lib/pricing";
 
 const PERIOD_LABEL_KEYS: Record<Period, string> = {
@@ -56,10 +53,8 @@ export function PricingStage() {
   });
 
   const [period, setPeriod] = useState<Period>("1mo");
-  const [payMethod, setPayMethod] = useState<Payment>("SBP");
 
   const basePrice = PRICE_BY_PERIOD[period];
-  const conversionText = formatConversion(period, payMethod);
 
   // ── Phase envelopes — paced so the tariff assembles deliberately
   //    instead of dumping every control into view at once. ──
@@ -94,7 +89,7 @@ export function PricingStage() {
   const periodOpacity = useTransform(scrollYProgress, [0.18, 0.30], [0, 1], { clamp: true });
   const periodY = useTransform(scrollYProgress, [0.18, 0.30], [-20, 0], { clamp: true });
 
-  // Crypto pills
+  // Beta access note
   const cryptoOpacity = useTransform(scrollYProgress, [0.28, 0.42], [0, 1], { clamp: true });
   const cryptoY = useTransform(scrollYProgress, [0.28, 0.42], [24, 0], { clamp: true });
 
@@ -190,22 +185,21 @@ export function PricingStage() {
             >
               <span className="inline-block w-[6px] h-[6px] rounded-full bg-accent animate-pulse" />
               <span className="font-mono text-label uppercase tracking-[0.12em] text-accent">
-                LAUNCH PRICE · REGULAR <span className="line-through opacity-70">$7</span>
+                {t("promo_text")}
               </span>
             </motion.div>
           </motion.div>
 
-          {/* ── PAYMENT METHODS — fiat + crypto ── */}
+          {/* ── BETA ACCESS NOTE ── */}
           <motion.div
             className="flex flex-col items-center gap-sm sm:gap-md mb-xl sm:mb-2xl pointer-events-auto"
             style={{ opacity: cryptoOpacity, y: cryptoY }}
           >
-            <PaymentPills value={payMethod} onChange={setPayMethod} />
             <motion.div
-              className="font-mono text-body-sm text-text-primary tracking-[0.04em]"
+              className="font-mono text-body-sm text-text-primary tracking-[0.08em] uppercase text-center"
               style={{ opacity: convOpacity }}
             >
-              {conversionText}
+              {t("access_note")}
             </motion.div>
           </motion.div>
 

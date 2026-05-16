@@ -265,7 +265,7 @@ export function Header() {
               transition: `opacity 300ms ${EASE}`,
             }}
           >
-            <BuyCta label={t("cta_buy")} compact />
+            <BuyCta label={t("cta_buy_compact")} compact />
             <button
               type="button"
               onClick={() => setMobileOpen((v) => !v)}
@@ -378,7 +378,7 @@ function BuyCta({ label, compact = false }: { label: string; compact?: boolean }
         rounded-full
         hover:opacity-90 active:scale-[0.98]
         transition-all duration-150 ease-out-nothing
-        ${compact ? "px-md min-h-[44px] text-[10px]" : "px-lg min-h-[44px] text-label"}
+        ${compact ? "px-md min-h-[44px] text-[10px] whitespace-nowrap" : "px-lg min-h-[44px] text-label"}
       `}
     >
       [ {label} ]

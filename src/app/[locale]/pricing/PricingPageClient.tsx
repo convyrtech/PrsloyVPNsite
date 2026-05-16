@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { PaymentPills } from "@/components/pricing/PaymentPills";
 import { FeatureCell } from "@/components/pricing/FeatureCell";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { DividerLabel } from "@/components/ui/DividerLabel";
@@ -12,10 +11,8 @@ import { TELEGRAM_BOT_URL } from "@/lib/links";
 import { isValidEmail } from "@/lib/validation";
 import {
   type Period,
-  type Payment,
   PERIODS,
   PRICE_BY_PERIOD,
-  formatConversion,
 } from "@/lib/pricing";
 
 type FormState = "idle" | "submitting" | "success" | "error";
@@ -25,13 +22,11 @@ export function PricingPageClient({ locale }: { locale: string }) {
   const tShared = useTranslations("pricing");
 
   const [period, setPeriod] = useState<Period>("1mo");
-  const [payment, setPayment] = useState<Payment>("SBP");
   const [email, setEmail] = useState("");
   const [state, setState] = useState<FormState>("idle");
   const [errorMsg, setErrorMsg] = useState<string>("");
 
   const basePrice = PRICE_BY_PERIOD[period];
-  const conversionText = formatConversion(period, payment);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,7 +46,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmed, period, payment, locale }),
+        body: JSON.stringify({ email: trimmed, period, locale }),
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
 
@@ -128,11 +123,9 @@ export function PricingPageClient({ locale }: { locale: string }) {
             </div>
           </div>
 
-          {/* PAYMENT METHODS — visible but disabled until Rollypay */}
           <div className="flex flex-col items-center gap-sm">
-            <PaymentPills value={payment} onChange={setPayment} />
-            <div className="font-mono text-body-sm text-text-secondary tracking-[0.04em]">
-              {conversionText}
+            <div className="font-mono text-label uppercase tracking-[0.12em] text-text-secondary text-center">
+              {t("beta_note")}
             </div>
           </div>
         </section>

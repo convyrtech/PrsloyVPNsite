@@ -252,7 +252,7 @@ export function Footer() {
             >
               <span>{t("cta")}</span>
               <span className="opacity-50">→</span>
-              <span>$5</span>
+              <span>BETA</span>
             </motion.button>
             <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
               {t("cta_meta")}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ReactElement } from "react";
 import {
   motion,
   useScroll,
@@ -12,7 +11,6 @@ import {
 import { useTranslations } from "next-intl";
 import { TextErosion } from "./TextErosion";
 
-const NOTHING = "NOTHING";
 const CIPHER_CHARS = "▓░█▒%@#&XΨΔΣΩ$01";
 
 /**
@@ -27,6 +25,7 @@ const CIPHER_CHARS = "▓░█▒%@#&XΨΔΣΩ$01";
  */
 export function NothingStage() {
   const t = useTranslations("nothing");
+  const targetWord = t("nothing_word");
   const stageRef = useRef<HTMLElement | null>(null);
   const domTextRef = useRef<HTMLDivElement | null>(null);
   const [matchEl, setMatchEl] = useState<HTMLElement | null>(null);
@@ -101,7 +100,7 @@ export function NothingStage() {
   );
 
   // ── Cipher mode (DOM text mutation) ──
-  const [cipherText, setCipherText] = useState(NOTHING);
+  const [cipherText, setCipherText] = useState(targetWord);
   const cipherActive = useRef(false);
 
   useMotionValueEvent(rawProgress, "change", (v) => {
@@ -112,20 +111,20 @@ export function NothingStage() {
     const id = setInterval(() => {
       if (cipherActive.current) {
         let out = "";
-        for (let i = 0; i < NOTHING.length; i++) {
+        for (let i = 0; i < targetWord.length; i++) {
           const lockChance = 0.18;
           out +=
             Math.random() < lockChance
-              ? NOTHING[i]
+              ? targetWord[i]
               : CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
         }
         setCipherText(out);
       } else {
-        setCipherText(NOTHING);
+        setCipherText(targetWord);
       }
     }, 70);
     return () => clearInterval(id);
-  }, []);
+  }, [targetWord]);
 
   return (
     <section
@@ -166,7 +165,7 @@ export function NothingStage() {
                      text-[clamp(64px,12vw,160px)] leading-none tracking-[0.18em]
                      whitespace-nowrap tabular-nums pointer-events-none select-none"
           style={{ opacity: domTextOpacity }}
-          aria-label={NOTHING}
+          aria-label={targetWord}
         >
           {cipherText}
         </motion.div>
@@ -177,7 +176,7 @@ export function NothingStage() {
           style={{ opacity: canvasOpacity }}
           aria-hidden="true"
         >
-          <TextErosion text={NOTHING} progress={erosionProgress} matchEl={matchEl} />
+          <TextErosion text={targetWord} progress={erosionProgress} matchEl={matchEl} />
         </motion.div>
 
         {/* META lines */}
