@@ -32,6 +32,26 @@ export type DashboardCopy = Record<
   | "access_label"
   | "access_active"
   | "access_pending"
+  | "capacity_label"
+  | "capacity_open"
+  | "capacity_review"
+  | "route_label"
+  | "route_private"
+  | "route_reserved"
+  | "console_label"
+  | "console_ready"
+  | "console_pending"
+  | "console_body_ready"
+  | "console_body_pending"
+  | "signal_label"
+  | "signal_latency"
+  | "signal_stability"
+  | "signal_support"
+  | "signal_ready"
+  | "signal_pending"
+  | "privacy_label"
+  | "privacy_body"
+  | "account_created_label"
   | "key_label"
   | "key_ready"
   | "key_not_issued"
@@ -180,6 +200,7 @@ export function DashboardClient({
   const hasKey = Boolean(user.subscriptionUrl);
   const accessActive = user.accessStatus === "active";
   const updatedAt = formatDashboardDate(user.updatedAt, locale);
+  const createdAt = formatDashboardDate(user.createdAt, locale);
   const progress = hasKey ? 100 : accessActive ? 75 : user.emailVerified ? 50 : 18;
   const steps: AccessStep[] = [
     {
@@ -211,6 +232,19 @@ export function DashboardClient({
         </RevealOnView>
       )}
 
+      <RevealOnView delay={0.12}>
+        <section className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-md">
+          <AccessConsole
+            copy={copy}
+            user={user}
+            hasKey={hasKey}
+            accessActive={accessActive}
+            progress={progress}
+          />
+          <SignalPanel copy={copy} hasKey={hasKey} accessActive={accessActive} />
+        </section>
+      </RevealOnView>
+
       <RevealOnView delay={0.15}>
         <section className="grid grid-cols-1 lg:grid-cols-[1.12fr_0.88fr] gap-md">
           <AccessTimeline
@@ -224,6 +258,7 @@ export function DashboardClient({
             user={user}
             hasKey={hasKey}
             updatedAt={updatedAt}
+            createdAt={createdAt}
           />
         </section>
       </RevealOnView>
@@ -373,6 +408,186 @@ function AccessTimeline({
   );
 }
 
+function AccessConsole({
+  copy,
+  user,
+  hasKey,
+  accessActive,
+  progress,
+}: {
+  copy: DashboardCopy;
+  user: PublicAuthUser;
+  hasKey: boolean;
+  accessActive: boolean;
+  progress: number;
+}) {
+  const status = hasKey
+    ? copy.console_ready
+    : accessActive
+      ? copy.access_active
+      : copy.console_pending;
+  const body = hasKey ? copy.console_body_ready : copy.console_body_pending;
+  const routeValue = hasKey ? copy.route_private : copy.route_reserved;
+
+  return (
+    <section className="relative overflow-hidden border border-border-visible rounded-[8px] bg-black p-xl sm:p-2xl min-h-[360px]">
+      <div aria-hidden="true" className="absolute inset-0 dot-grid-subtle opacity-70" />
+      <motion.div
+        aria-hidden="true"
+        className="absolute left-0 right-0 top-0 h-px bg-text-display"
+        animate={{ opacity: [0.15, 0.7, 0.15] }}
+        transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <div className="relative z-10 flex min-h-[300px] flex-col justify-between gap-2xl">
+        <div className="flex items-start justify-between gap-lg">
+          <div className="flex flex-col gap-xs">
+            <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
+              {copy.console_label}
+            </span>
+            <span className="font-mono text-label uppercase tracking-[0.14em] text-text-secondary">
+              {user.email}
+            </span>
+          </div>
+          <span
+            className={`mt-1 inline-flex h-3 w-3 shrink-0 rounded-full ${
+              hasKey
+                ? "bg-success shadow-[0_0_18px_rgba(74,158,92,0.8)]"
+                : "bg-warning animate-pulse"
+            }`}
+          />
+        </div>
+
+        <div className="flex flex-col gap-lg">
+          <div className="font-display font-bold text-text-display leading-[0.85] break-words"
+               style={{ fontSize: "clamp(56px, 10vw, 118px)", letterSpacing: "0.02em" }}>
+            {String(progress).padStart(3, "0")}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-sm">
+            <ConsoleStat label={copy.access_label} value={status} />
+            <ConsoleStat
+              label={copy.capacity_label}
+              value={accessActive || hasKey ? copy.capacity_open : copy.capacity_review}
+            />
+            <ConsoleStat label={copy.route_label} value={routeValue} />
+          </div>
+          <p className="max-w-xl font-body text-body text-text-secondary leading-[1.65]">
+            {body}
+          </p>
+        </div>
+
+        <div className="h-[2px] bg-border-visible overflow-hidden">
+          <motion.div
+            className="h-full bg-text-display"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.9, ease: [0.25, 0.1, 0.25, 1] }}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ConsoleStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-border-visible bg-black/70 p-md min-h-[92px] flex flex-col justify-between">
+      <span className="font-mono text-label uppercase tracking-[0.14em] text-text-disabled">
+        {label}
+      </span>
+      <span className="font-mono text-[12px] uppercase tracking-[0.06em] text-text-display break-words">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function SignalPanel({
+  copy,
+  hasKey,
+  accessActive,
+}: {
+  copy: DashboardCopy;
+  hasKey: boolean;
+  accessActive: boolean;
+}) {
+  const rows = [
+    {
+      label: copy.signal_latency,
+      value: hasKey ? copy.signal_ready : copy.signal_pending,
+      active: hasKey,
+    },
+    {
+      label: copy.signal_stability,
+      value: accessActive || hasKey ? copy.signal_ready : copy.signal_pending,
+      active: accessActive || hasKey,
+    },
+    {
+      label: copy.signal_support,
+      value: copy.signal_ready,
+      active: true,
+    },
+  ];
+
+  return (
+    <section className="border border-border-visible rounded-[8px] bg-surface p-xl sm:p-2xl min-h-[360px] flex flex-col gap-xl">
+      <div className="flex items-center justify-between gap-md">
+        <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
+          {copy.signal_label}
+        </span>
+        <span className="font-mono text-label uppercase tracking-[0.12em] text-text-disabled">
+          {hasKey ? "LIVE" : "STANDBY"}
+        </span>
+      </div>
+
+      <div aria-hidden="true" className="relative h-[118px] overflow-hidden border border-border-visible bg-black">
+        <div className="absolute inset-0 dot-grid-subtle opacity-60" />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <motion.span
+            key={i}
+            className="absolute bottom-0 w-[12%] bg-text-display"
+            style={{ left: `${10 + i * 18}%`, height: `${28 + i * 9}%` }}
+            animate={{ opacity: hasKey ? [0.35, 0.9, 0.35] : [0.15, 0.32, 0.15] }}
+            transition={{ duration: 1.8 + i * 0.18, repeat: Infinity, ease: "easeInOut" }}
+          />
+        ))}
+        <motion.span
+          className="absolute left-0 right-0 h-px bg-accent"
+          animate={{ top: ["18%", "76%", "18%"], opacity: [0.2, 0.85, 0.2] }}
+          transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
+      <div className="flex flex-col">
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            className="grid grid-cols-[1fr_auto] gap-md border-t border-border-visible py-md last:border-b"
+          >
+            <span className="font-mono text-label uppercase tracking-[0.12em] text-text-disabled">
+              {row.label}
+            </span>
+            <span className={`font-mono text-label uppercase tracking-[0.12em] ${
+              row.active ? "text-text-display" : "text-text-disabled"
+            }`}>
+              {row.value}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="border-t border-border-visible pt-md">
+        <div className="font-mono text-label uppercase tracking-[0.14em] text-text-disabled">
+          {copy.privacy_label}
+        </div>
+        <p className="mt-sm font-body text-body-sm text-text-secondary leading-[1.65]">
+          {copy.privacy_body}
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function StepMarker({ state, index }: { state: AccessStep["state"]; index: number }) {
   const active = state === "current";
   const done = state === "done";
@@ -405,11 +620,13 @@ function IdentityPanel({
   user,
   hasKey,
   updatedAt,
+  createdAt,
 }: {
   copy: DashboardCopy;
   user: PublicAuthUser;
   hasKey: boolean;
   updatedAt: string;
+  createdAt: string;
 }) {
   const accessValue =
     user.accessStatus === "active"
@@ -439,6 +656,7 @@ function IdentityPanel({
       <div className="grid grid-cols-2 gap-md">
         <MiniStat label={copy.email_status_label} value={user.emailVerified ? copy.email_verified : copy.email_pending} />
         <MiniStat label={copy.key_label} value={hasKey ? copy.key_ready : copy.key_not_issued} />
+        <MiniStat label={copy.account_created_label} value={createdAt} />
         <MiniStat label={copy.updated_label} value={updatedAt} wide />
       </div>
 
@@ -550,9 +768,24 @@ function AccessPanel({
           )}
         </div>
       ) : (
-        <p className="font-body text-body text-text-secondary leading-[1.65]">
-          {copy.key_pending_body}
-        </p>
+        <div className="grid gap-lg lg:grid-cols-[1fr_280px] lg:items-stretch">
+          <p className="font-body text-body text-text-secondary leading-[1.65]">
+            {copy.key_pending_body}
+          </p>
+          <div className="border border-border-visible bg-black p-md flex flex-col gap-md">
+            <div className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
+              {copy.config_label}
+            </div>
+            <div className="grid grid-cols-[auto_1fr] gap-x-md gap-y-sm font-mono text-label uppercase tracking-[0.1em]">
+              <span className="text-text-disabled">01</span>
+              <span className="text-text-display">{copy.progress_email}</span>
+              <span className="text-text-disabled">02</span>
+              <span className="text-text-secondary">{copy.progress_invite}</span>
+              <span className="text-text-disabled">03</span>
+              <span className="text-text-disabled">{copy.progress_access}</span>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

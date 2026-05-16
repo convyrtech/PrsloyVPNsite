@@ -60,7 +60,25 @@ export default async function RegisterPage({
 
           {/* FORM SIDE */}
           <RevealOnView delay={0.1}>
-            <section className="border border-border-visible rounded-[24px] p-xl sm:p-2xl">
+            <section className="border border-border-visible rounded-[8px] p-xl sm:p-2xl bg-surface">
+              <div className="mb-xl border-b border-border-visible pb-lg flex flex-col gap-md">
+                <div className="flex items-center justify-between gap-md font-mono text-label uppercase tracking-[0.14em]">
+                  <span className="text-text-disabled">PRSLOY ID</span>
+                  <span className="text-text-display">CREATE</span>
+                </div>
+                <div className="grid grid-cols-3 gap-sm">
+                  {["EMAIL", "VERIFY", "QUEUE"].map((item, index) => (
+                    <div key={item} className="border border-border-visible bg-black p-sm">
+                      <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-disabled">
+                        {String(index + 1).padStart(2, "0")}
+                      </div>
+                      <div className="mt-xs font-mono text-label uppercase tracking-[0.08em] text-text-display">
+                        {item}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <AuthForm
                 mode="register"
                 locale={locale}

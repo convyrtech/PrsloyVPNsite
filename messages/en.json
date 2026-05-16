@@ -187,8 +187,8 @@
     "label": "DASHBOARD",
     "title": "Access center",
     "subtitle": "Your dashboard shows account status, invite issuing, and the personal configuration. No public checkout yet: access is attached manually after capacity review.",
-    "telegram_cta_label": "SIGN IN WITH TELEGRAM",
-    "telegram_cta_meta": "One-tap auth",
+    "telegram_cta_label": "CREATE PRSLOY ID",
+    "telegram_cta_meta": "Email and password",
     "what_label": "WHAT'S IN THERE",
     "feature_status_title": "Key status",
     "feature_status_body": "Whether your key is active, valid until when, how much traffic is left (if there's a cap).",
@@ -224,6 +224,26 @@
     "access_label": "ACCESS",
     "access_active": "ACTIVE",
     "access_pending": "WAITING FOR INVITE",
+    "capacity_label": "CAPACITY",
+    "capacity_open": "OPEN",
+    "capacity_review": "REVIEW",
+    "route_label": "ROUTE",
+    "route_private": "PRIVATE",
+    "route_reserved": "RESERVED",
+    "console_label": "ACCESS CONSOLE",
+    "console_ready": "READY",
+    "console_pending": "PENDING",
+    "console_body_ready": "Your account is active. Keep the configuration private and use the setup guide when adding a new device.",
+    "console_body_pending": "Your identity is in the queue. Email verification and capacity review happen first; the configuration appears here after manual issue.",
+    "signal_label": "SIGNAL",
+    "signal_latency": "ROUTE CHECK",
+    "signal_stability": "STABILITY",
+    "signal_support": "HUMAN SUPPORT",
+    "signal_ready": "READY",
+    "signal_pending": "STANDBY",
+    "privacy_label": "PRIVATE BY DEFAULT",
+    "privacy_body": "No public config links and no fake checkout state. The dashboard only shows what is attached to this account.",
+    "account_created_label": "CREATED",
     "key_label": "ACCESS KEY",
     "key_ready": "ISSUED",
     "key_not_issued": "NOT ISSUED",
@@ -371,7 +391,7 @@
       "sections": [
         {
           "h": "WHAT WE COLLECT",
-          "p": "Only what's needed for the service to work: your Telegram ID (if you register through the bot) OR email (if you leave it on the site form), your key identifier in our provisioning system, subscription start and end date. That's it."
+          "p": "Only what's needed for the service to work: email, verification status, access status, your key identifier in our provisioning system, subscription start and end date. That's it."
         },
         {
           "h": "WHAT WE DON'T COLLECT",
@@ -391,11 +411,11 @@
         },
         {
           "h": "YOUR RIGHTS",
-          "p": "You can request deletion of any of your data — message us on Telegram. After identity verification (via the payment token), we delete within 7 days. You can choose not to give an email — register through the Telegram bot instead."
+          "p": "You can request deletion of any of your data — message support from the email tied to your PRSLOY ID. After identity verification, we delete within 7 days."
         },
         {
           "h": "CHANGES",
-          "p": "If we change something — we update the date at the top and post in the Telegram channel. We don't slip in material changes silently."
+          "p": "If we change something — we update the date at the top and send a product notice when the change matters. We don't slip in material changes silently."
         }
       ],
       "contact_label": "Privacy questions",
@@ -429,7 +449,7 @@
         },
         {
           "h": "TERMINATION",
-          "p": "You can stop renewing at any time — just don't pay. We can stop servicing the key in case of these terms being violated — after notifying you on Telegram. If we terminate without your fault — we refund the unused portion of the payment."
+          "p": "You can stop renewing at any time — just don't pay. We can stop servicing the key in case of these terms being violated — after notifying you through the account contact. If we terminate without your fault — we refund the unused portion of the payment."
         },
         {
           "h": "LIABILITY",
