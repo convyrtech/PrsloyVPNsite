@@ -6,8 +6,12 @@ import {
   loginUser,
   SESSION_COOKIE,
 } from "@/lib/auth";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+const LOGIN_LIMIT = 8;
+const LOGIN_WINDOW_SECONDS = 300;
 
 type LoginBody = {
   email?: unknown;
@@ -25,6 +29,14 @@ function setSessionCookie(res: NextResponse, session: string) {
 }
 
 export async function POST(req: Request) {
+  const limit = await rateLimit("login", getClientIp(req), LOGIN_LIMIT, LOGIN_WINDOW_SECONDS);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { ok: false, error: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
+    );
+  }
+
   let body: LoginBody;
   try {
     body = (await req.json()) as LoginBody;

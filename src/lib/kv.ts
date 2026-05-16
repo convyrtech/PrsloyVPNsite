@@ -69,3 +69,27 @@ export async function kvSet(
 export async function kvDel(key: string): Promise<void> {
   await redisCommand<number>(["DEL", key]);
 }
+
+/* Atomic fixed-window counter: INCR, set the TTL on the first hit, report
+   the current count and remaining seconds in one round-trip. */
+const RATE_LIMIT_SCRIPT = [
+  "local c = redis.call('INCR', KEYS[1])",
+  "if c == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end",
+  "local t = redis.call('TTL', KEYS[1])",
+  "return {c, t}",
+].join(" ");
+
+export async function kvRateLimit(
+  key: string,
+  windowSeconds: number
+): Promise<{ count: number; ttl: number }> {
+  const result = await redisCommand<[number, number]>([
+    "EVAL",
+    RATE_LIMIT_SCRIPT,
+    1,
+    key,
+    windowSeconds,
+  ]);
+  const [count, ttl] = Array.isArray(result) ? result : [0, 0];
+  return { count, ttl };
+}

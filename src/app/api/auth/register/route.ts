@@ -9,8 +9,12 @@ import {
 } from "@/lib/auth";
 import { buildVerificationEmail } from "@/lib/auth-email";
 import { sendTransactionalEmail } from "@/lib/email";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+const REGISTER_LIMIT = 5;
+const REGISTER_WINDOW_SECONDS = 3600;
 
 type RegisterBody = {
   email?: unknown;
@@ -48,6 +52,19 @@ async function sendVerification(req: Request, email: string, userId: string, loc
 }
 
 export async function POST(req: Request) {
+  const limit = await rateLimit(
+    "register",
+    getClientIp(req),
+    REGISTER_LIMIT,
+    REGISTER_WINDOW_SECONDS
+  );
+  if (!limit.ok) {
+    return NextResponse.json(
+      { ok: false, error: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
+    );
+  }
+
   let body: RegisterBody;
   try {
     body = (await req.json()) as RegisterBody;

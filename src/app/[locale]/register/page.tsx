@@ -77,6 +77,7 @@ export default async function RegisterPage({
                   notConfigured: t("not_configured"),
                   storageNotConfigured: t("storage_not_configured"),
                   secretNotConfigured: t("secret_not_configured"),
+                  rateLimited: t("rate_limited"),
                   generic: t("generic_error"),
                 }}
               />

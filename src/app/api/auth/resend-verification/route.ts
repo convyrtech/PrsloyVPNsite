@@ -6,8 +6,12 @@ import {
 } from "@/lib/auth";
 import { buildVerificationEmail } from "@/lib/auth-email";
 import { sendTransactionalEmail } from "@/lib/email";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+const RESEND_LIMIT = 4;
+const RESEND_WINDOW_SECONDS = 3600;
 
 type ResendBody = {
   locale?: unknown;
@@ -37,6 +41,14 @@ export async function POST(req: Request) {
     }
     if (current.emailVerified) {
       return NextResponse.json({ ok: true, alreadyVerified: true });
+    }
+
+    const limit = await rateLimit("resend", current.id, RESEND_LIMIT, RESEND_WINDOW_SECONDS);
+    if (!limit.ok) {
+      return NextResponse.json(
+        { ok: false, error: "rate_limited" },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
+      );
     }
 
     const { token } = await createVerificationTokenForEmail(current.email);

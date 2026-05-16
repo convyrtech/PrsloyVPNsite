@@ -285,6 +285,7 @@
     "not_configured": "Хранилище аккаунтов ещё не подключено.",
     "storage_not_configured": "Redis-хранилище не видно. Проверь UPSTASH_REDIS_REST_KV_REST_API_URL и UPSTASH_REDIS_REST_KV_REST_API_TOKEN.",
     "secret_not_configured": "AUTH_SECRET не задан или короче 32 символов.",
+    "rate_limited": "Слишком много попыток. Подожди пару минут и попробуй снова.",
     "generic_error": "Не получилось выполнить запрос. Попробуй через минуту.",
     "no_account": "НЕТ АККАУНТА?",
     "has_account": "УЖЕ ЕСТЬ АККАУНТ?",

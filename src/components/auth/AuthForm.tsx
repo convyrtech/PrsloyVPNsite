@@ -16,6 +16,7 @@ type AuthCopy = {
   notConfigured: string;
   storageNotConfigured: string;
   secretNotConfigured: string;
+  rateLimited: string;
   generic: string;
 };
 
@@ -54,6 +55,7 @@ export function AuthForm({ mode, locale, copy }: AuthFormProps) {
         else if (data.error === "kv_not_configured") setError(copy.storageNotConfigured);
         else if (data.error === "auth_secret_not_configured") setError(copy.secretNotConfigured);
         else if (data.error === "auth_not_configured") setError(copy.notConfigured);
+        else if (data.error === "rate_limited") setError(copy.rateLimited);
         else setError(copy.generic);
         return;
       }
