@@ -134,33 +134,54 @@
   },
   "setup_page": {
     "label": "SETUP",
-    "title": "Setup appears after access is issued",
-    "subtitle": "During private beta we do not publish technical setup on the landing page. Once access is issued, your dashboard shows a personal configuration and short setup steps.",
+    "title": "Setup without extra steps",
+    "subtitle": "Once access is issued, the dashboard shows your personal configuration. This public page explains the flow: what to prepare, where to take the link, and what to do if the client rejects it.",
     "platforms_label": "PLATFORMS",
+    "steps_unit": "STEPS",
+    "checklist": [
+      {
+        "title": "Access is issued",
+        "body": "Your dashboard should show an active status and a personal configuration. If it does not, the account is still under manual review."
+      },
+      {
+        "title": "One account",
+        "body": "Use the same email you requested the invite with. It keeps review history and access issuing tied to one PRSLOY ID."
+      },
+      {
+        "title": "Private link",
+        "body": "Do not share the configuration with other people. It is tied to your account and can be replaced manually."
+      }
+    ],
+    "security_label": "PRIVACY",
+    "security_title": "Configuration is not published publicly",
+    "security_body": "We do not publish universal setup details on the landing page. The link is created for an account and shown only in the dashboard, so it is easier to replace, revoke, or inspect manually.",
+    "dashboard_link": "OPEN DASHBOARD",
     "step_label_prefix": "STEP",
     "steps": [
       {
-        "title": "Request invite",
-        "body": "Submit a request and verify your email. If capacity is available, we attach access to your PRSLOY ID.",
-        "links": []
+        "title": "Copy the configuration",
+        "body": "In the dashboard, press Copy in the personal configuration block. If the link is hidden, press Show first."
       },
       {
-        "title": "Open dashboard",
-        "body": "Once issued, your dashboard shows a personal configuration and a guide for your access.",
-        "links": []
+        "title": "Open a compatible client",
+        "body": "Import the configuration as a subscription link or paste it into a manual input field. Exact labels depend on the client."
       },
       {
-        "title": "Connect by guide",
-        "body": "Follow the dashboard steps. If something does not work, support will help manually.",
-        "links": []
+        "title": "Check the active state",
+        "body": "After import, the client should show an active profile and should not ask for a new key. If the state does not change, refresh the profile list."
+      },
+      {
+        "title": "Keep access private",
+        "body": "Do not publish the link or send it to shared chats. If the link leaked or stopped working, contact support."
       }
     ],
     "troubleshooting_label": "IF IT WON'T CONNECT",
-    "troubleshooting_body": "Restart Happ. Make sure you're on the latest version. If it still won't work — message us on Telegram with a screenshot of the error, we reply within an hour.",
+    "troubleshooting_body": "If the client rejects the configuration, update the app, copy the link from the dashboard again, and make sure you use the same email. If the error remains, message us on Telegram with a screenshot.",
     "no_key_label": "No access yet?",
+    "no_key_body": "Request an invite first and verify your email. Once capacity is approved manually, the personal configuration appears in the dashboard.",
     "get_key_link": "Request invite",
     "telegram_label": "Got a question?",
-    "telegram_link": "Telegram"
+    "telegram_link": "Support"
   },
   "dashboard_page": {
     "label": "DASHBOARD",
