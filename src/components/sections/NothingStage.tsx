@@ -51,19 +51,19 @@ export function NothingStage() {
   // ── Sub-text envelopes ─────────────────────
   const yourIspOpacity = useTransform(
     scrollYProgress,
-    [0.05, 0.15, 0.62, 0.72],
-    [0, 1, 1, 0],
+    [0.00, 0.62, 0.72],
+    [1, 1, 0],
     { clamp: true }
   );
   const labelOpacity = useTransform(
     scrollYProgress,
-    [0.05, 0.15, 0.62, 0.72],
-    [0, 1, 1, 0],
+    [0.00, 0.62, 0.72],
+    [1, 1, 0],
     { clamp: true }
   );
   const metaOpacity = useTransform(
     scrollYProgress,
-    [0.10, 0.20, 0.62, 0.72],
+    [0.04, 0.16, 0.62, 0.72],
     [0, 1, 1, 0],
     { clamp: true }
   );
@@ -75,19 +75,19 @@ export function NothingStage() {
   //  Adding text post-void would invert the message: NOTHING the user
   //  sees is the *good* outcome, not a loss. Scroll cue handles direction.)
 
-  // ── DOM text (with cipher) — visible 0.05 → 0.62, hands off to canvas
+  // ── DOM text (with cipher) — visible immediately, hands off to canvas
   const domTextOpacity = useTransform(
     scrollYProgress,
-    [0.05, 0.18, 0.58, 0.62],
-    [0, 1, 1, 0],
+    [0.00, 0.58, 0.62],
+    [1, 1, 0],
     { clamp: true }
   );
 
-  // ── Canvas erosion — visible 0.60 → 1.0
+  // ── Canvas erosion — holds through the section boundary
   const canvasOpacity = useTransform(
     scrollYProgress,
-    [0.58, 0.62, 0.97, 1.0],
-    [0, 1, 1, 0],
+    [0.58, 0.62, 1.0],
+    [0, 1, 1],
     { clamp: true }
   );
 
@@ -133,7 +133,7 @@ export function NothingStage() {
       className="w-full bg-black"
       // Trimmed from 350vh — long void at the end was wasted scroll
       // before next section's content emerged.
-      style={{ height: "270vh", position: "relative" }}
+      style={{ height: "270vh", marginTop: "clamp(-620px, -60vh, -460px)", position: "relative" }}
     >
       <div className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black flex items-center justify-center">
         {/* TOP LABEL */}

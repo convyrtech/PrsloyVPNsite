@@ -60,7 +60,7 @@ export function ScrollStage() {
   // when user crosses the threshold, even if spring is still catching up.
   useEffect(() => {
     const unsub = rawProgress.on("change", (v) => {
-      if (v > 0.32 && !shouldMountGlobe) setShouldMountGlobe(true);
+      if (v > 0.18 && !shouldMountGlobe) setShouldMountGlobe(true);
     });
     return unsub;
   }, [rawProgress, shouldMountGlobe]);
@@ -101,20 +101,20 @@ export function ScrollStage() {
   // dwelling between sections.
   const globeOpacity = useTransform(
     scrollYProgress,
-    [0.55, 0.65, 0.97, 1.0],
+    [0.55, 0.65, 0.88, 1.0],
     [0, 1, 1, 0],
     { clamp: true }
   );
   const globeScale = useTransform(
     scrollYProgress,
-    [0.55, 0.75, 0.97, 1.0],
-    [0.25, 0.78, 0.78, 0.55],
+    [0.55, 0.75, 0.88, 1.0],
+    [0.25, 0.78, 0.78, 0.65],
     { clamp: true }
   );
   const globeY = useTransform(
     scrollYProgress,
-    [0.97, 1.0],
-    ["0%", "-12%"],
+    [0.88, 1.0],
+    ["0%", "-8%"],
     { clamp: true }
   );
   const globeRotate = useTransform(scrollYProgress, [0.55, 0.75], [-12, 0], { clamp: true });
@@ -122,7 +122,7 @@ export function ScrollStage() {
   // ── GLOBE OVERLAY UI ──
   // Hold overlay until section end so the user doesn't see dead screen before
   // NothingStage starts.
-  const overlayProgress = useTransform(scrollYProgress, [0.70, 0.82, 0.97, 1.0], [0, 1, 1, 0], { clamp: true });
+  const overlayProgress = useTransform(scrollYProgress, [0.70, 0.82, 0.88, 1.0], [0, 1, 1, 0], { clamp: true });
 
   // (removed: stuck-logo was redundant with the shrunken HeroParticles
   //  during 0.18–0.35; from 0.40+ the screen is occupied by handshake/globe

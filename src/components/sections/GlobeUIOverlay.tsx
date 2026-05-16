@@ -29,7 +29,7 @@ export function GlobeUIOverlay({
   return (
     <>
       {/* TOP-LEFT — label + title + subtitle */}
-      <div className="absolute top-2xl left-lg md:top-3xl md:left-2xl">
+      <div className="absolute top-[clamp(112px,16vh,156px)] left-lg md:top-[clamp(132px,17vh,188px)] md:left-2xl">
         <motion.p
           className="font-mono text-label uppercase text-text-disabled tracking-[0.08em] mb-md"
           style={{ opacity: labelOp }}
@@ -54,7 +54,7 @@ export function GlobeUIOverlay({
 
       {/* TOP-RIGHT — honest metrics */}
       <motion.div
-        className="absolute top-2xl right-lg md:top-3xl md:right-2xl
+        className="absolute top-[clamp(96px,14vh,144px)] right-lg md:top-[clamp(112px,14vh,160px)] md:right-2xl
                    grid grid-cols-3 gap-lg text-right"
         style={{ opacity: metricsOp }}
       >

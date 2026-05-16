@@ -61,13 +61,13 @@ export function PricingStage() {
   const basePrice = PRICE_BY_PERIOD[period];
   const conversionText = formatConversion(period, payMethod);
 
-  // ── Phase envelopes — compressed so first scroll into the section
-  //    immediately reveals the price (no empty-screen dwelling) ──
-  // Ignition pixel — fires immediately, gone by 0.06
-  const ignitionScale = useTransform(scrollYProgress, [0, 0.06], [0, 18], { clamp: true });
+  // ── Phase envelopes — paced so the tariff assembles deliberately
+  //    instead of dumping every control into view at once. ──
+  // Ignition pixel — fires immediately, gone by 0.12
+  const ignitionScale = useTransform(scrollYProgress, [0, 0.10], [0, 18], { clamp: true });
   const ignitionOpacity = useTransform(
     scrollYProgress,
-    [0, 0.02, 0.05, 0.08],
+    [0, 0.03, 0.08, 0.12],
     [0, 1, 1, 0],
     { clamp: true }
   );
@@ -75,53 +75,56 @@ export function PricingStage() {
   // Dust particles converging
   const dustOpacity = useTransform(
     scrollYProgress,
-    [0, 0.05, 0.12],
+    [0, 0.08, 0.16],
     [0, 0.7, 0],
     { clamp: true }
   );
 
-  // Price ($5 + /MONTH) — visible by ~0.10
-  const priceOpacity = useTransform(scrollYProgress, [0.04, 0.10], [0, 1], { clamp: true });
-  const priceY = useTransform(scrollYProgress, [0.04, 0.10], [40, 0], { clamp: true });
-  const priceScale = useTransform(scrollYProgress, [0.04, 0.10], [0.6, 1], { clamp: true });
-  const monthOpacity = useTransform(scrollYProgress, [0.08, 0.14], [0, 1], { clamp: true });
+  // Price ($5 + /MONTH) — visible early, then the controls layer in
+  const priceOpacity = useTransform(scrollYProgress, [0.06, 0.16], [0, 1], { clamp: true });
+  const priceY = useTransform(scrollYProgress, [0.06, 0.16], [40, 0], { clamp: true });
+  const priceScale = useTransform(scrollYProgress, [0.06, 0.16], [0.6, 1], { clamp: true });
+  const monthOpacity = useTransform(scrollYProgress, [0.14, 0.24], [0, 1], { clamp: true });
 
   // Top label
-  const labelOpacity = useTransform(scrollYProgress, [0.10, 0.18], [0, 1], { clamp: true });
-  const labelY = useTransform(scrollYProgress, [0.10, 0.18], [-12, 0], { clamp: true });
+  const labelOpacity = useTransform(scrollYProgress, [0.16, 0.28], [0, 1], { clamp: true });
+  const labelY = useTransform(scrollYProgress, [0.16, 0.28], [-12, 0], { clamp: true });
 
   // Period segmented control
-  const periodOpacity = useTransform(scrollYProgress, [0.12, 0.20], [0, 1], { clamp: true });
-  const periodY = useTransform(scrollYProgress, [0.12, 0.20], [-20, 0], { clamp: true });
+  const periodOpacity = useTransform(scrollYProgress, [0.18, 0.30], [0, 1], { clamp: true });
+  const periodY = useTransform(scrollYProgress, [0.18, 0.30], [-20, 0], { clamp: true });
 
   // Crypto pills
-  const cryptoOpacity = useTransform(scrollYProgress, [0.18, 0.28], [0, 1], { clamp: true });
-  const cryptoY = useTransform(scrollYProgress, [0.18, 0.28], [24, 0], { clamp: true });
+  const cryptoOpacity = useTransform(scrollYProgress, [0.28, 0.42], [0, 1], { clamp: true });
+  const cryptoY = useTransform(scrollYProgress, [0.28, 0.42], [24, 0], { clamp: true });
 
   // Conversion line
-  const convOpacity = useTransform(scrollYProgress, [0.24, 0.32], [0, 1], { clamp: true });
+  const convOpacity = useTransform(scrollYProgress, [0.36, 0.48], [0, 1], { clamp: true });
 
   // Features grid
-  const includesOpacity = useTransform(scrollYProgress, [0.30, 0.40], [0, 1], { clamp: true });
-  const featuresOpacity = useTransform(scrollYProgress, [0.34, 0.48], [0, 1], { clamp: true });
-  const featuresY = useTransform(scrollYProgress, [0.34, 0.48], [16, 0], { clamp: true });
+  const includesOpacity = useTransform(scrollYProgress, [0.44, 0.56], [0, 1], { clamp: true });
+  const featuresOpacity = useTransform(scrollYProgress, [0.48, 0.64], [0, 1], { clamp: true });
+  const featuresY = useTransform(scrollYProgress, [0.48, 0.64], [16, 0], { clamp: true });
 
   // CTA + guarantee — visible by mid-scroll, hold to end
-  const ctaOpacity = useTransform(scrollYProgress, [0.46, 0.60], [0, 1], { clamp: true });
-  const ctaY = useTransform(scrollYProgress, [0.46, 0.60], [32, 0], { clamp: true });
-  const guaranteeOpacity = useTransform(scrollYProgress, [0.56, 0.70], [0, 1], { clamp: true });
+  const ctaOpacity = useTransform(scrollYProgress, [0.62, 0.76], [0, 1], { clamp: true });
+  const ctaY = useTransform(scrollYProgress, [0.62, 0.76], [32, 0], { clamp: true });
+  const guaranteeOpacity = useTransform(scrollYProgress, [0.72, 0.84], [0, 1], { clamp: true });
 
   return (
     <section
       ref={stageRef}
       className="w-full bg-black"
-      // 160vh: shorter than original 350vh and previous 220vh. Long sticky
-      // sections feel "stuck" if scroll-density is too low. Bounded so it
-      // feels like one purposeful pull, not three idle screen-heights.
-      style={{ height: "160vh", position: "relative" }}
+      // Bounded sticky section: long enough to feel premium, short enough
+      // to avoid the "stuck on one screen" feeling.
+      style={{
+        height: "clamp(1900px, 240vh, 2600px)",
+        marginTop: "clamp(-620px, -60vh, -460px)",
+        position: "relative",
+      }}
     >
       <div className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black flex items-center justify-center
-                      pt-[clamp(80px,10vh,128px)] pb-[clamp(40px,6vh,80px)]">
+                      pt-[clamp(48px,7vh,112px)] pb-[clamp(24px,5vh,72px)]">
         <div className="relative w-full max-w-3xl px-lg flex flex-col items-center text-center">
           {/* ── IGNITION PIXEL — single bright dot that explodes into $ ── */}
           <motion.div
@@ -137,7 +140,7 @@ export function PricingStage() {
 
           {/* ── TOP LABEL ── */}
           <motion.p
-            className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled mb-2xl"
+            className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled mb-xl sm:mb-2xl"
             style={{ opacity: labelOpacity, y: labelY }}
           >
             {t("label")}
@@ -145,7 +148,7 @@ export function PricingStage() {
 
           {/* ── PERIOD SEGMENTED CONTROL ── */}
           <motion.div
-            className="mb-2xl pointer-events-auto"
+            className="mb-xl sm:mb-2xl pointer-events-auto"
             style={{ opacity: periodOpacity, y: periodY }}
           >
             <PeriodControl value={period} onChange={setPeriod} />
@@ -153,13 +156,13 @@ export function PricingStage() {
 
           {/* ── PRICE — clean & confident ── */}
           <motion.div
-            className="flex flex-col items-center mb-md"
+            className="flex flex-col items-center mb-sm sm:mb-md"
             style={{ opacity: priceOpacity, y: priceY, scale: priceScale }}
           >
             {/* Tiny instrument label — only typographic "character" we keep.
                 Massive uniform weight does the rest. */}
             <div className="font-mono text-[10px] uppercase tracking-[0.4em] text-text-disabled
-                            whitespace-nowrap mb-md">
+                            whitespace-nowrap mb-sm sm:mb-md">
               ─── PRICE ───
             </div>
 
@@ -167,7 +170,7 @@ export function PricingStage() {
             <div
               className="font-body font-bold text-text-display leading-[0.85] tabular-nums
                          flex items-baseline"
-              style={{ fontSize: "clamp(120px, 22vw, 260px)", letterSpacing: "-0.05em" }}
+              style={{ fontSize: "clamp(76px, 18vw, 240px)", letterSpacing: "0" }}
             >
               <span>$</span>
               <span>{basePrice}</span>
@@ -182,7 +185,7 @@ export function PricingStage() {
 
             {/* Promo line — single red accent on the entire screen */}
             <motion.div
-              className="mt-md flex items-center gap-sm"
+              className="mt-sm sm:mt-md flex items-center gap-sm text-center"
               style={{ opacity: monthOpacity }}
             >
               <span className="inline-block w-[6px] h-[6px] rounded-full bg-accent animate-pulse" />
@@ -194,7 +197,7 @@ export function PricingStage() {
 
           {/* ── PAYMENT METHODS — fiat + crypto ── */}
           <motion.div
-            className="flex flex-col items-center gap-md mb-2xl pointer-events-auto"
+            className="flex flex-col items-center gap-sm sm:gap-md mb-xl sm:mb-2xl pointer-events-auto"
             style={{ opacity: cryptoOpacity, y: cryptoY }}
           >
             <PaymentPills value={payMethod} onChange={setPayMethod} />
@@ -207,13 +210,13 @@ export function PricingStage() {
           </motion.div>
 
           {/* ── INCLUDES divider ── */}
-          <motion.div className="w-full mb-lg" style={{ opacity: includesOpacity }}>
+          <motion.div className="w-full mb-md sm:mb-lg" style={{ opacity: includesOpacity }}>
             <DividerLabel>{t("includes")}</DividerLabel>
           </motion.div>
 
           {/* ── FEATURE GRID ── */}
           <motion.div
-            className="grid grid-cols-3 gap-x-2xl gap-y-lg mb-2xl text-left"
+            className="grid grid-cols-3 gap-x-lg gap-y-md sm:gap-x-2xl sm:gap-y-lg mb-xl sm:mb-2xl text-left"
             style={{ opacity: featuresOpacity, y: featuresY }}
           >
             <FeatureCell label={t("feature_encryption")} value={t("feature_encryption_value")} />
@@ -256,14 +259,14 @@ export function PricingStage() {
                 [ {t("cta")} ]
               </Link>
             </motion.div>
-            <p className="mt-md font-mono text-label uppercase tracking-[0.12em] text-text-disabled">
+            <p className="mt-sm sm:mt-md font-mono text-label uppercase tracking-[0.12em] text-text-disabled">
               {t("cta_meta")}
             </p>
           </motion.div>
 
           {/* ── GUARANTEE strip ── */}
           <motion.p
-            className="mt-2xl font-mono text-label uppercase tracking-[0.08em] text-text-secondary"
+            className="mt-lg sm:mt-2xl font-mono text-label uppercase tracking-[0.08em] text-text-secondary"
             style={{ opacity: guaranteeOpacity }}
           >
             {t("guarantee")}

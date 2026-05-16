@@ -45,8 +45,8 @@ function FaqWordReveal({ text, trigger, delay }: { text: string; trigger: boolea
           initial={{ opacity: 0, y: 12, filter: "blur(6px)" }}
           animate={trigger ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
           transition={{
-            duration: 0.5,
-            delay: delay + i * 0.04,
+            duration: 0.35,
+            delay: delay + i * 0.025,
             ease: [0.25, 0.1, 0.25, 1],
           }}
           className="inline-block mr-[0.25em]"
@@ -76,7 +76,7 @@ function FaqWordReveal({ text, trigger, delay }: { text: string; trigger: boolea
 export function FaqStage() {
   const t = useTranslations("faq");
   const sectionRef = useRef<HTMLElement | null>(null);
-  const inView = useInView(sectionRef, { once: true, margin: "-15% 0px" });
+  const inView = useInView(sectionRef, { once: true, margin: "0px 0px 25% 0px" });
   const [shouldMount3D, setShouldMount3D] = useState(false);
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export function FaqStage() {
         {/* LEFT — stacked questions */}
         <div className="flex flex-col gap-2xl relative z-10">
           {items.map((item, i) => {
-            const baseDelay = 0.2 + i * 0.22;
+            const baseDelay = 0.08 + i * 0.12;
             return (
               <motion.div
                 key={item.num}
@@ -150,7 +150,7 @@ export function FaqStage() {
                 <motion.p
                   initial={{ opacity: 0, y: 8 }}
                   animate={inView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.6, delay: baseDelay + 0.4 }}
+                  transition={{ duration: 0.45, delay: baseDelay + 0.25 }}
                   className="font-body font-light text-text-secondary
                              text-[clamp(15px,1.4vw,18px)] leading-[1.55]
                              relative pl-lg before:absolute before:left-0 before:top-[0.7em]

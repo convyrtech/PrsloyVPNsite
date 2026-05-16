@@ -10,7 +10,7 @@ export function PaymentPills({
   onChange: (v: Payment) => void;
 }) {
   return (
-    <div className="flex items-center gap-md flex-wrap justify-center">
+    <div className="flex items-center gap-sm sm:gap-md flex-wrap justify-center">
       <div className="flex gap-sm">
         {FIAT_PAYMENTS.map((m) => (
           <Pill key={m} method={m} active={value === m} onClick={() => onChange(m)} />
@@ -40,7 +40,7 @@ function Pill({
       type="button"
       onClick={onClick}
       className={`
-        relative px-md min-h-[44px] inline-flex items-center justify-center
+        relative px-sm sm:px-md min-h-[40px] sm:min-h-[44px] inline-flex items-center justify-center
         font-mono text-label uppercase tracking-[0.08em]
         rounded-full border
         transition-colors duration-150 ease-out-nothing
