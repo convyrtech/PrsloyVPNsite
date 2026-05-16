@@ -7,11 +7,13 @@ import { LogoutButton, ResendVerificationButton } from "@/components/auth/Accoun
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { RevealOnView } from "@/components/ui/RevealOnView";
 import { DotoNumber } from "@/components/ui/DotoNumber";
+import { TELEGRAM_BOT_URL } from "@/lib/links";
 import type { PublicAuthUser } from "@/lib/auth";
 
 export type DashboardCopy = Record<
   | "label"
   | "title"
+  | "subtitle"
   | "setup_title"
   | "setup_body"
   | "auth_required_label"
@@ -47,9 +49,27 @@ export type DashboardCopy = Record<
   | "copy_key"
   | "copy_done"
   | "copy_error"
+  | "config_label"
+  | "show_key"
+  | "hide_key"
+  | "open_key"
   | "setup_link"
   | "ready_hint_label"
   | "pending_hint_label"
+  | "next_label"
+  | "next_active_1_title"
+  | "next_active_1_body"
+  | "next_active_2_title"
+  | "next_active_2_body"
+  | "next_active_3_title"
+  | "next_active_3_body"
+  | "next_pending_1_title"
+  | "next_pending_1_body"
+  | "next_pending_2_title"
+  | "next_pending_2_body"
+  | "next_pending_3_title"
+  | "next_pending_3_body"
+  | "support_link"
   | "account_label"
   | "logout",
   string
@@ -213,6 +233,10 @@ export function DashboardClient({
       </RevealOnView>
 
       <RevealOnView>
+        <NextActions copy={copy} hasKey={hasKey} />
+      </RevealOnView>
+
+      <RevealOnView>
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
           <InfoTile label={copy.email_label} value={user.email} />
           <InfoTile
@@ -259,20 +283,25 @@ function DashboardShell({
 
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
-      <div className="max-w-3xl mx-auto px-lg flex flex-col gap-3xl">
+      <div className="max-w-5xl mx-auto px-lg flex flex-col gap-3xl">
         <RevealOnView y={12}>
           <SectionLabel>{copy.label}</SectionLabel>
         </RevealOnView>
 
         <RevealOnView delay={0.05}>
           <header className="flex flex-col gap-lg">
-            <div className="flex flex-col gap-md sm:flex-row sm:items-end sm:justify-between sm:gap-lg">
-              <h1
-                className="font-body font-bold text-text-display leading-[0.95] tracking-[-0.03em] break-words sm:flex-1 sm:min-w-0"
-                style={{ fontSize: "clamp(36px, 7vw, 72px)" }}
-              >
-                {copy.title}
-              </h1>
+            <div className="flex flex-col gap-md lg:flex-row lg:items-end lg:justify-between lg:gap-2xl">
+              <div className="flex flex-col gap-md max-w-2xl">
+                <h1
+                  className="font-body font-bold text-text-display leading-[0.95] tracking-[-0.03em] break-words"
+                  style={{ fontSize: "clamp(40px, 7vw, 84px)" }}
+                >
+                  {copy.title}
+                </h1>
+                <p className="font-body text-body text-text-secondary leading-[1.55] max-w-xl">
+                  {copy.subtitle}
+                </p>
+              </div>
               <DotoNumber value={user ? "01" : "00"} unit={unit} />
             </div>
           </header>
@@ -422,7 +451,7 @@ function IdentityPanel({
 
 function MiniStat({ label, value, wide = false }: { label: string; value: string; wide?: boolean }) {
   return (
-    <div className={`border-t border-border-visible pt-sm ${wide ? "col-span-2" : ""}`}>
+    <div className={`min-w-0 border-t border-border-visible pt-sm ${wide ? "col-span-2" : ""}`}>
       <div className="font-mono text-label uppercase tracking-[0.12em] text-text-disabled">
         {label}
       </div>
@@ -443,6 +472,7 @@ function AccessPanel({
   hasKey: boolean;
 }) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
+  const [revealed, setRevealed] = useState(false);
 
   async function copyAccessKey() {
     if (!subscriptionUrl) return;
@@ -469,8 +499,13 @@ function AccessPanel({
           <p className="font-body text-body-sm text-text-secondary leading-[1.6]">
             {copy.key_ready_body}
           </p>
-          <div className="border border-border-visible bg-black p-md font-mono text-body-sm text-text-display break-all leading-[1.6]">
-            {subscriptionUrl}
+          <div className="border border-border-visible bg-black p-md">
+            <div className="mb-sm font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
+              {copy.config_label}
+            </div>
+            <div className="font-mono text-body-sm text-text-display break-all leading-[1.6]">
+              {revealed ? subscriptionUrl : maskAccessUrl(subscriptionUrl)}
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-sm">
             <button
@@ -482,6 +517,25 @@ function AccessPanel({
             >
               [ {copyState === "copied" ? copy.copy_done : copy.copy_key} ]
             </button>
+            <button
+              type="button"
+              onClick={() => setRevealed((v) => !v)}
+              className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
+                         font-mono text-label uppercase tracking-[0.08em] text-text-display
+                         hover:border-text-display transition-colors"
+            >
+              [ {revealed ? copy.hide_key : copy.show_key} ]
+            </button>
+            <a
+              href={subscriptionUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
+                         font-mono text-label uppercase tracking-[0.08em] text-text-display
+                         hover:border-text-display transition-colors"
+            >
+              [ {copy.open_key} ]
+            </a>
             <Link
               href="/setup"
               className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
@@ -500,6 +554,68 @@ function AccessPanel({
           {copy.key_pending_body}
         </p>
       )}
+    </section>
+  );
+}
+
+function NextActions({ copy, hasKey }: { copy: DashboardCopy; hasKey: boolean }) {
+  const actions = hasKey
+    ? [
+        { title: copy.next_active_1_title, body: copy.next_active_1_body, href: "/setup" },
+        { title: copy.next_active_2_title, body: copy.next_active_2_body },
+        { title: copy.next_active_3_title, body: copy.next_active_3_body, href: TELEGRAM_BOT_URL },
+      ]
+    : [
+        { title: copy.next_pending_1_title, body: copy.next_pending_1_body },
+        { title: copy.next_pending_2_title, body: copy.next_pending_2_body },
+        { title: copy.next_pending_3_title, body: copy.next_pending_3_body, href: TELEGRAM_BOT_URL },
+      ];
+
+  return (
+    <section className="flex flex-col gap-lg">
+      <div className="flex items-center gap-md">
+        <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
+          {copy.next_label}
+        </span>
+        <span className="h-px flex-1 bg-border-visible/40" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
+        {actions.map((action, index) => (
+          <article
+            key={action.title}
+            className="border border-border-visible rounded-[8px] p-lg min-h-[180px] flex flex-col gap-md"
+          >
+            <span className="font-mono text-label uppercase tracking-[0.14em] text-text-disabled">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <h3 className="font-body font-bold text-text-display text-subheading leading-[1.2]">
+              {action.title}
+            </h3>
+            <p className="font-body text-body-sm text-text-secondary leading-[1.55] flex-1">
+              {action.body}
+            </p>
+            {action.href && (
+              action.href.startsWith("http") ? (
+                <a
+                  href={action.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="self-start font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80"
+                >
+                  {copy.support_link} →
+                </a>
+              ) : (
+                <Link
+                  href={action.href as "/setup"}
+                  className="self-start font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80"
+                >
+                  {copy.setup_link} →
+                </Link>
+              )
+            )}
+          </article>
+        ))}
+      </div>
     </section>
   );
 }
@@ -572,4 +688,13 @@ function formatDashboardDate(value: string, locale: string) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
+}
+
+function maskAccessUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return `${url.origin}${url.pathname.slice(0, 8)}••••••••••••`;
+  } catch {
+    return `${value.slice(0, 12)}••••••••••••`;
+  }
 }
