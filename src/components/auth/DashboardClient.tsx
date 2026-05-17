@@ -142,6 +142,13 @@ type AccessOperationsCopy = {
   reissuePending: string;
   requestReissue: string;
   apiPending: string;
+  requestReissueSending: string;
+  requestReissueSent: string;
+  reissueSentBody: string;
+  reissueErrorBody: string;
+  reissueRateLimited: string;
+  reissueNoKey: string;
+  reissueAuthRequired: string;
 };
 
 const DEVICE_GUIDES: Record<DashboardLocale, DeviceGuide[]> = {
@@ -234,6 +241,14 @@ const ACCESS_OPERATIONS_COPY: Record<DashboardLocale, AccessOperationsCopy> = {
     reissuePending: "locked",
     requestReissue: "REQUEST REISSUE",
     apiPending: "API PENDING",
+    requestReissueSending: "SENDING…",
+    requestReissueSent: "REQUEST SENT",
+    reissueSentBody:
+      "Request received. Support will replace the configuration manually.",
+    reissueErrorBody: "Could not send the request. Try again in a moment.",
+    reissueRateLimited: "Too many requests. Try again later.",
+    reissueNoKey: "No active configuration to reissue yet.",
+    reissueAuthRequired: "Session expired. Refresh the page and sign in again.",
   },
   ru: {
     deviceLabel: "УСТРОЙСТВА",
@@ -263,6 +278,14 @@ const ACCESS_OPERATIONS_COPY: Record<DashboardLocale, AccessOperationsCopy> = {
     reissuePending: "закрыто",
     requestReissue: "ЗАПРОСИТЬ ПЕРЕВЫПУСК",
     apiPending: "API ПОЗЖЕ",
+    requestReissueSending: "ОТПРАВКА…",
+    requestReissueSent: "ЗАПРОС ОТПРАВЛЕН",
+    reissueSentBody:
+      "Запрос принят. Поддержка заменит конфигурацию вручную.",
+    reissueErrorBody: "Не удалось отправить запрос. Попробуй ещё раз чуть позже.",
+    reissueRateLimited: "Слишком много запросов. Попробуй позже.",
+    reissueNoKey: "Активной конфигурации для перевыпуска пока нет.",
+    reissueAuthRequired: "Сессия истекла. Обнови страницу и войди заново.",
   },
 };
 
@@ -961,29 +984,7 @@ function AccessOperationsPanel({
         <p className="font-body text-body-sm text-text-secondary leading-[1.65]">
           {text.operationsBody}
         </p>
-        <div className="flex flex-col sm:flex-row gap-sm">
-          {hasKey ? (
-            <a
-              href={TELEGRAM_BOT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-lg
-                         font-mono text-label uppercase tracking-[0.08em] text-black
-                         hover:opacity-90 active:scale-[0.98] transition-all"
-            >
-              [ {text.requestReissue} ]
-            </a>
-          ) : (
-            <span className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
-                             font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
-              [ {text.requestReissue} ]
-            </span>
-          )}
-          <span className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
-                           font-mono text-label uppercase tracking-[0.08em] text-text-display">
-            [ {text.apiPending} ]
-          </span>
-        </div>
+        <ReissueControl hasKey={hasKey} text={text} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
@@ -1007,6 +1008,99 @@ function AccessOperationsPanel({
         />
       </div>
     </section>
+  );
+}
+
+type ReissueState = "idle" | "sending" | "sent" | "error";
+
+function ReissueControl({
+  hasKey,
+  text,
+}: {
+  hasKey: boolean;
+  text: AccessOperationsCopy;
+}) {
+  const [state, setState] = useState<ReissueState>("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function submit() {
+    if (!hasKey || state === "sending" || state === "sent") return;
+    setState("sending");
+    setErrorMessage("");
+    try {
+      const res = await fetch("/api/access/reissue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      };
+      if (res.ok && data.ok) {
+        setState("sent");
+        return;
+      }
+      setErrorMessage(
+        data.error === "rate_limited"
+          ? text.reissueRateLimited
+          : data.error === "access_not_issued"
+            ? text.reissueNoKey
+            : data.error === "authentication_required"
+              ? text.reissueAuthRequired
+              : text.reissueErrorBody
+      );
+      setState("error");
+    } catch {
+      setErrorMessage(text.reissueErrorBody);
+      setState("error");
+    }
+  }
+
+  const label =
+    state === "sending"
+      ? text.requestReissueSending
+      : state === "sent"
+        ? text.requestReissueSent
+        : text.requestReissue;
+
+  return (
+    <div className="flex flex-col gap-sm">
+      <div className="flex flex-col sm:flex-row gap-sm">
+        {hasKey ? (
+          <button
+            type="button"
+            onClick={submit}
+            disabled={state === "sending" || state === "sent"}
+            className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-lg
+                       font-mono text-label uppercase tracking-[0.08em] text-black
+                       hover:opacity-90 active:scale-[0.98] transition-all
+                       disabled:opacity-60 disabled:cursor-default disabled:active:scale-100"
+          >
+            [ {label} ]
+          </button>
+        ) : (
+          <span className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
+                           font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
+            [ {text.requestReissue} ]
+          </span>
+        )}
+        <span className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
+                         font-mono text-label uppercase tracking-[0.08em] text-text-display">
+          [ {text.apiPending} ]
+        </span>
+      </div>
+      {state === "sent" && (
+        <p className="font-body text-body-sm text-success leading-[1.55]">
+          {text.reissueSentBody}
+        </p>
+      )}
+      {state === "error" && (
+        <p role="alert" className="font-body text-body-sm text-accent leading-[1.55]">
+          {errorMessage}
+        </p>
+      )}
+    </div>
   );
 }
 
