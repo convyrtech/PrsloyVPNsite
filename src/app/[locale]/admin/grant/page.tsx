@@ -18,5 +18,5 @@ export default async function AdminGrantPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  return <AdminGrantClient />;
+  return <AdminGrantClient locale={locale} />;
 }
