@@ -7,7 +7,11 @@ import { LogoutButton, ResendVerificationButton } from "@/components/auth/Accoun
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { RevealOnView } from "@/components/ui/RevealOnView";
 import { DotoNumber } from "@/components/ui/DotoNumber";
-import { TELEGRAM_BOT_URL } from "@/lib/links";
+import {
+  HAPP_DOWNLOAD_URL,
+  HAPP_IMPORT_GUIDE_URL,
+  TELEGRAM_BOT_URL,
+} from "@/lib/links";
 import type { PublicAuthUser } from "@/lib/auth";
 
 export type DashboardCopy = Record<
@@ -139,9 +143,6 @@ type AccessOperationsCopy = {
   requestReissue: string;
   apiPending: string;
 };
-
-const HAPP_DOWNLOAD_URL = "https://www.happ.su/main";
-const HAPP_IMPORT_GUIDE_URL = "https://www.happ.su/main/faq/adding-configuration-subscription";
 
 const DEVICE_GUIDES: Record<DashboardLocale, DeviceGuide[]> = {
   en: [

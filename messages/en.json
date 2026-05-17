@@ -152,6 +152,39 @@
         "body": "Do not share the configuration with other people. It is tied to your account and can be replaced manually."
       }
     ],
+    "happ_title": "Happ — a compatible client for every device",
+    "happ_body": "Happ is the compatible client we recommend for importing your personal configuration. It runs on phones, computers and TV devices and reads the configuration as a subscription link.",
+    "happ_download": "OPEN HAPP",
+    "happ_import_guide": "IMPORT GUIDE",
+    "platforms": [
+      {
+        "platform": "Phone",
+        "label": "iOS / Android",
+        "steps": [
+          "Install Happ from the official App Store or Google Play listing.",
+          "Open the dashboard and copy your personal configuration.",
+          "In Happ, add it as a subscription link and turn the profile on."
+        ]
+      },
+      {
+        "platform": "Desktop",
+        "label": "Windows / macOS / Linux",
+        "steps": [
+          "Install the desktop Happ build for your operating system.",
+          "Paste the copied configuration into the import field.",
+          "Refresh the profile list if the active state does not appear right away."
+        ]
+      },
+      {
+        "platform": "TV",
+        "label": "Android TV / Apple TV",
+        "steps": [
+          "Install Happ on the TV device or set-top box.",
+          "Move the configuration to the device with the clipboard or a QR code.",
+          "Import it as a subscription and keep the configuration private."
+        ]
+      }
+    ],
     "security_label": "PRIVACY",
     "security_title": "Configuration is not published publicly",
     "security_body": "We do not publish universal setup details on the landing page. The link is created for an account and shown only in the dashboard, so it is easier to replace, revoke, or inspect manually.",

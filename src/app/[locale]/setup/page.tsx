@@ -3,9 +3,14 @@ import { Link } from "@/i18n/routing";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { RevealOnView } from "@/components/ui/RevealOnView";
 import { DotoNumber } from "@/components/ui/DotoNumber";
-import { TELEGRAM_BOT_URL } from "@/lib/links";
+import {
+  HAPP_DOWNLOAD_URL,
+  HAPP_IMPORT_GUIDE_URL,
+  TELEGRAM_BOT_URL,
+} from "@/lib/links";
 
 type SetupItem = { title: string; body: string };
+type SetupPlatform = { platform: string; label: string; steps: string[] };
 
 export default async function SetupPage({
   params,
@@ -18,6 +23,7 @@ export default async function SetupPage({
 
   const checklist = (t.raw("checklist") as SetupItem[]) ?? [];
   const steps = (t.raw("steps") as SetupItem[]) ?? [];
+  const platforms = (t.raw("platforms") as SetupPlatform[]) ?? [];
 
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
@@ -66,6 +72,81 @@ export default async function SetupPage({
                 </p>
               </article>
             ))}
+          </section>
+        </RevealOnView>
+
+        <RevealOnView delay={0.12}>
+          <section className="flex flex-col gap-xl pt-xl border-t border-border-visible">
+            <div className="grid gap-lg lg:grid-cols-[180px_1fr]">
+              <span className="font-mono text-label uppercase tracking-[0.14em] text-text-disabled">
+                {t("platforms_label")}
+              </span>
+              <div className="flex flex-col gap-md">
+                <h2 className="font-body font-bold text-text-display text-heading leading-[1.15]">
+                  {t("happ_title")}
+                </h2>
+                <p className="font-body text-body text-text-secondary leading-[1.65] max-w-2xl">
+                  {t("happ_body")}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-sm pt-xs">
+                  <a
+                    href={HAPP_DOWNLOAD_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-lg
+                               font-mono text-label uppercase tracking-[0.08em] text-black
+                               hover:opacity-90 transition-opacity"
+                  >
+                    [ {t("happ_download")} ]
+                  </a>
+                  <a
+                    href={HAPP_IMPORT_GUIDE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
+                               font-mono text-label uppercase tracking-[0.08em] text-text-display
+                               hover:border-text-display transition-colors"
+                  >
+                    [ {t("happ_import_guide")} ]
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-md">
+              {platforms.map((platform, i) => (
+                <article
+                  key={platform.platform}
+                  className="border border-border-visible rounded-[8px] p-lg flex flex-col gap-lg"
+                >
+                  <div className="flex items-start justify-between gap-md">
+                    <div className="flex flex-col gap-xs">
+                      <span className="font-mono text-label uppercase tracking-[0.14em] text-text-disabled">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <h3 className="font-body font-bold text-text-display text-subheading leading-[1.2]">
+                        {platform.platform}
+                      </h3>
+                    </div>
+                    <span className="font-mono text-label uppercase tracking-[0.1em] text-text-secondary text-right">
+                      {platform.label}
+                    </span>
+                  </div>
+                  <ol className="flex flex-col gap-md">
+                    {platform.steps.map((step, si) => (
+                      <li key={step} className="grid grid-cols-[28px_1fr] gap-md">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-border-visible font-mono text-[10px] text-text-display">
+                          {String(si + 1).padStart(2, "0")}
+                        </span>
+                        <span className="font-body text-body-sm text-text-secondary leading-[1.55]">
+                          {step}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </article>
+              ))}
+            </div>
           </section>
         </RevealOnView>
 
