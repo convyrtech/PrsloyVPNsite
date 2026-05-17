@@ -105,6 +105,166 @@ type AccessStep = {
   state: "done" | "current" | "waiting";
 };
 
+type DashboardLocale = "en" | "ru";
+
+type DeviceGuide = {
+  platform: string;
+  label: string;
+  steps: string[];
+};
+
+type AccessOperationsCopy = {
+  deviceLabel: string;
+  deviceTitle: string;
+  deviceBodyReady: string;
+  deviceBodyPending: string;
+  installHapp: string;
+  importGuide: string;
+  unavailable: string;
+  operationsLabel: string;
+  operationsTitle: string;
+  operationsBody: string;
+  validityLabel: string;
+  validityReady: string;
+  validityPending: string;
+  trafficLabel: string;
+  trafficReady: string;
+  trafficPending: string;
+  devicesLabel: string;
+  devicesReady: string;
+  devicesPending: string;
+  reissueLabel: string;
+  reissueReady: string;
+  reissuePending: string;
+  requestReissue: string;
+  apiPending: string;
+};
+
+const HAPP_DOWNLOAD_URL = "https://www.happ.su/main";
+const HAPP_IMPORT_GUIDE_URL = "https://www.happ.su/main/faq/adding-configuration-subscription";
+
+const DEVICE_GUIDES: Record<DashboardLocale, DeviceGuide[]> = {
+  en: [
+    {
+      platform: "Phone",
+      label: "iOS / Android",
+      steps: [
+        "Install Happ from the official store or the official download page.",
+        "Copy the personal configuration in this dashboard.",
+        "Add it in Happ as a URL link or subscription, then turn the profile on.",
+      ],
+    },
+    {
+      platform: "Desktop",
+      label: "Windows / macOS / Linux",
+      steps: [
+        "Install the desktop Happ build for your system.",
+        "Paste the copied configuration into the import field.",
+        "Refresh the profile list if the active state does not appear immediately.",
+      ],
+    },
+    {
+      platform: "TV",
+      label: "Android TV / Apple TV",
+      steps: [
+        "Install Happ on the TV device or set-top box.",
+        "Move the configuration to the device via clipboard, QR, or account handoff.",
+        "Import it as a subscription and keep the profile private.",
+      ],
+    },
+  ],
+  ru: [
+    {
+      platform: "Телефон",
+      label: "iOS / Android",
+      steps: [
+        "Установи Happ из официального магазина или с официальной страницы загрузки.",
+        "Скопируй персональную конфигурацию в этом кабинете.",
+        "Добавь ее в Happ как URL-ссылку или подписку, потом включи профиль.",
+      ],
+    },
+    {
+      platform: "ПК",
+      label: "Windows / macOS / Linux",
+      steps: [
+        "Установи desktop-версию Happ под свою систему.",
+        "Вставь скопированную конфигурацию в поле импорта.",
+        "Если активный профиль не появился сразу, обнови список профилей.",
+      ],
+    },
+    {
+      platform: "TV",
+      label: "Android TV / Apple TV",
+      steps: [
+        "Установи Happ на телевизор или приставку.",
+        "Передай конфигурацию на устройство через буфер, QR или ручной перенос.",
+        "Импортируй ее как подписку и не отправляй профиль в общие чаты.",
+      ],
+    },
+  ],
+};
+
+const ACCESS_OPERATIONS_COPY: Record<DashboardLocale, AccessOperationsCopy> = {
+  en: {
+    deviceLabel: "DEVICE SETUP",
+    deviceTitle: "Connect where you actually use it.",
+    deviceBodyReady:
+      "Your configuration is ready. The fastest path is Happ: install the client, import the link, turn the profile on.",
+    deviceBodyPending:
+      "The guide is ready, but the import link appears only after manual issue.",
+    installHapp: "OPEN HAPP",
+    importGuide: "IMPORT GUIDE",
+    unavailable: "Available after issue",
+    operationsLabel: "ACCESS OPS",
+    operationsTitle: "No fake telemetry.",
+    operationsBody:
+      "Validity, traffic, and one-tap reissue need the provider API. Until that is connected, the dashboard shows honest beta states and routes reissue through support.",
+    validityLabel: "VALIDITY",
+    validityReady: "manual beta",
+    validityPending: "not issued",
+    trafficLabel: "TRAFFIC",
+    trafficReady: "provider API pending",
+    trafficPending: "waiting",
+    devicesLabel: "DEVICES",
+    devicesReady: "personal devices",
+    devicesPending: "after issue",
+    reissueLabel: "REISSUE",
+    reissueReady: "manual request",
+    reissuePending: "locked",
+    requestReissue: "REQUEST REISSUE",
+    apiPending: "API PENDING",
+  },
+  ru: {
+    deviceLabel: "УСТРОЙСТВА",
+    deviceTitle: "Подключение там, где реально пользуешься.",
+    deviceBodyReady:
+      "Конфигурация готова. Самый короткий путь: Happ, импорт ссылки, включить профиль.",
+    deviceBodyPending:
+      "Инструкция готова, но ссылка для импорта появится только после ручной выдачи.",
+    installHapp: "ОТКРЫТЬ HAPP",
+    importGuide: "ИМПОРТ",
+    unavailable: "После выдачи",
+    operationsLabel: "ДОСТУП",
+    operationsTitle: "Без фейковой телеметрии.",
+    operationsBody:
+      "Срок, трафик и перевыпуск в один клик требуют API провайдера. Пока он не подключен, кабинет честно показывает beta-состояния, а перевыпуск идет через поддержку.",
+    validityLabel: "СРОК",
+    validityReady: "ручная beta",
+    validityPending: "не выдан",
+    trafficLabel: "ТРАФИК",
+    trafficReady: "ждет provider API",
+    trafficPending: "ожидание",
+    devicesLabel: "УСТРОЙСТВА",
+    devicesReady: "личные устройства",
+    devicesPending: "после выдачи",
+    reissueLabel: "ПЕРЕВЫПУСК",
+    reissueReady: "ручной запрос",
+    reissuePending: "закрыто",
+    requestReissue: "ЗАПРОСИТЬ ПЕРЕВЫПУСК",
+    apiPending: "API ПОЗЖЕ",
+  },
+};
+
 export function DashboardClient({
   locale,
   copy,
@@ -202,6 +362,9 @@ export function DashboardClient({
   const updatedAt = formatDashboardDate(user.updatedAt, locale);
   const createdAt = formatDashboardDate(user.createdAt, locale);
   const progress = hasKey ? 100 : accessActive ? 75 : user.emailVerified ? 50 : 18;
+  const dashboardLocale = getDashboardLocale(locale);
+  const deviceGuides = DEVICE_GUIDES[dashboardLocale];
+  const operationsCopy = ACCESS_OPERATIONS_COPY[dashboardLocale];
   const steps: AccessStep[] = [
     {
       label: copy.progress_email,
@@ -265,6 +428,14 @@ export function DashboardClient({
 
       <RevealOnView>
         <AccessPanel copy={copy} subscriptionUrl={user.subscriptionUrl} hasKey={hasKey} />
+      </RevealOnView>
+
+      <RevealOnView>
+        <DeviceSetupPanel guides={deviceGuides} hasKey={hasKey} text={operationsCopy} />
+      </RevealOnView>
+
+      <RevealOnView>
+        <AccessOperationsPanel hasKey={hasKey} text={operationsCopy} />
       </RevealOnView>
 
       <RevealOnView>
@@ -680,6 +851,197 @@ function MiniStat({ label, value, wide = false }: { label: string; value: string
   );
 }
 
+function DeviceSetupPanel({
+  guides,
+  hasKey,
+  text,
+}: {
+  guides: DeviceGuide[];
+  hasKey: boolean;
+  text: AccessOperationsCopy;
+}) {
+  return (
+    <section className="border border-border-visible rounded-[8px] p-xl sm:p-2xl flex flex-col gap-xl">
+      <div className="grid gap-lg lg:grid-cols-[0.82fr_1fr] lg:items-end">
+        <div className="flex flex-col gap-sm">
+          <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
+            {text.deviceLabel}
+          </span>
+          <h2 className="font-body font-bold text-text-display text-heading leading-[1.05]">
+            {text.deviceTitle}
+          </h2>
+        </div>
+        <div className="flex flex-col gap-md">
+          <p className="font-body text-body-sm text-text-secondary leading-[1.65]">
+            {hasKey ? text.deviceBodyReady : text.deviceBodyPending}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-sm">
+            <a
+              href={HAPP_DOWNLOAD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-lg
+                         font-mono text-label uppercase tracking-[0.08em] text-black
+                         hover:opacity-90 active:scale-[0.98] transition-all"
+            >
+              [ {text.installHapp} ]
+            </a>
+            <a
+              href={HAPP_IMPORT_GUIDE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
+                         font-mono text-label uppercase tracking-[0.08em] text-text-display
+                         hover:border-text-display transition-colors"
+            >
+              [ {text.importGuide} ]
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-md">
+        {guides.map((guide, index) => (
+          <article
+            key={guide.platform}
+            className="relative overflow-hidden border border-border-visible rounded-[8px] bg-black p-lg min-h-[280px] flex flex-col gap-lg"
+          >
+            <div aria-hidden="true" className="absolute inset-0 dot-grid-subtle opacity-50" />
+            <div className="relative z-10 flex items-start justify-between gap-md">
+              <div className="flex flex-col gap-xs">
+                <span className="font-mono text-label uppercase tracking-[0.14em] text-text-disabled">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3 className="font-body font-bold text-text-display text-subheading leading-[1.15]">
+                  {guide.platform}
+                </h3>
+              </div>
+              <span className="font-mono text-label uppercase tracking-[0.1em] text-text-secondary text-right">
+                {guide.label}
+              </span>
+            </div>
+            <ol className="relative z-10 flex flex-col gap-md">
+              {guide.steps.map((step, stepIndex) => (
+                <li key={step} className="grid grid-cols-[28px_1fr] gap-md">
+                  <span className="flex h-7 w-7 items-center justify-center border border-border-visible font-mono text-[10px] text-text-display">
+                    {String(stepIndex + 1).padStart(2, "0")}
+                  </span>
+                  <span className="font-body text-body-sm text-text-secondary leading-[1.55]">
+                    {hasKey || stepIndex === 0 ? step : text.unavailable}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AccessOperationsPanel({
+  hasKey,
+  text,
+}: {
+  hasKey: boolean;
+  text: AccessOperationsCopy;
+}) {
+  return (
+    <section className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-md">
+      <div className="border border-border-visible rounded-[8px] bg-surface p-xl sm:p-2xl flex flex-col justify-between gap-xl min-h-[320px]">
+        <div className="flex flex-col gap-sm">
+          <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
+            {text.operationsLabel}
+          </span>
+          <h2 className="font-body font-bold text-text-display text-heading leading-[1.05]">
+            {text.operationsTitle}
+          </h2>
+        </div>
+        <p className="font-body text-body-sm text-text-secondary leading-[1.65]">
+          {text.operationsBody}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-sm">
+          {hasKey ? (
+            <a
+              href={TELEGRAM_BOT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-lg
+                         font-mono text-label uppercase tracking-[0.08em] text-black
+                         hover:opacity-90 active:scale-[0.98] transition-all"
+            >
+              [ {text.requestReissue} ]
+            </a>
+          ) : (
+            <span className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
+                             font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
+              [ {text.requestReissue} ]
+            </span>
+          )}
+          <span className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
+                           font-mono text-label uppercase tracking-[0.08em] text-text-display">
+            [ {text.apiPending} ]
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
+        <OperationMetric
+          label={text.validityLabel}
+          value={hasKey ? text.validityReady : text.validityPending}
+          tone={hasKey ? "success" : "warning"}
+        />
+        <OperationMetric
+          label={text.trafficLabel}
+          value={hasKey ? text.trafficReady : text.trafficPending}
+        />
+        <OperationMetric
+          label={text.devicesLabel}
+          value={hasKey ? text.devicesReady : text.devicesPending}
+        />
+        <OperationMetric
+          label={text.reissueLabel}
+          value={hasKey ? text.reissueReady : text.reissuePending}
+          tone={hasKey ? "warning" : "muted"}
+        />
+      </div>
+    </section>
+  );
+}
+
+function OperationMetric({
+  label,
+  value,
+  tone = "muted",
+}: {
+  label: string;
+  value: string;
+  tone?: "success" | "warning" | "muted";
+}) {
+  return (
+    <article className="border border-border-visible rounded-[8px] bg-black p-lg min-h-[150px] flex flex-col justify-between gap-lg">
+      <div className="flex items-center justify-between gap-md">
+        <span className="font-mono text-label uppercase tracking-[0.14em] text-text-disabled">
+          {label}
+        </span>
+        <span
+          className={`inline-block h-2 w-2 rounded-full ${
+            tone === "success"
+              ? "bg-success shadow-[0_0_12px_rgba(74,158,92,0.75)]"
+              : tone === "warning"
+                ? "bg-warning animate-pulse"
+                : "bg-border-visible"
+          }`}
+        />
+      </div>
+      <span className="font-display font-bold text-text-display leading-[0.9] uppercase"
+            style={{ fontSize: "clamp(28px, 5vw, 54px)", letterSpacing: "0.02em" }}>
+        {value}
+      </span>
+    </article>
+  );
+}
+
 function AccessPanel({
   copy,
   subscriptionUrl,
@@ -923,11 +1285,19 @@ function formatDashboardDate(value: string, locale: string) {
   }).format(date);
 }
 
+function getDashboardLocale(locale: string): DashboardLocale {
+  return locale === "ru" ? "ru" : "en";
+}
+
 function maskAccessUrl(value: string) {
+  const mask = "••••••••••••";
   try {
     const url = new URL(value);
-    return `${url.origin}${url.pathname.slice(0, 8)}••••••••••••`;
+    if (url.origin !== "null") {
+      return `${url.origin}${url.pathname.slice(0, 8)}${mask}`;
+    }
+    return `${url.protocol}//${url.host || url.pathname.slice(0, 8)}${mask}`;
   } catch {
-    return `${value.slice(0, 12)}••••••••••••`;
+    return `${value.slice(0, 12)}${mask}`;
   }
 }
