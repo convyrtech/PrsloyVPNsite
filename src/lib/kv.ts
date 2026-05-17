@@ -70,6 +70,15 @@ export async function kvDel(key: string): Promise<void> {
   await redisCommand<number>(["DEL", key]);
 }
 
+export async function kvSAdd(key: string, member: string): Promise<number> {
+  return await redisCommand<number>(["SADD", key, member]);
+}
+
+export async function kvSMembers(key: string): Promise<string[]> {
+  const result = await redisCommand<string[] | null>(["SMEMBERS", key]);
+  return Array.isArray(result) ? result : [];
+}
+
 /* Atomic fixed-window counter: INCR, set the TTL on the first hit, report
    the current count and remaining seconds in one round-trip. */
 const RATE_LIMIT_SCRIPT = [

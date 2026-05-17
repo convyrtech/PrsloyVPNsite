@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createHash, timingSafeEqual } from "crypto";
+import { isAdminAuthorized, isAdminConfigured } from "@/lib/admin-auth";
 import { AuthError, getAuthSetupErrorCode, grantAccess } from "@/lib/auth";
 import { isValidEmail } from "@/lib/validation";
 
@@ -23,26 +23,13 @@ const ALLOWED_CONFIG_PROTOCOLS = new Set([
   "wireguard:",
 ]);
 
-// Constant-time compare via fixed-length digests — avoids leaking
-// the secret length and short-circuiting on the first wrong byte.
-function isAuthorized(req: Request): boolean {
-  const secret = process.env.ADMIN_SECRET?.trim();
-  if (!secret) return false;
-  const header = req.headers.get("authorization") ?? "";
-  const provided = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
-  if (!provided) return false;
-  const a = createHash("sha256").update(provided).digest();
-  const b = createHash("sha256").update(secret).digest();
-  return timingSafeEqual(a, b);
-}
-
 export async function POST(req: Request) {
   // Without ADMIN_SECRET the endpoint is disabled and indistinguishable
   // from a route that does not exist.
-  if (!process.env.ADMIN_SECRET?.trim()) {
+  if (!isAdminConfigured()) {
     return NextResponse.json({ ok: false, error: "not_found" }, { status: 404 });
   }
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 

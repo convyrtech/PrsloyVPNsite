@@ -1,7 +1,14 @@
 import { cookies } from "next/headers";
 import { randomBytes, scrypt, timingSafeEqual, createHmac } from "crypto";
 import { promisify } from "util";
-import { kvDel, kvGet, kvSet, KvNotConfiguredError } from "@/lib/kv";
+import {
+  kvDel,
+  kvGet,
+  kvSAdd,
+  kvSet,
+  kvSMembers,
+  KvNotConfiguredError,
+} from "@/lib/kv";
 import { isValidEmail } from "@/lib/validation";
 
 const scryptAsync = promisify(scrypt);
@@ -23,6 +30,19 @@ export type AuthUser = {
 };
 
 export type PublicAuthUser = Omit<AuthUser, "passwordHash">;
+
+// Operator-facing shape for the admin user list. Never exposes the
+// password hash or the raw subscription URL — only whether one exists.
+export type AdminUserSummary = {
+  id: string;
+  email: string;
+  emailVerified: boolean;
+  accessStatus: AuthUser["accessStatus"];
+  vpnSlug: string | null;
+  hasSubscriptionUrl: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export class AuthError extends Error {
   code: string;
@@ -50,6 +70,8 @@ function verifyKey(token: string) {
   return `auth:verify:${token}`;
 }
 
+const USERS_INDEX_KEY = "auth:users:index";
+
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
@@ -62,6 +84,19 @@ function publicUser(user: AuthUser): PublicAuthUser {
     accessStatus: user.accessStatus,
     vpnSlug: user.vpnSlug,
     subscriptionUrl: user.subscriptionUrl,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+}
+
+function adminUserSummary(user: AuthUser): AdminUserSummary {
+  return {
+    id: user.id,
+    email: user.email,
+    emailVerified: user.emailVerified,
+    accessStatus: user.accessStatus,
+    vpnSlug: user.vpnSlug,
+    hasSubscriptionUrl: Boolean(user.subscriptionUrl),
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -155,7 +190,26 @@ export async function registerUser(email: string, password: string) {
     throw err;
   }
 
+  // Best-effort: the account is already saved. A failed index write
+  // only hides the user from the admin list, so it must not fail
+  // registration.
+  try {
+    await kvSAdd(USERS_INDEX_KEY, id);
+  } catch (err) {
+    console.warn("[auth] failed to add user to index", err);
+  }
+
   return publicUser(user);
+}
+
+export async function listUsers(): Promise<AdminUserSummary[]> {
+  const ids = await kvSMembers(USERS_INDEX_KEY);
+  if (ids.length === 0) return [];
+  const users = await Promise.all(ids.map((id) => getUserById(id)));
+  return users
+    .filter((user): user is AuthUser => user !== null)
+    .map(adminUserSummary)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function loginUser(email: string, password: string) {
