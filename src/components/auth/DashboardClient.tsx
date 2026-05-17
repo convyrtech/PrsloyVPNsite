@@ -1034,8 +1034,8 @@ function OperationMetric({
           }`}
         />
       </div>
-      <span className="font-display font-bold text-text-display leading-[0.9] uppercase"
-            style={{ fontSize: "clamp(28px, 5vw, 54px)", letterSpacing: "0.02em" }}>
+      <span className="font-display font-bold text-text-display leading-[1.1] uppercase break-words"
+            style={{ fontSize: "clamp(20px, 2.6vw, 32px)", letterSpacing: "0.02em" }}>
         {value}
       </span>
     </article>
