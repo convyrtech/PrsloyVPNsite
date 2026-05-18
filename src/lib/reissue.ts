@@ -1,5 +1,25 @@
 import { createHash, randomBytes } from "crypto";
-import { kvGet, kvSAdd, kvScanKeys, kvSet, kvSMembers } from "@/lib/kv";
+import {
+  getIndexedIds,
+  kvGet,
+  kvListPushCapped,
+  kvListRange,
+  kvSAdd,
+  kvSet,
+  kvSRem,
+} from "@/lib/kv";
+
+/* Reissue request lifecycle
+   ─────────────────────────
+   create ──> status: open ──> SADD  access:reissue:index   (open set)
+                  │
+   markHandled ───┤  status: handled, handledAt set
+                  └─> LPUSH access:reissue:handled (capped)  +  SREM open set
+
+   listReissueRequests reads the open set in full (the live queue) and only
+   a bounded recent slice of the handled list — handled history never grows
+   the read cost. A handled record still found in the open set (created
+   before this split existed) is migrated lazily on read. */
 
 export type ReissueRequest = {
   requestId: string;
@@ -13,8 +33,12 @@ export type ReissueRequest = {
   handledAt?: string;
 };
 
-const REISSUE_INDEX_KEY = "access:reissue:index";
+const REISSUE_OPEN_INDEX_KEY = "access:reissue:index";
+const REISSUE_INDEX_SYNCED_KEY = "access:reissue:index:synced";
+const REISSUE_HANDLED_LIST_KEY = "access:reissue:handled";
 const REISSUE_KEY_PREFIX = "access:reissue:";
+const REISSUE_HANDLED_CAP = 50;
+const REISSUE_HANDLED_FETCH = 12;
 
 export class ReissueError extends Error {
   code: string;
@@ -36,6 +60,17 @@ function reissueKey(requestId: string) {
 function hashSubscriptionUrl(value: string | null): string | null {
   if (!value) return null;
   return createHash("sha256").update(value).digest("hex");
+}
+
+async function getReissueRequest(requestId: string): Promise<ReissueRequest | null> {
+  const raw = await kvGet(reissueKey(requestId));
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as ReissueRequest;
+  } catch (err) {
+    console.warn("[reissue] corrupt request record skipped", requestId, err);
+    return null;
+  }
 }
 
 export async function createReissueRequest(input: {
@@ -60,69 +95,97 @@ export async function createReissueRequest(input: {
   await kvSet(reissueKey(record.requestId), JSON.stringify(record));
 
   // Best-effort: the request is already saved. A failed index write
-  // only hides it from a future operator list.
+  // only hides it from the operator list.
   try {
-    await kvSAdd(REISSUE_INDEX_KEY, record.requestId);
+    await kvSAdd(REISSUE_OPEN_INDEX_KEY, record.requestId);
   } catch (err) {
-    console.warn("[reissue] failed to add request to index", err);
+    console.warn("[reissue] failed to add request to open index", err);
   }
 
   return record;
-}
-
-export async function listReissueRequests(): Promise<ReissueRequest[]> {
-  const indexedIds = await kvSMembers(REISSUE_INDEX_KEY);
-  const discoveredIds = await discoverReissueRequestIds();
-  const ids = Array.from(new Set([...indexedIds, ...discoveredIds]));
-  if (ids.length === 0) return [];
-
-  if (discoveredIds.length > 0) {
-    await Promise.all(
-      discoveredIds.map(async (id) => {
-        try {
-          await kvSAdd(REISSUE_INDEX_KEY, id);
-        } catch (err) {
-          console.warn("[reissue] failed to reindex request", id, err);
-        }
-      })
-    );
-  }
-
-  const requests = await Promise.all(ids.map((id) => getReissueRequest(id)));
-  return requests
-    .filter((request): request is ReissueRequest => request !== null)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function markReissueHandled(requestId: string): Promise<ReissueRequest> {
   const record = await getReissueRequest(requestId);
   if (!record) throw new ReissueError("not_found");
+  if (record.status === "handled") return record;
 
-  if (record.status !== "handled") {
-    record.status = "handled";
-    record.handledAt = new Date().toISOString();
-    await kvSet(reissueKey(record.requestId), JSON.stringify(record));
-  }
+  record.status = "handled";
+  record.handledAt = new Date().toISOString();
+  await kvSet(reissueKey(record.requestId), JSON.stringify(record));
+
+  // Push to the handled list before removing from the open set: a failure
+  // between the two leaves the request visible in both lists (read-side
+  // dedup handles it) rather than lost from both.
+  await kvListPushCapped(REISSUE_HANDLED_LIST_KEY, record.requestId, REISSUE_HANDLED_CAP);
+  await kvSRem(REISSUE_OPEN_INDEX_KEY, record.requestId);
 
   return record;
 }
 
-async function getReissueRequest(requestId: string): Promise<ReissueRequest | null> {
-  const raw = await kvGet(reissueKey(requestId));
-  return raw ? (JSON.parse(raw) as ReissueRequest) : null;
+const byCreatedDesc = (a: ReissueRequest, b: ReissueRequest) =>
+  b.createdAt.localeCompare(a.createdAt);
+
+function dedupById(records: ReissueRequest[]): ReissueRequest[] {
+  const seen = new Map<string, ReissueRequest>();
+  for (const record of records) {
+    if (!seen.has(record.requestId)) seen.set(record.requestId, record);
+  }
+  return Array.from(seen.values());
 }
 
-async function discoverReissueRequestIds(): Promise<string[]> {
-  try {
-    const keys = await kvScanKeys(`${REISSUE_KEY_PREFIX}*`);
-    return keys
-      .filter((key) => key.startsWith(REISSUE_KEY_PREFIX))
-      .map((key) => key.slice(REISSUE_KEY_PREFIX.length))
-      .filter((id) => id !== "index");
-  } catch (err) {
-    console.warn("[reissue] failed to scan request keys", err);
-    return [];
+export async function listReissueRequests(): Promise<ReissueRequest[]> {
+  const openIds = await getIndexedIds({
+    indexKey: REISSUE_OPEN_INDEX_KEY,
+    keyPrefix: REISSUE_KEY_PREFIX,
+    syncFlagKey: REISSUE_INDEX_SYNCED_KEY,
+    excludeKeys: [
+      REISSUE_OPEN_INDEX_KEY,
+      REISSUE_INDEX_SYNCED_KEY,
+      REISSUE_HANDLED_LIST_KEY,
+    ],
+  });
+  const handledIds = Array.from(
+    new Set(await kvListRange(REISSUE_HANDLED_LIST_KEY, 0, REISSUE_HANDLED_FETCH - 1))
+  );
+
+  const [openCandidates, handledCandidates] = await Promise.all([
+    Promise.all(openIds.map((id) => getReissueRequest(id))),
+    Promise.all(handledIds.map((id) => getReissueRequest(id))),
+  ]);
+
+  const open: ReissueRequest[] = [];
+  const stale: ReissueRequest[] = [];
+  for (const record of openCandidates) {
+    if (!record) continue;
+    if (record.status === "handled") stale.push(record);
+    else open.push(record);
   }
+
+  // Lazily migrate requests handled before the open/handled split existed.
+  if (stale.length > 0) {
+    await Promise.all(
+      stale.map(async (record) => {
+        try {
+          await kvListPushCapped(
+            REISSUE_HANDLED_LIST_KEY,
+            record.requestId,
+            REISSUE_HANDLED_CAP
+          );
+          await kvSRem(REISSUE_OPEN_INDEX_KEY, record.requestId);
+        } catch (err) {
+          console.warn("[reissue] failed to migrate handled request", record.requestId, err);
+        }
+      })
+    );
+  }
+
+  const handled = dedupById([
+    ...handledCandidates.filter((r): r is ReissueRequest => r !== null),
+    ...stale,
+  ]);
+
+  return [...open.sort(byCreatedDesc), ...handled.sort(byCreatedDesc)];
 }
 
 function escapeHtml(value: string): string {

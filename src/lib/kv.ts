@@ -74,12 +74,19 @@ export async function kvSAdd(key: string, member: string): Promise<number> {
   return await redisCommand<number>(["SADD", key, member]);
 }
 
+export async function kvSRem(key: string, member: string): Promise<void> {
+  await redisCommand<number>(["SREM", key, member]);
+}
+
 export async function kvSMembers(key: string): Promise<string[]> {
   const result = await redisCommand<string[] | null>(["SMEMBERS", key]);
   return Array.isArray(result) ? result : [];
 }
 
-export async function kvScanKeys(pattern: string, count = 100): Promise<string[]> {
+export async function kvScanKeys(
+  pattern: string,
+  count = 100
+): Promise<{ keys: string[]; complete: boolean }> {
   const keys = new Set<string>();
   let cursor = "0";
   let iterations = 0;
@@ -100,7 +107,73 @@ export async function kvScanKeys(pattern: string, count = 100): Promise<string[]
     iterations += 1;
   } while (cursor !== "0" && iterations < 100);
 
-  return Array.from(keys);
+  // complete=false means the 100-iteration safety cap was hit before the
+  // cursor finished — results are partial and callers must not treat them
+  // as the full keyspace.
+  return { keys: Array.from(keys), complete: cursor === "0" };
+}
+
+export async function kvListPushCapped(
+  key: string,
+  value: string,
+  cap: number
+): Promise<void> {
+  await redisCommand<number>(["LPUSH", key, value]);
+  await redisCommand<string>(["LTRIM", key, 0, cap - 1]);
+}
+
+export async function kvListRange(
+  key: string,
+  start: number,
+  stop: number
+): Promise<string[]> {
+  const result = await redisCommand<string[] | null>(["LRANGE", key, start, stop]);
+  return Array.isArray(result) ? result : [];
+}
+
+/* One source of truth for an "index set + lazy SCAN backfill" collection.
+   ─────────────────────────────────────────────────────────────────────
+   sync flag set   ─> SMEMBERS index                          (fast path)
+   sync flag unset ─> SCAN keyPrefix* ─> SADD stragglers to index
+                      ├ scan complete ─> set sync flag
+                      └ scan capped   ─> warn, leave flag unset (retry) */
+export async function getIndexedIds(params: {
+  indexKey: string;
+  keyPrefix: string;
+  syncFlagKey: string;
+  excludeKeys: string[];
+}): Promise<string[]> {
+  const { indexKey, keyPrefix, syncFlagKey, excludeKeys } = params;
+
+  if (await kvGet(syncFlagKey)) {
+    return await kvSMembers(indexKey);
+  }
+
+  const indexed = await kvSMembers(indexKey);
+  const { keys, complete } = await kvScanKeys(`${keyPrefix}*`);
+  const discovered = keys
+    .filter((key) => key.startsWith(keyPrefix) && !excludeKeys.includes(key))
+    .map((key) => key.slice(keyPrefix.length))
+    .filter(Boolean);
+
+  // Reindex stragglers so the fast path works on the next call.
+  await Promise.all(
+    discovered.map(async (id) => {
+      try {
+        await kvSAdd(indexKey, id);
+      } catch (err) {
+        console.warn("[kv] reindex failed", indexKey, id, err);
+      }
+    })
+  );
+
+  if (complete) {
+    await kvSet(syncFlagKey, "1");
+  } else {
+    console.warn("[kv] scan incomplete, backfill flag withheld", `${keyPrefix}*`);
+  }
+
+  return Array.from(new Set([...indexed, ...discovered]));
 }
 
 /* Atomic fixed-window counter: INCR, set the TTL on the first hit, report

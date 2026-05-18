@@ -2,12 +2,11 @@ import { cookies } from "next/headers";
 import { randomBytes, scrypt, timingSafeEqual, createHmac } from "crypto";
 import { promisify } from "util";
 import {
+  getIndexedIds,
   kvDel,
   kvGet,
   kvSAdd,
-  kvScanKeys,
   kvSet,
-  kvSMembers,
   KvNotConfiguredError,
 } from "@/lib/kv";
 import { isValidEmail } from "@/lib/validation";
@@ -68,6 +67,7 @@ function verifyKey(token: string) {
 }
 
 const USERS_INDEX_KEY = "auth:users:index";
+const USERS_INDEX_SYNCED_KEY = "auth:users:index:synced";
 const USER_KEY_PREFIX = "auth:user:";
 
 function userKey(id: string) {
@@ -147,7 +147,13 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 
 async function getUserById(id: string): Promise<AuthUser | null> {
   const raw = await kvGet(userKey(id));
-  return raw ? (JSON.parse(raw) as AuthUser) : null;
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as AuthUser;
+  } catch (err) {
+    console.warn("[auth] corrupt user record skipped", id, err);
+    return null;
+  }
 }
 
 export async function getUserByEmail(email: string): Promise<AuthUser | null> {
@@ -205,41 +211,19 @@ export async function registerUser(email: string, password: string) {
 }
 
 export async function listUsers(): Promise<AdminUserSummary[]> {
-  const indexedIds = await kvSMembers(USERS_INDEX_KEY);
-  const discoveredIds = await discoverUserIds();
-  const ids = Array.from(new Set([...indexedIds, ...discoveredIds]));
+  const ids = await getIndexedIds({
+    indexKey: USERS_INDEX_KEY,
+    keyPrefix: USER_KEY_PREFIX,
+    syncFlagKey: USERS_INDEX_SYNCED_KEY,
+    excludeKeys: [],
+  });
   if (ids.length === 0) return [];
-
-  if (discoveredIds.length > 0) {
-    await Promise.all(
-      discoveredIds.map(async (id) => {
-        try {
-          await kvSAdd(USERS_INDEX_KEY, id);
-        } catch (err) {
-          console.warn("[auth] failed to reindex user", id, err);
-        }
-      })
-    );
-  }
 
   const users = await Promise.all(ids.map((id) => getUserById(id)));
   return users
     .filter((user): user is AuthUser => user !== null)
     .map(adminUserSummary)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-}
-
-async function discoverUserIds(): Promise<string[]> {
-  try {
-    const keys = await kvScanKeys(`${USER_KEY_PREFIX}*`);
-    return keys
-      .filter((key) => key.startsWith(USER_KEY_PREFIX))
-      .map((key) => key.slice(USER_KEY_PREFIX.length))
-      .filter(Boolean);
-  } catch (err) {
-    console.warn("[auth] failed to scan user keys", err);
-    return [];
-  }
 }
 
 export async function loginUser(email: string, password: string) {

@@ -54,6 +54,8 @@ export function AdminUsersClient({ locale }: { locale: string }) {
   const [pending, setPending] = useState(false);
   const [requestPendingId, setRequestPendingId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [usersError, setUsersError] = useState("");
+  const [reissueError, setReissueError] = useState("");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -68,48 +70,57 @@ export function AdminUsersClient({ locale }: { locale: string }) {
 
     setPending(true);
     setError("");
+    setUsersError("");
+    setReissueError("");
 
-    try {
-      const authHeader = { Authorization: `Bearer ${secret.trim()}` };
-      const [usersRes, requestsRes] = await Promise.all([
-        fetch("/api/admin/users", { headers: authHeader }),
-        fetch("/api/admin/reissue", { headers: authHeader }),
-      ]);
-      const usersData = (await usersRes.json().catch(() => ({}))) as {
+    // Independent loads: a failure of one endpoint must not blank the
+    // other list. allSettled never rejects, so one network error does
+    // not abort the sibling fetch.
+    const authHeader = { Authorization: `Bearer ${secret.trim()}` };
+    const [usersOutcome, reissueOutcome] = await Promise.allSettled([
+      fetch("/api/admin/users", { headers: authHeader }),
+      fetch("/api/admin/reissue", { headers: authHeader }),
+    ]);
+
+    if (usersOutcome.status === "fulfilled") {
+      const res = usersOutcome.value;
+      const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         users?: AdminUser[];
         error?: string;
       };
-      const requestsData = (await requestsRes.json().catch(() => ({}))) as {
+      if (res.ok && data.ok && Array.isArray(data.users)) {
+        setUsers(data.users);
+      } else {
+        setUsers(null);
+        setUsersError(errorMessages[data.error || ""] || "Could not load users.");
+      }
+    } else {
+      setUsers(null);
+      setUsersError("Network error.");
+    }
+
+    if (reissueOutcome.status === "fulfilled") {
+      const res = reissueOutcome.value;
+      const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         requests?: AdminReissueRequest[];
         error?: string;
       };
-
-      if (!usersRes.ok || !usersData.ok || !Array.isArray(usersData.users)) {
-        setError(errorMessages[usersData.error || ""] || "Unknown admin error.");
-        setUsers(null);
+      if (res.ok && data.ok && Array.isArray(data.requests)) {
+        setRequests(data.requests);
+      } else {
         setRequests(null);
-        return;
+        setReissueError(
+          errorMessages[data.error || ""] || "Could not load reissue requests."
+        );
       }
-      if (
-        !requestsRes.ok ||
-        !requestsData.ok ||
-        !Array.isArray(requestsData.requests)
-      ) {
-        setError(errorMessages[requestsData.error || ""] || "Unknown admin error.");
-        setUsers(null);
-        setRequests(null);
-        return;
-      }
-
-      setUsers(usersData.users);
-      setRequests(requestsData.requests);
-    } catch {
-      setError("Network error.");
-    } finally {
-      setPending(false);
+    } else {
+      setRequests(null);
+      setReissueError("Network error.");
     }
+
+    setPending(false);
   }
 
   const counts = useMemo(() => {
@@ -259,15 +270,24 @@ export function AdminUsersClient({ locale }: { locale: string }) {
           </p>
         )}
 
-        {users && (
-          <section className="flex flex-col gap-2xl">
-            <ReissueQueue
-              requests={requests ?? []}
-              locale={locale}
-              pendingId={requestPendingId}
-              onMarkHandled={markRequestHandled}
-            />
+        {requests ? (
+          <ReissueQueue
+            requests={requests}
+            locale={locale}
+            pendingId={requestPendingId}
+            onMarkHandled={markRequestHandled}
+          />
+        ) : reissueError ? (
+          <p
+            role="alert"
+            className="border border-border-visible rounded-[8px] p-xl font-body text-body-sm text-accent leading-[1.55]"
+          >
+            {reissueError}
+          </p>
+        ) : null}
 
+        {users ? (
+          <section className="flex flex-col gap-2xl">
             <div className="flex flex-col gap-md lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap gap-sm">
                 {FILTERS.map((f) => (
@@ -321,7 +341,14 @@ export function AdminUsersClient({ locale }: { locale: string }) {
               </div>
             )}
           </section>
-        )}
+        ) : usersError ? (
+          <p
+            role="alert"
+            className="border border-border-visible rounded-[8px] p-xl font-body text-body-sm text-accent leading-[1.55]"
+          >
+            {usersError}
+          </p>
+        ) : null}
       </div>
     </main>
   );
