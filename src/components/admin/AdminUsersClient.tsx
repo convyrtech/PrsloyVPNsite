@@ -14,6 +14,18 @@ type AdminUser = {
   updatedAt: string;
 };
 
+type AdminReissueRequest = {
+  requestId: string;
+  userId: string;
+  email: string;
+  vpnSlug: string | null;
+  subscriptionUrlHash: string | null;
+  reason: string | null;
+  status: "open" | "handled";
+  createdAt: string;
+  handledAt?: string;
+};
+
 type Filter = "all" | "pending" | "active" | "no_key";
 
 const FILTERS: { key: Filter; label: string }[] = [
@@ -29,12 +41,18 @@ const errorMessages: Record<string, string> = {
   kv_not_configured: "Account storage is not configured.",
   auth_secret_not_configured: "AUTH_SECRET is not configured.",
   list_failed: "Could not load users. Check server logs.",
+  reissue_list_failed: "Could not load reissue requests. Check server logs.",
+  reissue_update_failed: "Could not update the reissue request.",
+  request_not_found: "Reissue request was not found.",
+  invalid_json: "Invalid request body.",
 };
 
 export function AdminUsersClient({ locale }: { locale: string }) {
   const [secret, setSecret] = useState("");
   const [users, setUsers] = useState<AdminUser[] | null>(null);
+  const [requests, setRequests] = useState<AdminReissueRequest[] | null>(null);
   const [pending, setPending] = useState(false);
+  const [requestPendingId, setRequestPendingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
@@ -52,22 +70,41 @@ export function AdminUsersClient({ locale }: { locale: string }) {
     setError("");
 
     try {
-      const res = await fetch("/api/admin/users", {
-        headers: { Authorization: `Bearer ${secret.trim()}` },
-      });
-      const data = (await res.json().catch(() => ({}))) as {
+      const authHeader = { Authorization: `Bearer ${secret.trim()}` };
+      const [usersRes, requestsRes] = await Promise.all([
+        fetch("/api/admin/users", { headers: authHeader }),
+        fetch("/api/admin/reissue", { headers: authHeader }),
+      ]);
+      const usersData = (await usersRes.json().catch(() => ({}))) as {
         ok?: boolean;
         users?: AdminUser[];
         error?: string;
       };
+      const requestsData = (await requestsRes.json().catch(() => ({}))) as {
+        ok?: boolean;
+        requests?: AdminReissueRequest[];
+        error?: string;
+      };
 
-      if (!res.ok || !data.ok || !Array.isArray(data.users)) {
-        setError(errorMessages[data.error || ""] || "Unknown admin error.");
+      if (!usersRes.ok || !usersData.ok || !Array.isArray(usersData.users)) {
+        setError(errorMessages[usersData.error || ""] || "Unknown admin error.");
         setUsers(null);
+        setRequests(null);
+        return;
+      }
+      if (
+        !requestsRes.ok ||
+        !requestsData.ok ||
+        !Array.isArray(requestsData.requests)
+      ) {
+        setError(errorMessages[requestsData.error || ""] || "Unknown admin error.");
+        setUsers(null);
+        setRequests(null);
         return;
       }
 
-      setUsers(data.users);
+      setUsers(usersData.users);
+      setRequests(requestsData.requests);
     } catch {
       setError("Network error.");
     } finally {
@@ -110,6 +147,53 @@ export function AdminUsersClient({ locale }: { locale: string }) {
     }
   }
 
+  async function markRequestHandled(request: AdminReissueRequest) {
+    if (requestPendingId || request.status === "handled") return;
+    if (!secret.trim()) {
+      setError("ADMIN_SECRET is required.");
+      return;
+    }
+
+    setRequestPendingId(request.requestId);
+    setError("");
+
+    try {
+      const res = await fetch("/api/admin/reissue", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${secret.trim()}`,
+        },
+        body: JSON.stringify({
+          action: "mark_handled",
+          requestId: request.requestId,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        request?: AdminReissueRequest;
+        error?: string;
+      };
+
+      if (!res.ok || !data.ok || !data.request) {
+        setError(errorMessages[data.error || ""] || "Unknown admin error.");
+        return;
+      }
+
+      setRequests((current) =>
+        current
+          ? current.map((item) =>
+              item.requestId === data.request?.requestId ? data.request : item
+            )
+          : current
+      );
+    } catch {
+      setError("Network error.");
+    } finally {
+      setRequestPendingId(null);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
       <div className="max-w-6xl mx-auto px-lg flex flex-col gap-2xl">
@@ -132,8 +216,8 @@ export function AdminUsersClient({ locale }: { locale: string }) {
             Operator view.
           </h1>
           <p className="max-w-2xl font-body text-body text-text-secondary leading-[1.65]">
-            A read-only list of PRSLOY accounts. Search and filtering run in the
-            browser. Issuing access, revoke and deletion are not done here.
+            A read-only list of PRSLOY accounts plus manual reissue requests. Search and
+            filtering run in the browser. Raw configs are not exposed here.
           </p>
         </header>
 
@@ -176,7 +260,14 @@ export function AdminUsersClient({ locale }: { locale: string }) {
         )}
 
         {users && (
-          <section className="flex flex-col gap-lg">
+          <section className="flex flex-col gap-2xl">
+            <ReissueQueue
+              requests={requests ?? []}
+              locale={locale}
+              pendingId={requestPendingId}
+              onMarkHandled={markRequestHandled}
+            />
+
             <div className="flex flex-col gap-md lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap gap-sm">
                 {FILTERS.map((f) => (
@@ -233,6 +324,153 @@ export function AdminUsersClient({ locale }: { locale: string }) {
         )}
       </div>
     </main>
+  );
+}
+
+function ReissueQueue({
+  requests,
+  locale,
+  pendingId,
+  onMarkHandled,
+}: {
+  requests: AdminReissueRequest[];
+  locale: string;
+  pendingId: string | null;
+  onMarkHandled: (request: AdminReissueRequest) => void;
+}) {
+  const open = requests.filter((request) => request.status === "open");
+  const handled = requests.filter((request) => request.status === "handled");
+  const ordered = [...open, ...handled.slice(0, 4)];
+
+  return (
+    <section className="border border-border-visible rounded-[8px] bg-surface p-xl flex flex-col gap-lg">
+      <div className="flex flex-col gap-md lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-sm">
+          <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
+            REISSUE QUEUE
+          </span>
+          <h2 className="font-body font-bold text-text-display text-heading leading-[1.1]">
+            Manual key replacements.
+          </h2>
+          <p className="max-w-2xl font-body text-body-sm text-text-secondary leading-[1.6]">
+            Requests contain account identifiers and a config hash only. Replace the
+            key in the provider panel, grant the new config, then mark the request done.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-sm font-mono text-label uppercase tracking-[0.1em]">
+          <QueueCounter label="Open" value={open.length} tone="warning" />
+          <QueueCounter label="Handled" value={handled.length} tone="success" />
+        </div>
+      </div>
+
+      {ordered.length === 0 ? (
+        <p className="border border-border-visible rounded-[8px] p-lg font-mono text-label
+                      uppercase tracking-[0.1em] text-text-disabled">
+          No reissue requests yet.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-sm">
+          {ordered.map((request) => (
+            <ReissueRow
+              key={request.requestId}
+              request={request}
+              locale={locale}
+              pending={pendingId === request.requestId}
+              onMarkHandled={() => onMarkHandled(request)}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ReissueRow({
+  request,
+  locale,
+  pending,
+  onMarkHandled,
+}: {
+  request: AdminReissueRequest;
+  locale: string;
+  pending: boolean;
+  onMarkHandled: () => void;
+}) {
+  const isOpen = request.status === "open";
+  return (
+    <article
+      className="border border-border-visible rounded-[8px] bg-black p-lg flex flex-col gap-md
+                 lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-lg"
+    >
+      <div className="flex min-w-0 flex-col gap-sm">
+        <div className="flex flex-wrap items-center gap-sm">
+          <span className="font-mono text-body-sm text-text-display break-all">
+            {request.email}
+          </span>
+          <StatusChip
+            label={request.status.toUpperCase()}
+            tone={isOpen ? "warning" : "success"}
+          />
+        </div>
+        <div className="grid gap-xs font-mono text-label uppercase tracking-[0.08em] text-text-secondary sm:grid-cols-2">
+          <span className="break-all">Request {request.requestId}</span>
+          <span className="break-all">User {request.userId}</span>
+          <span className="break-all">Slug {request.vpnSlug || "none"}</span>
+          <span className="break-all">Hash {shortHash(request.subscriptionUrlHash)}</span>
+        </div>
+        {request.reason && (
+          <p className="font-body text-body-sm text-text-secondary leading-[1.55]">
+            {request.reason}
+          </p>
+        )}
+      </div>
+      <div className="flex flex-col gap-sm sm:flex-row sm:items-center lg:justify-end">
+        <span className="font-mono text-label uppercase tracking-[0.1em] text-text-disabled tabular-nums">
+          {formatAdminDate(request.handledAt || request.createdAt, locale)}
+        </span>
+        {isOpen ? (
+          <button
+            type="button"
+            onClick={onMarkHandled}
+            disabled={pending}
+            className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-md
+                       font-mono text-label uppercase tracking-[0.08em] text-text-display
+                       hover:border-text-display disabled:opacity-60 disabled:cursor-wait transition-colors"
+          >
+            [ {pending ? "Saving..." : "Mark done"} ]
+          </button>
+        ) : (
+          <span className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-md
+                           font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
+            [ Done ]
+          </span>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function QueueCounter({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "success" | "warning";
+}) {
+  return (
+    <div className="border border-border-visible bg-black p-md min-w-[112px]">
+      <div className="flex items-center gap-sm text-text-disabled">
+        <span
+          className={`h-[6px] w-[6px] rounded-full ${
+            tone === "success" ? "bg-success" : "bg-warning animate-pulse"
+          }`}
+        />
+        <span>{label}</span>
+      </div>
+      <div className="mt-xs text-text-display tabular-nums">{value}</div>
+    </div>
   );
 }
 
@@ -329,4 +567,8 @@ function formatAdminDate(value: string, locale: string) {
     month: "short",
     year: "2-digit",
   }).format(date);
+}
+
+function shortHash(value: string | null) {
+  return value ? `${value.slice(0, 10)}...` : "none";
 }

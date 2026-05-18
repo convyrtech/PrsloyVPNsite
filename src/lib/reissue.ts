@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "crypto";
-import { kvSAdd, kvSet } from "@/lib/kv";
+import { kvGet, kvSAdd, kvScanKeys, kvSet, kvSMembers } from "@/lib/kv";
 
 export type ReissueRequest = {
   requestId: string;
@@ -8,14 +8,26 @@ export type ReissueRequest = {
   vpnSlug: string | null;
   subscriptionUrlHash: string | null;
   reason: string | null;
-  status: "open";
+  status: "open" | "handled";
   createdAt: string;
+  handledAt?: string;
 };
 
 const REISSUE_INDEX_KEY = "access:reissue:index";
+const REISSUE_KEY_PREFIX = "access:reissue:";
+
+export class ReissueError extends Error {
+  code: string;
+
+  constructor(code: string) {
+    super(code);
+    this.name = "ReissueError";
+    this.code = code;
+  }
+}
 
 function reissueKey(requestId: string) {
-  return `access:reissue:${requestId}`;
+  return `${REISSUE_KEY_PREFIX}${requestId}`;
 }
 
 // Store a hash, never the raw URL. Support identifies the account by
@@ -56,6 +68,61 @@ export async function createReissueRequest(input: {
   }
 
   return record;
+}
+
+export async function listReissueRequests(): Promise<ReissueRequest[]> {
+  const indexedIds = await kvSMembers(REISSUE_INDEX_KEY);
+  const discoveredIds = await discoverReissueRequestIds();
+  const ids = Array.from(new Set([...indexedIds, ...discoveredIds]));
+  if (ids.length === 0) return [];
+
+  if (discoveredIds.length > 0) {
+    await Promise.all(
+      discoveredIds.map(async (id) => {
+        try {
+          await kvSAdd(REISSUE_INDEX_KEY, id);
+        } catch (err) {
+          console.warn("[reissue] failed to reindex request", id, err);
+        }
+      })
+    );
+  }
+
+  const requests = await Promise.all(ids.map((id) => getReissueRequest(id)));
+  return requests
+    .filter((request): request is ReissueRequest => request !== null)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function markReissueHandled(requestId: string): Promise<ReissueRequest> {
+  const record = await getReissueRequest(requestId);
+  if (!record) throw new ReissueError("not_found");
+
+  if (record.status !== "handled") {
+    record.status = "handled";
+    record.handledAt = new Date().toISOString();
+    await kvSet(reissueKey(record.requestId), JSON.stringify(record));
+  }
+
+  return record;
+}
+
+async function getReissueRequest(requestId: string): Promise<ReissueRequest | null> {
+  const raw = await kvGet(reissueKey(requestId));
+  return raw ? (JSON.parse(raw) as ReissueRequest) : null;
+}
+
+async function discoverReissueRequestIds(): Promise<string[]> {
+  try {
+    const keys = await kvScanKeys(`${REISSUE_KEY_PREFIX}*`);
+    return keys
+      .filter((key) => key.startsWith(REISSUE_KEY_PREFIX))
+      .map((key) => key.slice(REISSUE_KEY_PREFIX.length))
+      .filter((id) => id !== "index");
+  } catch (err) {
+    console.warn("[reissue] failed to scan request keys", err);
+    return [];
+  }
 }
 
 function escapeHtml(value: string): string {
