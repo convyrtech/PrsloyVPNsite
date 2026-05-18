@@ -16,6 +16,7 @@ export type FakeRedis = {
   store: Store;
   reset: () => void;
   setScanCapped: (capped: boolean) => void;
+  setFailing: (failing: boolean) => void;
 };
 
 function matchesGlob(pattern: string, key: string): boolean {
@@ -39,6 +40,7 @@ export function installFakeRedis(): FakeRedis {
     lists: new Map(),
   };
   let scanCapped = false;
+  let failing = false;
 
   function run(cmd: (string | number)[]): unknown {
     const op = String(cmd[0]).toUpperCase();
@@ -102,12 +104,20 @@ export function installFakeRedis(): FakeRedis {
       }
       case "LRANGE":
         return sliceRange(store.lists.get(key) ?? [], Number(cmd[2]), Number(cmd[3]));
+      case "EVAL": {
+        // Emulates the fixed-window rate-limit script: INCR + report TTL.
+        const rlKey = String(cmd[3]);
+        const count = Number(store.strings.get(rlKey) ?? "0") + 1;
+        store.strings.set(rlKey, String(count));
+        return [count, Number(cmd[4])];
+      }
       default:
         throw new Error(`fake-redis: unsupported command ${op}`);
     }
   }
 
   vi.stubGlobal("fetch", async (_url: unknown, init?: { body?: string }) => {
+    if (failing) throw new Error("fake-redis: simulated network failure");
     const cmd = JSON.parse(init?.body ?? "[]") as (string | number)[];
     return new Response(JSON.stringify({ result: run(cmd) }), {
       status: 200,
@@ -122,9 +132,13 @@ export function installFakeRedis(): FakeRedis {
       store.sets.clear();
       store.lists.clear();
       scanCapped = false;
+      failing = false;
     },
     setScanCapped: (capped) => {
       scanCapped = capped;
+    },
+    setFailing: (value) => {
+      failing = value;
     },
   };
 }
