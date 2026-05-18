@@ -79,6 +79,30 @@ export async function kvSMembers(key: string): Promise<string[]> {
   return Array.isArray(result) ? result : [];
 }
 
+export async function kvScanKeys(pattern: string, count = 100): Promise<string[]> {
+  const keys = new Set<string>();
+  let cursor = "0";
+  let iterations = 0;
+
+  do {
+    const result = await redisCommand<[string | number, string[]]>([
+      "SCAN",
+      cursor,
+      "MATCH",
+      pattern,
+      "COUNT",
+      count,
+    ]);
+    cursor = String(result?.[0] ?? "0");
+    for (const key of result?.[1] ?? []) {
+      keys.add(key);
+    }
+    iterations += 1;
+  } while (cursor !== "0" && iterations < 100);
+
+  return Array.from(keys);
+}
+
 /* Atomic fixed-window counter: INCR, set the TTL on the first hit, report
    the current count and remaining seconds in one round-trip. */
 const RATE_LIMIT_SCRIPT = [

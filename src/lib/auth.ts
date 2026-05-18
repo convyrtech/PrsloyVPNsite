@@ -5,6 +5,7 @@ import {
   kvDel,
   kvGet,
   kvSAdd,
+  kvScanKeys,
   kvSet,
   kvSMembers,
   KvNotConfiguredError,
@@ -54,10 +55,6 @@ export class AuthError extends Error {
   }
 }
 
-function userKey(id: string) {
-  return `auth:user:${id}`;
-}
-
 function emailKey(email: string) {
   return `auth:email:${email}`;
 }
@@ -71,6 +68,11 @@ function verifyKey(token: string) {
 }
 
 const USERS_INDEX_KEY = "auth:users:index";
+const USER_KEY_PREFIX = "auth:user:";
+
+function userKey(id: string) {
+  return `${USER_KEY_PREFIX}${id}`;
+}
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -203,13 +205,41 @@ export async function registerUser(email: string, password: string) {
 }
 
 export async function listUsers(): Promise<AdminUserSummary[]> {
-  const ids = await kvSMembers(USERS_INDEX_KEY);
+  const indexedIds = await kvSMembers(USERS_INDEX_KEY);
+  const discoveredIds = await discoverUserIds();
+  const ids = Array.from(new Set([...indexedIds, ...discoveredIds]));
   if (ids.length === 0) return [];
+
+  if (discoveredIds.length > 0) {
+    await Promise.all(
+      discoveredIds.map(async (id) => {
+        try {
+          await kvSAdd(USERS_INDEX_KEY, id);
+        } catch (err) {
+          console.warn("[auth] failed to reindex user", id, err);
+        }
+      })
+    );
+  }
+
   const users = await Promise.all(ids.map((id) => getUserById(id)));
   return users
     .filter((user): user is AuthUser => user !== null)
     .map(adminUserSummary)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+async function discoverUserIds(): Promise<string[]> {
+  try {
+    const keys = await kvScanKeys(`${USER_KEY_PREFIX}*`);
+    return keys
+      .filter((key) => key.startsWith(USER_KEY_PREFIX))
+      .map((key) => key.slice(USER_KEY_PREFIX.length))
+      .filter(Boolean);
+  } catch (err) {
+    console.warn("[auth] failed to scan user keys", err);
+    return [];
+  }
 }
 
 export async function loginUser(email: string, password: string) {
