@@ -90,11 +90,15 @@ export function NothingStage() {
     { clamp: true }
   );
 
-  // Erosion progress driver — slowest growth at start, fast tail so the
-  // last fragments crumble in the final 20% of scroll
+  // Erosion progress driver. Must use rawProgress, NOT the smoothed
+  // spring: the spring lags real scroll, so on a fast wheel flick — or a
+  // short laptop viewport, where one gesture covers more progress — it
+  // can still be mid-erosion when the section ends and the next stage's
+  // curtain arrives, freezing the word half-crumbled. rawProgress is
+  // exact, and finishing at 0.92 leaves a void beat before the boundary.
   const erosionProgress = useTransform(
-    scrollYProgress,
-    [0.62, 0.95],
+    rawProgress,
+    [0.62, 0.92],
     [0, 1],
     { clamp: true }
   );
