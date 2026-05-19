@@ -134,9 +134,11 @@ export function NothingStage() {
     <section
       ref={stageRef}
       className="relative w-full bg-black"
-      // Start just after the previous sticky viewport releases; the small
-      // black breath keeps fast wheel input from visually stacking the acts.
-      style={{ height: "320vh", marginTop: "-92vh" }}
+      // Overlap the previous act's tail only modestly. A deep overlap pulls
+      // this section's opaque black panel up far enough that, rising from
+      // the bottom, it covers the prior act's centred content before that
+      // act's animation has finished.
+      style={{ height: "320vh", marginTop: "-40vh" }}
     >
       <div className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black flex items-center justify-center">
         {/* TOP LABEL */}

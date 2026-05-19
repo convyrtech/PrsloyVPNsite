@@ -118,7 +118,9 @@ export function PricingStage() {
       // to avoid the "stuck on one screen" feeling.
       style={{
         height: "clamp(2300px, 300vh, 3400px)",
-        marginTop: "-92vh",
+        // Modest overlap: a deeper one covers NothingStage's centred word
+        // before its erosion finishes (the panel rises bottom-up).
+        marginTop: "-40vh",
       }}
     >
       <div className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black flex items-center justify-center
