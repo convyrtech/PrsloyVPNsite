@@ -98,7 +98,7 @@
     "a1": "A personal configuration for private connectivity and a short guide in the dashboard. We do not publish technical schemes or setup details on the public site.",
     "q2": "Why invite-only?",
     "a2": "It lets us control capacity and quality. Opening access slowly is better than onboarding more people than the infrastructure can comfortably handle.",
-    "q3": "Where's the app?",
+    "q3": "Where’s the app?",
     "a3": "For now we issue a compatible configuration and a guide. Our own client is in development, but access should not depend on a single app."
   },
   "pricing_page": {
@@ -112,11 +112,11 @@
     "waitlist_description": "Leave your email — we check available capacity and send the next step. Public checkout stays closed for now: quality first, scale later.",
     "email_placeholder": "your@email.com",
     "submit": "REQUEST INVITE",
-    "submitting": "SENDING...",
+    "submitting": "SENDING…",
     "no_spam": "No newsletters. Only access updates.",
     "success_title": "Request received.",
     "success_description": "We will send the next step when capacity is available for new access. No newsletters.",
-    "error_title": "Didn't send",
+    "error_title": "Didn’t send",
     "error_description": "Try again in a minute or message us on Telegram.",
     "error_invalid_email": "That looks invalid — check and resend.",
     "how_label": "HOW TO GET ACCESS",
@@ -208,7 +208,7 @@
         "body": "Do not publish the link or send it to shared chats. If the link leaked or stopped working, contact support."
       }
     ],
-    "troubleshooting_label": "IF IT WON'T CONNECT",
+    "troubleshooting_label": "IF IT WON’T CONNECT",
     "troubleshooting_body": "If the client rejects the configuration, update the app, copy the link from the dashboard again, and make sure you use the same email. If the error remains, message us on Telegram with a screenshot.",
     "no_key_label": "No access yet?",
     "no_key_body": "Request an invite first and verify your email. Once capacity is approved manually, the personal configuration appears in the dashboard.",
@@ -222,9 +222,9 @@
     "subtitle": "Your dashboard shows account status, invite issuing, and the personal configuration. No public checkout yet: access is attached manually after capacity review.",
     "telegram_cta_label": "CREATE PRSLOY ID",
     "telegram_cta_meta": "Email and password",
-    "what_label": "WHAT'S IN THERE",
+    "what_label": "WHAT’S IN THERE",
     "feature_status_title": "Key status",
-    "feature_status_body": "Whether your key is active, valid until when, how much traffic is left (if there's a cap).",
+    "feature_status_body": "Whether your key is active, valid until when, how much traffic is left (if there’s a cap).",
     "feature_renew_title": "Renew",
     "feature_renew_body": "Pay for a new period without regenerating the key. The route is preserved, devices stay connected.",
     "feature_regen_title": "Regenerate",
@@ -325,14 +325,14 @@
     "login_subtitle": "Use the email and password you created on the site. Telegram is no longer required for web access.",
     "register_label": "PRSLOY ID",
     "register_title": "Create account",
-    "register_subtitle": "Create a site account. We'll verify the email and attach access here when the invite is issued.",
+    "register_subtitle": "Create a site account. We’ll verify the email and attach access here when the invite is issued.",
     "email": "EMAIL",
     "password": "PASSWORD",
     "email_placeholder": "you@email.com",
     "password_placeholder": "At least 8 characters",
     "login_submit": "SIGN IN",
     "register_submit": "CREATE ACCOUNT",
-    "submitting": "SENDING...",
+    "submitting": "SENDING…",
     "invalid": "Use a valid email and a password with at least 8 characters.",
     "email_exists": "This email already has an account. Sign in instead.",
     "credentials": "Email or password is incorrect.",
@@ -369,7 +369,7 @@
       },
       {
         "category": "product",
-        "q": "Where's the app?",
+        "q": "Where’s the app?",
         "a": "For now access works through a compatible configuration and dashboard guide. Our own client is in development, but access should not depend on a single app."
       },
       {
@@ -421,14 +421,14 @@
       "label": "PRIVACY",
       "title": "What we know about you",
       "updated": "Updated: May 13, 2026",
-      "intro": "This is not a corporate privacy policy with 40 clauses. Here's an honest list of what we collect, why, and how long we keep it.",
+      "intro": "This is not a corporate privacy policy with 40 clauses. Here’s an honest list of what we collect, why, and how long we keep it.",
       "sections": [
         {
           "h": "WHAT WE COLLECT",
-          "p": "Only what's needed for the service to work: email, verification status, access status, the identifier of your access in our system, subscription start and end date. That's it."
+          "p": "Only what’s needed for the service to work: email, verification status, access status, the identifier of your access in our system, subscription start and end date. That’s it."
         },
         {
-          "h": "WHAT WE DON'T COLLECT",
+          "h": "WHAT WE DON’T COLLECT",
           "p": "Activity logs — which sites you visit, what you look up, who you connect to. Payment data (cards, account numbers) — these go directly to the payment gateway. Biometrics, contacts, geolocation. There are no email newsletters or marketing trackers on the site."
         },
         {
@@ -437,7 +437,7 @@
         },
         {
           "h": "RETENTION",
-          "p": "Your key record lives while the subscription is active + 90 days (in case of renewal). After that — deleted. Email from the waitlist form is kept until we send you the invite link, then deleted within 30 days if you don't subscribe."
+          "p": "Your key record lives while the subscription is active + 90 days (in case of renewal). After that — deleted. Email from the waitlist form is kept until we send you the invite link, then deleted within 30 days if you don’t subscribe."
         },
         {
           "h": "THIRD PARTIES",
@@ -449,7 +449,7 @@
         },
         {
           "h": "CHANGES",
-          "p": "If we change something — we update the date at the top and send a product notice when the change matters. We don't slip in material changes silently."
+          "p": "If we change something — we update the date at the top and send a product notice when the change matters. We don’t slip in material changes silently."
         }
       ],
       "contact_label": "Privacy questions",
@@ -470,12 +470,12 @@
           "p": "Personal secure connectivity, protecting data on public networks, and access to your work and personal resources. Publicly distributing or reselling the key is not allowed."
         },
         {
-          "h": "WHAT YOU CAN'T USE IT FOR",
-          "p": "Spam and DDoS. Attacks on infrastructure (ours or anyone else's). Distributing harmful software. Automated data collection above reasonable limits (thousands of requests per second). The operator reserves the right to disable the key without refund in case of abuse — but we'll ask first, then disable."
+          "h": "WHAT YOU CAN’T USE IT FOR",
+          "p": "Spam and DDoS. Attacks on infrastructure (ours or anyone else’s). Distributing harmful software. Automated data collection above reasonable limits (thousands of requests per second). The operator reserves the right to disable the key without refund in case of abuse — but we’ll ask first, then disable."
         },
         {
           "h": "AVAILABILITY",
-          "p": "The service is in closed beta. We do everything we can to keep routes up 24/7, but we can't guarantee 100% uptime — that would be a lie. If a node falls, the route switches; if something stays down for a long time, we compensate by extending the subscription."
+          "p": "The service is in closed beta. We do everything we can to keep routes up 24/7, but we can’t guarantee 100% uptime — that would be a lie. If a node falls, the route switches; if something stays down for a long time, we compensate by extending the subscription."
         },
         {
           "h": "PAYMENT AND REFUNDS",
@@ -483,7 +483,7 @@
         },
         {
           "h": "TERMINATION",
-          "p": "You can stop renewing at any time — just don't pay. We can stop servicing the key in case of these terms being violated — after notifying you through the account contact. If we terminate without your fault — we refund the unused portion of the payment."
+          "p": "You can stop renewing at any time — just don’t pay. We can stop servicing the key in case of these terms being violated — after notifying you through the account contact. If we terminate without your fault — we refund the unused portion of the payment."
         },
         {
           "h": "LIABILITY",

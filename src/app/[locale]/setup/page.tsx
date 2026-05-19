@@ -223,7 +223,7 @@ export default async function SetupPage({
                 rel="noopener noreferrer"
                 className="self-start font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80"
               >
-                {t("telegram_link")} -&gt;
+                {t("telegram_link")} →
               </a>
             </article>
 
@@ -238,7 +238,7 @@ export default async function SetupPage({
                 href="/pricing"
                 className="self-start font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80"
               >
-                {t("get_key_link")} -&gt;
+                {t("get_key_link")} →
               </Link>
             </article>
           </section>

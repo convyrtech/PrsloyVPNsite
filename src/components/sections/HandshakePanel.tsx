@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransform, type MotionValue } from "motion/react";
+import type { MotionValue } from "motion/react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -130,9 +130,4 @@ export function HandshakePanel({
       </div>
     </div>
   );
-}
-
-/** Helper: derive handshake progress from main scroll progress (0.35→0.55) */
-export function useHandshakeProgress(scrollProgress: MotionValue<number>) {
-  return useTransform(scrollProgress, [0.35, 0.55], [0, 1], { clamp: true });
 }

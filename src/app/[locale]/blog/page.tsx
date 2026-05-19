@@ -47,7 +47,7 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
         label: "ACCESS DELIVERY",
         title: "Accounts and access keys are now connected",
         body:
-          "A week ago this was a 'next' item. Today it works. We grant access to an account and the access key appears in that person's dashboard right away. The path from sign-up to a working key is closed — for the first time fully on the site, instead of by hand in chat.",
+          "A week ago this was a “next” item. Today it works. We grant access to an account and the access key appears in that person's dashboard right away. The path from sign-up to a working key is closed — for the first time fully on the site, instead of by hand in chat.",
         items: [
           "Internal granting tool — one form: email, key link, done.",
           "The dashboard shows access status and the subscription link itself.",
@@ -270,7 +270,7 @@ export async function generateMetadata({
 function statusClass(status: string) {
   if (status === "LIVE") return "text-success border-success/50";
   if (status === "FIXED") return "text-text-display border-border-visible";
-  return "text-accent border-accent/50";
+  return "text-warning border-warning/50";
 }
 
 export default async function BlogPage({
@@ -293,7 +293,7 @@ export default async function BlogPage({
           <header className="grid gap-xl lg:grid-cols-[1fr_auto] lg:items-end">
             <div className="flex flex-col gap-lg">
               <h1
-                className="font-body font-bold text-text-display leading-[0.95] break-words"
+                className="font-body font-bold text-text-display leading-[0.95] tracking-[-0.03em] break-words"
                 style={{ fontSize: "clamp(40px, 8vw, 88px)" }}
               >
                 {copy.title}
@@ -302,7 +302,12 @@ export default async function BlogPage({
                 {copy.subtitle}
               </p>
             </div>
-            <DotoNumber value={copy.entries.length} unit="NOTES" pulse pulseColor="bg-success" />
+            <DotoNumber
+              value={String(copy.entries.length).padStart(2, "0")}
+              unit="NOTES"
+              pulse
+              pulseColor="bg-success"
+            />
           </header>
         </RevealOnView>
 
@@ -374,7 +379,7 @@ export default async function BlogPage({
                            font-mono text-label uppercase tracking-[0.08em]
                            text-text-display hover:opacity-80 transition-opacity"
               >
-                {copy.cta} -&gt;
+                {copy.cta} →
               </Link>
             </div>
           </section>

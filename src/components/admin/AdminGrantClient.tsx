@@ -271,7 +271,7 @@ function SuccessPanel({ user, locale }: { user: GrantUser; locale: string }) {
         href="/dashboard"
         className="self-start font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80"
       >
-        Open dashboard check -&gt;
+        Open dashboard check →
       </Link>
     </div>
   );

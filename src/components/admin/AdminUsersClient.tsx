@@ -217,7 +217,7 @@ export function AdminUsersClient({ locale }: { locale: string }) {
               href="/admin/grant"
               className="font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80"
             >
-              Grant access -&gt;
+              Grant access →
             </Link>
           </div>
           <h1
