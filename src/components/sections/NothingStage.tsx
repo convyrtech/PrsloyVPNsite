@@ -134,11 +134,12 @@ export function NothingStage() {
     <section
       ref={stageRef}
       className="relative w-full bg-black"
-      // Overlap the previous act's tail only modestly. A deep overlap pulls
-      // this section's opaque black panel up far enough that, rising from
-      // the bottom, it covers the prior act's centred content before that
-      // act's animation has finished.
-      style={{ height: "320vh", marginTop: "-40vh" }}
+      // Overlap the previous act's tail. Tuned tradeoff: a deeper overlap
+      // shrinks the black beat between acts but risks this opaque panel
+      // covering the prior act's centred content mid-animation; a shallower
+      // one is safe but leaves a longer black gap. -60vh keeps the globe
+      // clear while trimming the gap.
+      style={{ height: "320vh", marginTop: "-60vh" }}
     >
       <div className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black flex items-center justify-center">
         {/* TOP LABEL */}
