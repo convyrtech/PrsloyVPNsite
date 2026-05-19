@@ -240,7 +240,8 @@
     "no_key_label": "No access yet?",
     "get_key_link": "Request invite",
     "setup_title": "ACCOUNT STORAGE IS NOT CONNECTED",
-    "setup_body": "Email login is built into the site, but the production KV storage and AUTH_SECRET env are not configured yet.",
+    "setup_body": "Email login is built into the site, but the service is not fully configured in production yet.",
+    "loading_body": "Loading your account…",
     "auth_required_label": "SIGN IN REQUIRED",
     "auth_required_body": "Create a PRSLOY ID or sign in to see your account, email status, and access key state.",
     "login_link": "SIGN IN",
@@ -336,8 +337,8 @@
     "email_exists": "This email already has an account. Sign in instead.",
     "credentials": "Email or password is incorrect.",
     "not_configured": "Account storage is not connected yet.",
-    "storage_not_configured": "Redis storage is not visible. Check UPSTASH_REDIS_REST_KV_REST_API_URL and UPSTASH_REDIS_REST_KV_REST_API_TOKEN.",
-    "secret_not_configured": "AUTH_SECRET is missing or shorter than 32 characters.",
+    "storage_not_configured": "Account storage is temporarily unavailable. Please try again shortly.",
+    "secret_not_configured": "The account service is not fully configured yet. Please try again later.",
     "rate_limited": "Too many attempts. Wait a couple of minutes and try again.",
     "generic_error": "Could not complete the request. Try again in a minute.",
     "no_account": "NO ACCOUNT?",
@@ -424,11 +425,11 @@
       "sections": [
         {
           "h": "WHAT WE COLLECT",
-          "p": "Only what's needed for the service to work: email, verification status, access status, your key identifier in our provisioning system, subscription start and end date. That's it."
+          "p": "Only what's needed for the service to work: email, verification status, access status, the identifier of your access in our system, subscription start and end date. That's it."
         },
         {
           "h": "WHAT WE DON'T COLLECT",
-          "p": "Activity logs (DNS queries, visited sites, peer IPs). Payment data (cards, account numbers) — these go directly to the payment gateway. Biometrics, contacts, geolocation. There are no email newsletters or marketing trackers on the site."
+          "p": "Activity logs — which sites you visit, what you look up, who you connect to. Payment data (cards, account numbers) — these go directly to the payment gateway. Biometrics, contacts, geolocation. There are no email newsletters or marketing trackers on the site."
         },
         {
           "h": "PAYMENT",
@@ -470,7 +471,7 @@
         },
         {
           "h": "WHAT YOU CAN'T USE IT FOR",
-          "p": "Spam and DDoS. Attacks on infrastructure (ours or anyone else's). Distributing malware. Automated scraping above reasonable limits (thousands of requests per second). The operator reserves the right to disable the key without refund in case of abuse — but we'll ask first, then disable."
+          "p": "Spam and DDoS. Attacks on infrastructure (ours or anyone else's). Distributing harmful software. Automated data collection above reasonable limits (thousands of requests per second). The operator reserves the right to disable the key without refund in case of abuse — but we'll ask first, then disable."
         },
         {
           "h": "AVAILABILITY",

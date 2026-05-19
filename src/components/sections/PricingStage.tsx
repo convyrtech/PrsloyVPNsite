@@ -159,7 +159,7 @@ export function PricingStage() {
           >
             {/* Tiny instrument label — only typographic "character" we keep.
                 Massive uniform weight does the rest. */}
-            <div className="font-mono text-[10px] uppercase tracking-[0.4em] text-text-disabled
+            <div className="font-mono text-[10px] uppercase tracking-[0.4em] text-text-secondary
                             whitespace-nowrap mb-sm sm:mb-md">
               ─── PRICE ───
             </div>

@@ -609,7 +609,7 @@ export function GlobeImpl({ chrome = true }: { chrome?: boolean }) {
 
           <span
             className="absolute bottom-md left-1/2 -translate-x-1/2 z-30
-                       font-mono text-[10px] uppercase tracking-[0.2em] text-text-disabled
+                       font-mono text-[10px] uppercase tracking-[0.2em] text-text-secondary
                        pointer-events-none"
           >
             {touch.current ? t("hint_touch") : t("hint_desktop")}

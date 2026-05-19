@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "motion/react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
+import { TELEGRAM_BOT_URL } from "@/lib/links";
+
+const FooterCtaLink = motion.create(Link);
 
 /**
  * Footer — "Departure Board" closing.
@@ -238,8 +241,8 @@ export function Footer() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="flex flex-col items-start lg:items-end gap-sm shrink-0 lg:pb-md"
           >
-            <motion.button
-              type="button"
+            <FooterCtaLink
+              href="/pricing"
               animate={inView ? { scale: [1, 1.025, 1] } : {}}
               transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
               style={{ backgroundColor: "#ffffff", color: "#000000" }}
@@ -253,7 +256,7 @@ export function Footer() {
               <span>{t("cta")}</span>
               <span className="opacity-50">→</span>
               <span>BETA</span>
-            </motion.button>
+            </FooterCtaLink>
             <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
               {t("cta_meta")}
             </span>
@@ -282,7 +285,7 @@ export function Footer() {
         <div className="grid grid-cols-[60px_140px_1fr_90px] md:grid-cols-[80px_220px_1fr_100px]
                         gap-md md:gap-lg
                         pb-sm border-b border-border-visible/30
-                        font-mono text-[10px] uppercase tracking-[0.16em] text-text-disabled">
+                        font-mono text-[10px] uppercase tracking-[0.16em] text-text-secondary">
           <span>CODE</span>
           <span>NODE</span>
           <span className="pl-[14px]">STATE</span>
@@ -381,7 +384,7 @@ export function Footer() {
 
           {/* Right: Telegram link */}
           <a
-            href="https://t.me/prsloy_bot"
+            href={TELEGRAM_BOT_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="font-mono text-[12px] uppercase tracking-[0.16em] text-text-display
@@ -411,7 +414,7 @@ export function Footer() {
             PRSLOY
           </h3>
           <div className="mt-md flex flex-wrap items-center gap-md
-                          font-mono text-[10px] uppercase tracking-[0.2em] text-text-disabled">
+                          font-mono text-[10px] uppercase tracking-[0.2em] text-text-secondary">
             <span>{t("wordmark_meta")}</span>
             <span className="opacity-40">·</span>
             <span>{t("copyright")}</span>

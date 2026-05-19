@@ -20,6 +20,7 @@ export type DashboardCopy = Record<
   | "subtitle"
   | "setup_title"
   | "setup_body"
+  | "loading_body"
   | "auth_required_label"
   | "auth_required_body"
   | "login_link"
@@ -329,7 +330,7 @@ export function DashboardClient({
   if (state.kind === "loading") {
     return (
       <DashboardShell locale={locale} copy={copy}>
-        <StatusPanel tone="success" title="PRSLOY ID" body="Loading account..." />
+        <StatusPanel tone="success" title="PRSLOY ID" body={copy.loading_body} />
       </DashboardShell>
     );
   }

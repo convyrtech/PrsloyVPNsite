@@ -82,7 +82,7 @@ export function GlobeUIOverlay({
       {/* BOTTOM-CENTER hint */}
       <motion.span
         className="absolute bottom-md left-1/2 -translate-x-1/2
-                   font-mono text-[10px] uppercase tracking-[0.2em] text-text-disabled
+                   font-mono text-[10px] uppercase tracking-[0.2em] text-text-secondary
                    pointer-events-none whitespace-nowrap"
         style={{ opacity: hintOp }}
       >
@@ -95,7 +95,7 @@ export function GlobeUIOverlay({
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="text-left">
-      <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-disabled mb-1">
+      <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-secondary mb-1">
         {label}
       </div>
       <div className="font-mono text-body-sm text-text-display tracking-[-0.01em]">

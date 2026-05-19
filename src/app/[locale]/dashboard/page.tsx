@@ -16,6 +16,7 @@ export default async function DashboardPage({
     "subtitle",
     "setup_title",
     "setup_body",
+    "loading_body",
     "auth_required_label",
     "auth_required_body",
     "login_link",

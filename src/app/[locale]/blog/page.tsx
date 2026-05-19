@@ -45,9 +45,9 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
       {
         date: "16 MAY 2026",
         label: "ACCESS DELIVERY",
-        title: "Accounts and VPN keys are now connected",
+        title: "Accounts and access keys are now connected",
         body:
-          "A week ago this was a 'next' item. Today it works. We grant access to an account and the VPN key appears in that person's dashboard right away. The path from sign-up to a working key is closed — for the first time fully on the site, instead of by hand in chat.",
+          "A week ago this was a 'next' item. Today it works. We grant access to an account and the access key appears in that person's dashboard right away. The path from sign-up to a working key is closed — for the first time fully on the site, instead of by hand in chat.",
         items: [
           "Internal granting tool — one form: email, key link, done.",
           "The dashboard shows access status and the subscription link itself.",
@@ -154,9 +154,9 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
       {
         date: "16 МАЯ 2026",
         label: "ВЫДАЧА ДОСТУПА",
-        title: "Аккаунт и VPN-ключ теперь связаны",
+        title: "Аккаунт и ключ доступа теперь связаны",
         body:
-          "Неделю назад это был пункт «дальше». Сегодня — работает. Мы выдаём доступ аккаунту, и VPN-ключ сразу появляется у человека в личном кабинете. Путь от регистрации до готового ключа замкнут — впервые целиком на сайте, а не вручную в переписке.",
+          "Неделю назад это был пункт «дальше». Сегодня — работает. Мы выдаём доступ аккаунту, и ключ доступа сразу появляется у человека в личном кабинете. Путь от регистрации до готового ключа замкнут — впервые целиком на сайте, а не вручную в переписке.",
         items: [
           "Внутренний инструмент выдачи — одна форма: почта, ссылка-ключ, готово.",
           "Кабинет показывает статус доступа и саму ссылку-подписку.",
