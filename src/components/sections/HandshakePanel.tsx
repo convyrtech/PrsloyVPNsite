@@ -56,7 +56,7 @@ export function HandshakePanel({
             return (
               <span
                 key={i}
-                className="block transition-all duration-150 ease-out-nothing"
+                className="block transition duration-150 ease-out-nothing"
                 style={{
                   width: "10px",
                   height: filled ? "28px" : "16px",

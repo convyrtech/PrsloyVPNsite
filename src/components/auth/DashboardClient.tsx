@@ -907,7 +907,7 @@ function DeviceSetupPanel({
               rel="noopener noreferrer"
               className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-lg
                          font-mono text-label uppercase tracking-[0.08em] text-black
-                         hover:opacity-90 active:scale-[0.98] transition-all"
+                         hover:opacity-90 active:scale-[0.98] transition"
             >
               [ {text.installHapp} ]
             </a>
@@ -1075,7 +1075,7 @@ function ReissueControl({
             disabled={state === "sending" || state === "sent"}
             className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-lg
                        font-mono text-label uppercase tracking-[0.08em] text-black
-                       hover:opacity-90 active:scale-[0.98] transition-all
+                       hover:opacity-90 active:scale-[0.98] transition
                        disabled:opacity-60 disabled:cursor-default disabled:active:scale-100"
           >
             [ {label} ]
@@ -1189,7 +1189,7 @@ function AccessPanel({
               onClick={copyAccessKey}
               className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-lg
                          font-mono text-label uppercase tracking-[0.08em] text-black
-                         hover:opacity-90 active:scale-[0.98] transition-all"
+                         hover:opacity-90 active:scale-[0.98] transition"
             >
               [ {copyState === "copied" ? copy.copy_done : copy.copy_key} ]
             </button>

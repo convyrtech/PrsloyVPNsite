@@ -322,7 +322,7 @@ function NavLink({
       href={href as "/pricing"}
       className={`
         relative font-mono text-label uppercase tracking-[0.08em]
-        transition-all duration-150 ease-out-nothing
+        transition duration-150 ease-out-nothing
         hover:text-text-display hover:tracking-[0.12em]
         ${isActive ? "text-text-display" : baseColor}
       `}
@@ -377,7 +377,7 @@ function BuyCta({ label, compact = false }: { label: string; compact?: boolean }
         bg-text-display text-black font-mono uppercase tracking-[0.08em]
         rounded-full
         hover:opacity-90 active:scale-[0.98]
-        transition-all duration-150 ease-out-nothing
+        transition duration-150 ease-out-nothing
         ${compact ? "px-md min-h-[44px] text-[10px] whitespace-nowrap" : "px-lg min-h-[44px] text-label"}
       `}
     >

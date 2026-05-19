@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { isValidEmail } from "@/lib/validation";
 
 type AuthCopy = {
   email: string;
@@ -37,6 +38,18 @@ export function AuthForm({ mode, locale, copy }: AuthFormProps) {
     e.preventDefault();
     if (pending) return;
 
+    // Pre-validate client-side so obvious mistakes surface instantly
+    // instead of after a network round-trip.
+    const trimmedEmail = email.trim();
+    if (!isValidEmail(trimmedEmail)) {
+      setError(copy.invalid);
+      return;
+    }
+    if (mode === "register" && password.length < 8) {
+      setError(copy.invalid);
+      return;
+    }
+
     setPending(true);
     setError("");
 
@@ -44,7 +57,7 @@ export function AuthForm({ mode, locale, copy }: AuthFormProps) {
       const res = await fetch(`/api/auth/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, locale }),
+        body: JSON.stringify({ email: trimmedEmail, password, locale }),
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
 
@@ -112,7 +125,7 @@ export function AuthForm({ mode, locale, copy }: AuthFormProps) {
         className="mt-md bg-text-display text-black font-mono uppercase tracking-[0.08em]
                    px-xl min-h-[48px] inline-flex items-center justify-center rounded-full text-label
                    hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:cursor-wait
-                   transition-all duration-150 ease-out-nothing"
+                   transition duration-150 ease-out-nothing"
       >
         [ {pending ? copy.submitting : copy.submit} ]
       </button>

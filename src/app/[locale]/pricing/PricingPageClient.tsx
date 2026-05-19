@@ -189,7 +189,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
                              rounded-full text-label
                              hover:opacity-90 active:scale-[0.98]
                              disabled:opacity-60 disabled:cursor-wait
-                             transition-all duration-150 ease-out-nothing
+                             transition duration-150 ease-out-nothing
                              whitespace-nowrap"
                 >
                   [ {state === "submitting" ? t("submitting") : t("submit")} ]

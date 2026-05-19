@@ -258,7 +258,7 @@ export function AdminUsersClient({ locale }: { locale: string }) {
             className="bg-text-display text-black font-mono uppercase tracking-[0.08em]
                        px-xl min-h-[48px] inline-flex items-center justify-center rounded-full text-label
                        hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:cursor-wait
-                       transition-all duration-150"
+                       transition duration-150"
           >
             [ {pending ? "Loading..." : users ? "Reload" : "Load users"} ]
           </button>

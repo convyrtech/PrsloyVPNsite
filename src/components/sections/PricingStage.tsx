@@ -250,7 +250,7 @@ export function PricingStage() {
                 className="block bg-text-display text-black font-mono uppercase tracking-[0.08em]
                            px-[56px] py-[20px] rounded-full
                            hover:opacity-95 active:scale-[0.98]
-                           transition-all duration-150 ease-out-nothing"
+                           transition duration-150 ease-out-nothing"
                 style={{ fontSize: "16px" }}
               >
                 [ {t("cta")} ]

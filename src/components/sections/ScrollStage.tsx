@@ -193,7 +193,7 @@ export function ScrollStage() {
                          font-mono text-body-sm uppercase tracking-[0.08em] whitespace-nowrap
                          px-lg md:px-xl py-md rounded-full pointer-events-auto
                          hover:opacity-90 active:scale-[0.98]
-                         transition-all duration-150 ease-out-nothing"
+                         transition duration-150 ease-out-nothing"
             >
               [ {t("cta")} ]
             </Link>

@@ -602,7 +602,7 @@ export function GlobeImpl({ chrome = true }: { chrome?: boolean }) {
                        font-mono text-body-sm uppercase tracking-[0.08em]
                        px-xl py-md rounded-full
                        hover:opacity-90 active:scale-[0.98]
-                       transition-all duration-150 ease-out-nothing"
+                       transition duration-150 ease-out-nothing"
           >
             [ {t("cta")} ]
           </Link>
