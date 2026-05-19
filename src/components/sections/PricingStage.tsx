@@ -295,7 +295,8 @@ function PeriodControl({
             type="button"
             onClick={() => onChange(id)}
             className={`
-              relative px-lg py-2 font-mono text-label uppercase tracking-[0.08em]
+              relative px-lg min-h-[44px] inline-flex items-center justify-center
+              font-mono text-label uppercase tracking-[0.08em]
               rounded-full transition-colors duration-200 ease-out-nothing
               ${active ? "text-black" : "text-text-secondary hover:text-text-primary"}
             `}

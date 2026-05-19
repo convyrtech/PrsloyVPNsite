@@ -210,9 +210,9 @@ export default async function SetupPage({
             <article className="border border-border-visible rounded-[8px] p-xl sm:p-2xl bg-surface flex flex-col gap-lg">
               <div className="flex items-center gap-sm">
                 <span className="inline-block h-[6px] w-[6px] rounded-full bg-warning animate-pulse" />
-                <h3 className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
+                <h2 className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
                   {t("troubleshooting_label")}
-                </h3>
+                </h2>
               </div>
               <p className="font-body text-body text-text-secondary leading-[1.65]">
                 {t("troubleshooting_body")}
@@ -228,9 +228,9 @@ export default async function SetupPage({
             </article>
 
             <article className="border border-border-visible rounded-[8px] p-xl sm:p-2xl flex flex-col gap-lg">
-              <h3 className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
+              <h2 className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
                 {t("no_key_label")}
-              </h3>
+              </h2>
               <p className="font-body text-body text-text-secondary leading-[1.65]">
                 {t("no_key_body")}
               </p>

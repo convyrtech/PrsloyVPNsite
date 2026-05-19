@@ -9,7 +9,6 @@
   /* Color palette — dark mode primary */
   --color-black: #000000;
   --color-surface: #111111;
-  --color-surface-raised: #1a1a1a;
   --color-border: #222222;
   --color-border-visible: #333333;
   --color-text-disabled: #666666;
@@ -17,7 +16,6 @@
   --color-text-primary: #e8e8e8;
   --color-text-display: #ffffff;
   --color-accent: #d71921;
-  --color-accent-subtle: rgba(215, 25, 33, 0.15);
   --color-success: #4a9e5c;
   --color-warning: #d4a843;
   --color-interactive: #5b9bf6;

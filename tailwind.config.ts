@@ -11,7 +11,6 @@ const config: Config = {
         // Nothing design tokens (dark mode is primary)
         black: "var(--color-black)",
         surface: "var(--color-surface)",
-        "surface-raised": "var(--color-surface-raised)",
         border: "var(--color-border)",
         "border-visible": "var(--color-border-visible)",
         "text-disabled": "var(--color-text-disabled)",
@@ -19,7 +18,6 @@ const config: Config = {
         "text-primary": "var(--color-text-primary)",
         "text-display": "var(--color-text-display)",
         accent: "var(--color-accent)",
-        "accent-subtle": "var(--color-accent-subtle)",
         success: "var(--color-success)",
         warning: "var(--color-warning)",
         interactive: "var(--color-interactive)",
@@ -31,14 +29,11 @@ const config: Config = {
       },
       fontSize: {
         // Type scale
-        "display-xl": ["72px", { lineHeight: "1.0", letterSpacing: "-0.03em" }],
-        "display-lg": ["48px", { lineHeight: "1.05", letterSpacing: "-0.02em" }],
         "display-md": ["36px", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
         heading: ["24px", { lineHeight: "1.2", letterSpacing: "-0.01em" }],
         subheading: ["18px", { lineHeight: "1.3" }],
         body: ["16px", { lineHeight: "1.5" }],
-        "body-sm": ["14px", { lineHeight: "1.5", letterSpacing: "0.01em" }],
-        caption: ["12px", { lineHeight: "1.4", letterSpacing: "0.04em" }],
+        "body-sm": ["14px", { lineHeight: "1.5" }],
         label: ["11px", { lineHeight: "1.2", letterSpacing: "0.08em" }],
       },
       spacing: {
@@ -54,9 +49,6 @@ const config: Config = {
       },
       transitionTimingFunction: {
         "out-nothing": "cubic-bezier(0.25, 0.1, 0.25, 1)",
-      },
-      transitionDuration: {
-        micro: "150ms",
       },
     },
   },

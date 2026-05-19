@@ -137,7 +137,7 @@ function BoardRow({
           className={
             "inline-block w-[6px] h-[6px] rounded-full shrink-0 " +
             (active
-              ? "bg-[#2BD66A] shadow-[0_0_8px_rgba(43,214,106,0.6)] animate-pulse"
+              ? "bg-success shadow-[0_0_8px_rgba(74,158,92,0.6)] animate-pulse"
               : "bg-text-secondary/60 ring-1 ring-text-disabled")
           }
         />
@@ -341,8 +341,8 @@ export function Footer() {
                                text-[clamp(15px,1.6vw,19px)] leading-[1.15] font-medium
                                flex items-center gap-sm">
                 {m.accent && (
-                  <span className="inline-block w-[6px] h-[6px] rounded-full bg-[#2BD66A]
-                                   shadow-[0_0_8px_rgba(43,214,106,0.6)] animate-pulse shrink-0" />
+                  <span className="inline-block w-[6px] h-[6px] rounded-full bg-success
+                                   shadow-[0_0_8px_rgba(74,158,92,0.6)] animate-pulse shrink-0" />
                 )}
                 {m.v}
               </span>
