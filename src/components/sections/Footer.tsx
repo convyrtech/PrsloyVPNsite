@@ -380,6 +380,9 @@ export function Footer() {
             <Link href="/terms" className="hover:text-text-display transition-colors">
               {t("nav_terms")}
             </Link>
+            <Link href="/refunds" className="hover:text-text-display transition-colors">
+              {t("nav_refunds")}
+            </Link>
           </nav>
 
           {/* Right: Telegram link */}

@@ -247,6 +247,12 @@ export function PricingPageClient({ locale }: { locale: string }) {
             </Link>
           </div>
           <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
+            <span className="text-text-disabled">{t("refunds_label")}</span>
+            <Link href="/refunds" className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80 transition-opacity">
+              {t("refunds_link")} {"\u2192"}
+            </Link>
+          </div>
+          <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
             <span className="text-text-disabled">{t("telegram_label")}</span>
             <a
               href={TELEGRAM_BOT_URL}

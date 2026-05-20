@@ -4,7 +4,7 @@ import { RevealOnView } from "@/components/ui/RevealOnView";
 import { DotoNumber } from "@/components/ui/DotoNumber";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
 
-export type LegalKind = "privacy" | "terms";
+export type LegalKind = "privacy" | "terms" | "refunds";
 
 export async function LegalLayout({ kind, locale }: { kind: LegalKind; locale: string }) {
   const t = await getTranslations({ locale, namespace: `legal.${kind}` });

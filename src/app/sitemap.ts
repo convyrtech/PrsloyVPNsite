@@ -3,7 +3,7 @@ import { routing } from "@/i18n/routing";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://prsloy.com";
 
-const STATIC_PAGES = ["", "pricing", "faq", "blog", "privacy", "terms"];
+const STATIC_PAGES = ["", "pricing", "faq", "blog", "privacy", "terms", "refunds"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];
