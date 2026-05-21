@@ -15,6 +15,7 @@ vi.mock("next/headers", () => ({
 import {
   AuthError,
   createSession,
+  deleteUser,
   destroySession,
   getCurrentUser,
   grantAccess,
@@ -169,5 +170,27 @@ describe("listUsers", () => {
 
   it("returns an empty array when there are no users", async () => {
     expect(await listUsers()).toEqual([]);
+  });
+});
+
+describe("deleteUser", () => {
+  it("removes the account, user index entry, and email reservation", async () => {
+    const user = await registerUser("delete@example.com", "password123");
+    await registerUser("keep@example.com", "password123");
+
+    const deleted = await deleteUser(user.id);
+    const users = await listUsers();
+
+    expect(deleted.email).toBe("delete@example.com");
+    expect(users.map((u) => u.email)).toEqual(["keep@example.com"]);
+    await expect(
+      registerUser("delete@example.com", "password123")
+    ).resolves.toMatchObject({ email: "delete@example.com" });
+  });
+
+  it("rejects an unknown account", async () => {
+    await expect(deleteUser("missing")).rejects.toMatchObject({
+      code: "not_found",
+    });
   });
 });

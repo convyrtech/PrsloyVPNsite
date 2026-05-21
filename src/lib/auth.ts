@@ -6,6 +6,7 @@ import {
   kvDel,
   kvGet,
   kvSAdd,
+  kvSRem,
   kvSet,
   KvNotConfiguredError,
 } from "@/lib/kv";
@@ -224,6 +225,22 @@ export async function listUsers(): Promise<AdminUserSummary[]> {
     .filter((user): user is AuthUser => user !== null)
     .map(adminUserSummary)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function deleteUser(userId: string): Promise<AdminUserSummary> {
+  const id = userId.trim();
+  if (!id) throw new AuthError("not_found");
+
+  const user = await getUserById(id);
+  if (!user) throw new AuthError("not_found");
+
+  await Promise.all([
+    kvDel(userKey(user.id)),
+    kvDel(emailKey(user.email)),
+    kvSRem(USERS_INDEX_KEY, user.id),
+  ]);
+
+  return adminUserSummary(user);
 }
 
 export async function loginUser(email: string, password: string) {

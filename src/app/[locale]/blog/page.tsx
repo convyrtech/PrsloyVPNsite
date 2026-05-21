@@ -43,6 +43,45 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
     nextLabel: "NEXT",
     entries: [
       {
+        date: "21 MAY 2026",
+        label: "SUPPORT",
+        title: "Support and refund rules are now public",
+        body:
+          "The product can now pass a basic bank review: there is a working support channel, a public refund page, and a clear place where a customer can ask for help without hunting for a private chat.",
+        items: [
+          "Support points to the public PRSLOY Telegram account.",
+          "Refund terms are published in Russian and English.",
+          "Footer, pricing, and sitemap now expose the policy page.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "21 MAY 2026",
+        label: "OPERATOR PANEL",
+        title: "Admin work is no longer trapped in chat",
+        body:
+          "Manual operations now have a proper internal panel. We can see accounts, grant access, process key reissue requests, and remove test accounts without touching storage by hand.",
+        items: [
+          "Admin pages are localized and connected to each other.",
+          "Operators can grant a key by email and subscription link.",
+          "Test accounts can be deleted from the user list.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "20 MAY 2026",
+        label: "CABINET",
+        title: "The dashboard became a customer page, not an engineering console",
+        body:
+          "The first dashboard was too noisy. We cut it down to what a normal customer needs: access status, the current key, setup, key replacement, support, and account controls.",
+        items: [
+          "Less internal wording and fewer distracting metrics.",
+          "Setup and reissue actions are visible where the user expects them.",
+          "The page now matches the minimal PRSLOY visual language.",
+        ],
+        status: "LIVE",
+      },
+      {
         date: "16 MAY 2026",
         label: "ACCESS DELIVERY",
         title: "Accounts and access keys are now connected",
@@ -151,6 +190,45 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
     issueLabel: "FIXED",
     nextLabel: "NEXT",
     entries: [
+      {
+        date: "21 МАЯ 2026",
+        label: "ПОДДЕРЖКА",
+        title: "Поддержка и правила возврата теперь публичные",
+        body:
+          "Проект теперь выглядит нормально для проверки банком: есть рабочий канал связи, открытая страница возвратов и понятное место, куда клиент пишет, если что-то не работает.",
+        items: [
+          "Поддержка ведет на публичный аккаунт PRSLOY в Telegram.",
+          "Условия возврата опубликованы на русском и английском.",
+          "Ссылки на правила добавлены в футер, тариф и sitemap.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "21 МАЯ 2026",
+        label: "АДМИНКА",
+        title: "Ручные операции вынесли из переписок",
+        body:
+          "У внутренних действий появился нормальный интерфейс. Можно видеть аккаунты, выдавать доступ, закрывать заявки на перевыпуск ключа и удалять тестовые аккаунты без ручного ковыряния в хранилище.",
+        items: [
+          "Админские страницы переведены и связаны между собой.",
+          "Доступ выдается по email и ссылке-подписке.",
+          "Тестовые аккаунты можно удалить из списка пользователей.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "20 МАЯ 2026",
+        label: "КАБИНЕТ",
+        title: "Личный кабинет стал страницей клиента, а не инженерной панелью",
+        body:
+          "Первый кабинет был перегружен. Мы оставили то, что реально нужно человеку: статус доступа, текущий ключ, инструкцию по устройствам, перевыпуск ключа, поддержку и управление аккаунтом.",
+        items: [
+          "Меньше внутренней терминологии и лишних метрик.",
+          "Настройка и перевыпуск ключа находятся рядом с доступом.",
+          "Страница стала ближе к минимальному языку PRSLOY.",
+        ],
+        status: "LIVE",
+      },
       {
         date: "16 МАЯ 2026",
         label: "ВЫДАЧА ДОСТУПА",

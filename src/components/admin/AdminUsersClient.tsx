@@ -43,6 +43,9 @@ type AdminUsersCopy = {
   noMatch: string;
   copied: string;
   copyEmail: string;
+  deleteUser: string;
+  deletingUser: string;
+  deleteConfirm: string;
   emailVerified: string;
   emailUnverified: string;
   access: string;
@@ -85,6 +88,10 @@ const COPY: Record<"ru" | "en", AdminUsersCopy> = {
     noMatch: "Ничего не найдено.",
     copied: "Скопировано",
     copyEmail: "Копировать email",
+    deleteUser: "Удалить",
+    deletingUser: "Удаляем...",
+    deleteConfirm:
+      "Удалить этот аккаунт из PRSLOY? Это освободит email для новой регистрации.",
     emailVerified: "Почта подтверждена",
     emailUnverified: "Почта не подтверждена",
     access: "Доступ",
@@ -124,6 +131,9 @@ const COPY: Record<"ru" | "en", AdminUsersCopy> = {
       reissue_list_failed: "Не получилось загрузить заявки на перевыпуск.",
       reissue_update_failed: "Не получилось обновить заявку.",
       request_not_found: "Заявка на перевыпуск не найдена.",
+      user_id_required: "Не передан пользователь.",
+      user_not_found: "Пользователь не найден.",
+      delete_failed: "Не получилось удалить пользователя. Проверь server logs.",
       invalid_json: "Неверное тело запроса.",
       users_unknown: "Не получилось загрузить пользователей.",
       reissue_unknown: "Не получилось загрузить заявки на перевыпуск.",
@@ -147,6 +157,10 @@ const COPY: Record<"ru" | "en", AdminUsersCopy> = {
     noMatch: "No accounts match.",
     copied: "Copied",
     copyEmail: "Copy email",
+    deleteUser: "Delete",
+    deletingUser: "Deleting...",
+    deleteConfirm:
+      "Delete this PRSLOY account? This frees the email for a new registration.",
     emailVerified: "Email verified",
     emailUnverified: "Email unverified",
     access: "Access",
@@ -186,6 +200,9 @@ const COPY: Record<"ru" | "en", AdminUsersCopy> = {
       reissue_list_failed: "Could not load reissue requests. Check server logs.",
       reissue_update_failed: "Could not update the reissue request.",
       request_not_found: "Reissue request was not found.",
+      user_id_required: "Missing user id.",
+      user_not_found: "User was not found.",
+      delete_failed: "Could not delete the user. Check server logs.",
       invalid_json: "Invalid request body.",
       users_unknown: "Could not load users.",
       reissue_unknown: "Could not load reissue requests.",
@@ -202,6 +219,7 @@ export function AdminUsersClient({ locale }: { locale: string }) {
   const [requests, setRequests] = useState<AdminReissueRequest[] | null>(null);
   const [pending, setPending] = useState(false);
   const [requestPendingId, setRequestPendingId] = useState<string | null>(null);
+  const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [usersError, setUsersError] = useState("");
   const [reissueError, setReissueError] = useState("");
@@ -350,6 +368,47 @@ export function AdminUsersClient({ locale }: { locale: string }) {
     }
   }
 
+  async function removeUser(user: AdminUser) {
+    if (deletePendingId) return;
+    if (!secret.trim()) {
+      setError(copy.secretRequired);
+      return;
+    }
+    if (!window.confirm(copy.deleteConfirm)) return;
+
+    setDeletePendingId(user.id);
+    setError("");
+
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${secret.trim()}`,
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        user?: AdminUser;
+        error?: string;
+      };
+
+      if (!res.ok || !data.ok || !data.user) {
+        setError(copy.errors[data.error || ""] || copy.errors.admin_unknown);
+        return;
+      }
+
+      setUsers((current) =>
+        current ? current.filter((item) => item.id !== data.user?.id) : current
+      );
+    } catch {
+      setError(copy.errors.network);
+    } finally {
+      setDeletePendingId(null);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
       <div className="max-w-6xl mx-auto px-lg flex flex-col gap-2xl">
@@ -476,6 +535,8 @@ export function AdminUsersClient({ locale }: { locale: string }) {
                     copy={copy}
                     copied={copiedId === user.id}
                     onCopy={() => copyEmail(user)}
+                    deletePending={deletePendingId === user.id}
+                    onDelete={() => removeUser(user)}
                   />
                 ))}
               </div>
@@ -692,12 +753,16 @@ function UserRow({
   copy,
   copied,
   onCopy,
+  deletePending,
+  onDelete,
 }: {
   user: AdminUser;
   locale: string;
   copy: AdminUsersCopy;
   copied: boolean;
   onCopy: () => void;
+  deletePending: boolean;
+  onDelete: () => void;
 }) {
   return (
     <article
@@ -723,7 +788,7 @@ function UserRow({
           />
         </div>
       </div>
-      <div className="flex items-center justify-between gap-md md:justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-md md:justify-end">
         <span className="font-mono text-label uppercase tracking-[0.1em] text-text-disabled tabular-nums">
           {formatAdminDate(user.createdAt, locale)}
         </span>
@@ -735,6 +800,16 @@ function UserRow({
                      hover:border-text-display transition-colors"
         >
           [ {copied ? copy.copied : copy.copyEmail} ]
+        </button>
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={deletePending}
+          className="inline-flex min-h-[44px] items-center justify-center border border-accent/60 px-md
+                     font-mono text-label uppercase tracking-[0.08em] text-accent
+                     hover:border-accent disabled:opacity-60 disabled:cursor-wait transition-colors"
+        >
+          [ {deletePending ? copy.deletingUser : copy.deleteUser} ]
         </button>
       </div>
     </article>
