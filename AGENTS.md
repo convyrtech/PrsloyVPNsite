@@ -211,6 +211,7 @@ These are project-specific anti-failure rules. Numbered for easy reference in co
 6. **Auto-memory drifts.** Memory files in `~/.claude/projects/E--VPN/memory/` can be 2-3 weeks stale. Always sniff-check claims about ongoing state against current code on `main` before quoting them as fact.
 7. **Plans decay.** `PRSLOY_PHASES.md` and `docs/plans/*.md` are dated snapshots. Use them for historical context, not as current spec.
 8. **Partner's old backend is not load-bearing.** Anything referencing Marzneshin / XUI / double-hop is reference material at best. Don't propose changes to it; don't assume it's current.
+9. **Never name the payment provider in user-facing copy.** Users see the METHOD ("СБП" / "SBP" / "card" / "USDT") — never the backend processor brand (Platega, etc.). Naming the provider looks amateur, leaks competitive intel, and conflicts with [[feedback_no_tech_jargon]] and [[feedback_marketing_voice]]. Applies to UI labels, FAQ, privacy, terms — everywhere a customer reads. Internal code, env vars, file paths, route URLs, and these docs can keep the brand name; those aren't user-visible surfaces.
 
 ---
 
@@ -306,6 +307,7 @@ Format: `- (YYYY-MM-DD) Rule. Why: short reason.`
 - (2026-05-21) User dislikes parallel-agents / git-worktrees for this project. Why: in their experience "сжигание токенов впустую". Don't propose those patterns unless explicitly asked.
 - (2026-05-21) `PRSLOY_PHASES.md` and similar dated plans decay fast — verify against `main` before quoting them as current.
 - (2026-05-21) Memory files in `~/.claude/projects/E--VPN/memory/` can be 2-3 weeks stale. Always sniff-check against code before using as fact.
+- (2026-05-21) **Payment provider (Platega) MUST NOT appear in user-facing copy** — only the METHOD does ("СБП" / "SBP"). Why: caught after live deploy when founder saw "Оплата через Platega" on /pricing and called it amateur; existing memory rules ([[feedback_no_tech_jargon]] and [[feedback_marketing_voice]]) already said this, I extended the user's prior pattern instead of questioning it. Lesson: when inheriting copy from earlier work, audit it against memory rules before extending — don't blindly continue patterns that violate them.
 
 ---
 

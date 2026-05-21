@@ -20,7 +20,7 @@ type Copy = {
 
 const COPY: Record<"ru" | "en", Copy> = {
   ru: {
-    title: "Оплата через Platega",
+    title: "Оплата СБП",
     body:
       "Сейчас подключен СБП QR. После оплаты подписка активируется в ЛК, ключ выдаем вручную до подключения API.",
     pay: "Оплатить СБП",
@@ -28,11 +28,11 @@ const COPY: Record<"ru" | "en", Copy> = {
     login: "Войти",
     register: "Создать аккаунт",
     authError: "Сначала войди или создай PRSLOY ID, чтобы оплата привязалась к кабинету.",
-    configError: "Platega еще не настроена в env.",
+    configError: "Оплата временно недоступна. Напиши в поддержку.",
     genericError: "Не получилось создать платеж. Попробуй еще раз или напиши в поддержку.",
   },
   en: {
-    title: "Platega checkout",
+    title: "Pay with SBP",
     body:
       "SBP QR is the first method connected. After payment, your subscription activates in the dashboard; the key is issued manually until the API is connected.",
     pay: "Pay with SBP",
@@ -40,7 +40,7 @@ const COPY: Record<"ru" | "en", Copy> = {
     login: "Sign in",
     register: "Create account",
     authError: "Sign in or create a PRSLOY ID first so the payment is tied to your dashboard.",
-    configError: "Platega env is not configured yet.",
+    configError: "Payment is temporarily unavailable. Message support.",
     genericError: "Could not create a payment. Try again or contact support.",
   },
 };

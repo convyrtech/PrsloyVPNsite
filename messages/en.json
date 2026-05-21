@@ -416,7 +416,7 @@
       {
         "category": "payment",
         "q": "How does payment work now?",
-        "a": "SBP QR is connected via Platega. During beta, payment activates a subscription in your dashboard; the key is still issued manually after a capacity check."
+        "a": "SBP QR checkout is live. During beta, payment activates a subscription in your dashboard; the key is still issued manually after a capacity check."
       },
       {
         "category": "payment",
@@ -454,7 +454,7 @@
         },
         {
           "h": "PAYMENT",
-          "p": "Platega processes payments via SBP QR. The payment provider handles card data; we only store the order status, amount, period, and the PRSLOY ID it is tied to."
+          "p": "Payment is processed via SBP QR. The payment gateway handles card data; we only store the order status, amount, period, and the PRSLOY ID it is tied to."
         },
         {
           "h": "RETENTION",
@@ -500,7 +500,7 @@
         },
         {
           "h": "PAYMENT AND REFUNDS",
-          "p": "Platega processes payments via SBP QR. During private beta the key is still issued manually after payment until the API is wired. If something goes wrong, message support."
+          "p": "SBP QR checkout is live. During private beta the key is still issued manually after payment until the API is wired. If something goes wrong, message support."
         },
         {
           "h": "TERMINATION",
