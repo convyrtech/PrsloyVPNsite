@@ -71,3 +71,10 @@ next-env.d.ts
 /findings.md
 /progress.md
 /task_plan.md
+
+# Claude Code local overrides (personal hooks, permissions, plugin opt-outs)
+.claude/settings.local.json
+.claude/hooks/
+
+# throwaway test/audit artifacts (e.g. PageSpeed Insights one-off runs)
+.tmp-*
