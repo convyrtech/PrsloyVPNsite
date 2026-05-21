@@ -8,9 +8,9 @@
   "hero": {
     "status_label": "CLOSED BETA",
     "headline_line1": "A private layer of your internet.",
-    "headline_line2": "Closed beta.",
+    "headline_line2": "Closed access.",
     "sub_price": "",
-    "sub_features": "We pick servers by reputation, not by price tag",
+    "sub_features": "Dedicated infrastructure with impeccable reputation. No compromises.",
     "cta": "REQUEST INVITE",
     "launch_strip": "CLOSED BETA · BY INVITATION",
     "scroll_hint": "SCROLL"
@@ -40,8 +40,8 @@
   "globe": {
     "label": "INFRASTRUCTURE",
     "title_line1": "",
-    "title_line2_strong": "Flawless stability.",
-    "subtitle": "We don't compromise on cheap hosting. Only servers with top-tier reputation.",
+    "title_line2_strong": "Uncompromising stability.",
+    "subtitle": "We deploy nodes only in tier-1 datacenters (Tier-3) with impeccable reputation. No cheap hosting, no overselling. The result — an autonomous channel resistant to external blocks and peak loads.",
     "metric_routing": "CONNECTION",
     "metric_routing_value": "STEADY",
     "metric_logs": "ACCESS",
@@ -59,10 +59,10 @@
   },
   "nothing": {
     "label": "YOUR CONNECTION · CLOSED BETA",
-    "your_isp_sees": "YOUR CONNECTION STAYS",
+    "your_isp_sees": "Your traffic. Your route. Only",
     "nothing_word": "PRIVATE",
-    "meta_route": "Configuration is issued by a person, not a bot.",
-    "meta_invisible": "OWN ROUTE · REAL SUPPORT · NOTHING EXTRA",
+    "meta_route": "Every configuration is assembled and validated by hand, not stamped out by automated bots.",
+    "meta_invisible": "Isolated digital perimeter · personal gateway · engineer support",
     "scroll_cue": "ACCESS"
   },
   "pricing": {
@@ -89,17 +89,17 @@
     "cta": "REQUEST INVITE",
     "cta_meta": "ISSUED MANUALLY DURING BETA",
     "guarantee": "Email — for the invite only · No newsletters · Support is a real person",
-    "access_note": "Invite, configuration and guide arrive after a capacity check"
+    "access_note": "Access is hard-limited by the physical capacity of our servers. Configuration is generated individually after request verification."
   },
   "faq": {
     "label": "QUESTIONS",
     "see_all": "ALL QUESTIONS",
     "q1": "What does this actually run on?",
-    "a1": "On servers we choose by the provider’s reputation, not the price tag. Cheap infrastructure lands on blocklists and under sanctions — and takes everyone’s access down with it. We don’t go there.",
+    "a1": "Top-tier servers. Budget hosting gets compromised instantly, lands on global blocklists, and paralyzes the whole network. We invest in clean IP addresses and independent locations. Security is never cheap.",
     "q2": "Why invite-only?",
-    "a2": "To keep load and quality in our hands. We'd rather give perfect speed to a limited circle than cram servers to the limit for short-term revenue. Capacity is hard-capped.",
+    "a2": "To guarantee the speed we promise. We'd rather ensure impeccable uptime for a limited circle than overload the network for quick revenue. Each node's capacity is hard-quoted.",
     "q3": "Where's the app?",
-    "a3": "Privacy shouldn't depend on a single button. Access runs through clean configuration files that set up in a minute. Our own client is in development, but we're against locking users into a single app."
+    "a3": "Privacy shouldn't depend on third-party software or a 'single button'. You get a clean configuration file that integrates natively into your OS in 60 seconds. This eliminates the background telemetry collection present in 99% of commercial apps. Our own lightweight client is in development."
   },
   "pricing_page": {
     "label": "PRICING",
@@ -386,12 +386,12 @@
       {
         "category": "product",
         "q": "Why invite-only and not for everyone?",
-        "a": "To keep load and quality in our hands. We'd rather give perfect speed to a limited circle than cram servers to the limit for short-term revenue. Capacity is hard-capped."
+        "a": "To guarantee the speed we promise. We'd rather ensure impeccable uptime for a limited circle than overload the network for quick revenue. Each node's capacity is hard-quoted."
       },
       {
         "category": "product",
         "q": "Where's the app?",
-        "a": "Privacy shouldn't depend on a single button. Access runs through clean configuration files that set up in a minute. Our own client is in development, but we're against locking users into a single app."
+        "a": "Privacy shouldn't depend on third-party software or a 'single button'. You get a clean configuration file that integrates natively into your OS in 60 seconds. This eliminates the background telemetry collection present in 99% of commercial apps. Our own lightweight client is in development."
       },
       {
         "category": "tech",
