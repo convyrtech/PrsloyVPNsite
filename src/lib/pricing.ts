@@ -11,6 +11,22 @@ export const PRICE_BY_PERIOD: Record<Period, number> = {
   "1yr": 3,
 };
 
+export const MONTHS_BY_PERIOD: Record<Period, number> = {
+  "1mo": 1,
+  "6mo": 6,
+  "1yr": 12,
+};
+
+export const RUB_PER_USD = 90;
+
+export function getPeriodTotalUsd(period: Period): number {
+  return PRICE_BY_PERIOD[period] * MONTHS_BY_PERIOD[period];
+}
+
+export function getPeriodTotalRub(period: Period): number {
+  return Math.round(getPeriodTotalUsd(period) * RUB_PER_USD);
+}
+
 export type PaymentRate = {
   mult: number;
   precision: number;

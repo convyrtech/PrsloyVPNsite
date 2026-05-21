@@ -9,6 +9,7 @@ import { DividerLabel } from "@/components/ui/DividerLabel";
 import { RevealOnView } from "@/components/ui/RevealOnView";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
 import { isValidEmail } from "@/lib/validation";
+import { PaymentCheckout } from "@/components/payments/PaymentCheckout";
 import {
   type Period,
   PERIODS,
@@ -128,6 +129,8 @@ export function PricingPageClient({ locale }: { locale: string }) {
               {t("beta_note")}
             </div>
           </div>
+
+          <PaymentCheckout period={period} locale={locale} />
         </section>
         </RevealOnView>
 

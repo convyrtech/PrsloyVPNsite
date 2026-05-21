@@ -108,8 +108,8 @@
     "subheadline": "Personal configuration. Manual issue. No extra setup.",
     "promo_strip": "BETA ACCESS · $5/MO",
     "waitlist_label": "REQUEST INVITE",
-    "waitlist_title": "Beta access is issued manually",
-    "waitlist_description": "Leave your email — we check available capacity and send the next step. Public checkout stays closed for now: quality first, scale later.",
+    "waitlist_title": "Pay or request an invite",
+    "waitlist_description": "SBP QR is connected. After payment, the subscription activates in your dashboard, while the key is still issued manually until the API is connected. If you want to ask first, leave your email.",
     "email_placeholder": "your@email.com",
     "submit": "REQUEST INVITE",
     "submitting": "SENDING…",
@@ -132,7 +132,7 @@
     "refunds_link": "Refund policy",
     "faq_label": "More questions?",
     "faq_link": "Full FAQ",
-    "beta_note": "No public checkout yet: access is issued manually during private beta"
+    "beta_note": "SBP QR is connected. The key is issued manually after payment until the API is connected"
   },
   "setup_page": {
     "label": "SETUP",
@@ -416,12 +416,12 @@
       {
         "category": "payment",
         "q": "How does payment work now?",
-        "a": "Public checkout is not open yet. During beta, access is issued manually: request first, capacity check, then the next step by email."
+        "a": "SBP QR is connected via Platega. During beta, payment activates a subscription in your dashboard; the key is still issued manually after a capacity check."
       },
       {
         "category": "payment",
         "q": "Why show $5/mo?",
-        "a": "It is the beta access reference price so positioning is clear. Automatic checkout comes only after manual issuing is stable."
+        "a": "It is the beta access reference price so positioning is clear. SBP QR checkout is live; automatic key issuing comes once the API is wired."
       },
       {
         "category": "trust",
@@ -454,7 +454,7 @@
         },
         {
           "h": "PAYMENT",
-          "p": "Public payment is not open right now. During private beta, access is issued manually after request and capacity check. If a paid step appears, terms and the payment processor will be shown before payment."
+          "p": "Platega processes payments via SBP QR. The payment provider handles card data; we only store the order status, amount, period, and the PRSLOY ID it is tied to."
         },
         {
           "h": "RETENTION",
@@ -500,7 +500,7 @@
         },
         {
           "h": "PAYMENT AND REFUNDS",
-          "p": "Public payment is closed for now. If access is issued through an individual paid step, payment and refund terms are fixed before payment. If something goes wrong, message support."
+          "p": "Platega processes payments via SBP QR. During private beta the key is still issued manually after payment until the API is wired. If something goes wrong, message support."
         },
         {
           "h": "TERMINATION",

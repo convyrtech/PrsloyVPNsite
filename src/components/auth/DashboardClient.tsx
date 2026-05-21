@@ -7,6 +7,7 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { RevealOnView } from "@/components/ui/RevealOnView";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
 import type { PublicAuthUser } from "@/lib/auth";
+import { PaymentStatusCard } from "@/components/payments/PaymentStatusCard";
 
 export type DashboardCopy = Record<
   | "label"
@@ -207,6 +208,7 @@ export function DashboardClient({
             hasKey={hasKey}
           />
           <div className="grid grid-cols-1 gap-md">
+            <PaymentStatusCard locale={locale} />
             <NextStepCard copy={copy} hasKey={hasKey} />
             <ReissueCard copy={copy} hasKey={hasKey} />
             <SupportCard copy={copy} />

@@ -1,0 +1,172 @@
+import { randomBytes } from "crypto";
+import { kvGet, kvSet, KvNotConfiguredError } from "@/lib/kv";
+import {
+  type Period,
+  getPeriodTotalRub,
+  getPeriodTotalUsd,
+} from "@/lib/pricing";
+
+export type PaymentProvider = "platega";
+export type PaymentMethod = "sbp_qr";
+export type PaymentStatus =
+  | "created"
+  | "pending"
+  | "confirmed"
+  | "canceled"
+  | "chargebacked"
+  | "failed";
+
+export type PaymentOrder = {
+  id: string;
+  provider: PaymentProvider;
+  method: PaymentMethod;
+  userId: string;
+  email: string;
+  period: Period;
+  amountRub: number;
+  amountUsd: number;
+  currency: "RUB";
+  status: PaymentStatus;
+  providerStatus: string | null;
+  transactionId: string | null;
+  paymentUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+  confirmedAt: string | null;
+};
+
+export class PaymentError extends Error {
+  code: string;
+
+  constructor(code: string) {
+    super(code);
+    this.name = "PaymentError";
+    this.code = code;
+  }
+}
+
+const ORDER_KEY_PREFIX = "payment:order:";
+const TRANSACTION_KEY_PREFIX = "payment:platega:transaction:";
+const USER_LATEST_KEY_PREFIX = "payment:user:latest:";
+
+function orderKey(orderId: string) {
+  return `${ORDER_KEY_PREFIX}${orderId}`;
+}
+
+function transactionKey(transactionId: string) {
+  return `${TRANSACTION_KEY_PREFIX}${transactionId}`;
+}
+
+function userLatestKey(userId: string) {
+  return `${USER_LATEST_KEY_PREFIX}${userId}`;
+}
+
+async function saveOrder(order: PaymentOrder): Promise<void> {
+  await kvSet(orderKey(order.id), JSON.stringify(order));
+}
+
+export async function getPaymentOrder(orderId: string): Promise<PaymentOrder | null> {
+  const raw = await kvGet(orderKey(orderId));
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as PaymentOrder;
+  } catch (err) {
+    console.warn("[payments] corrupt order skipped", orderId, err);
+    return null;
+  }
+}
+
+export async function getLatestPaymentOrder(
+  userId: string
+): Promise<PaymentOrder | null> {
+  const orderId = await kvGet(userLatestKey(userId));
+  return orderId ? await getPaymentOrder(orderId) : null;
+}
+
+export async function createPaymentOrder(input: {
+  userId: string;
+  email: string;
+  period: Period;
+  method: PaymentMethod;
+}): Promise<PaymentOrder> {
+  const now = new Date().toISOString();
+  const order: PaymentOrder = {
+    id: randomBytes(12).toString("hex"),
+    provider: "platega",
+    method: input.method,
+    userId: input.userId,
+    email: input.email,
+    period: input.period,
+    amountRub: getPeriodTotalRub(input.period),
+    amountUsd: getPeriodTotalUsd(input.period),
+    currency: "RUB",
+    status: "created",
+    providerStatus: null,
+    transactionId: null,
+    paymentUrl: null,
+    createdAt: now,
+    updatedAt: now,
+    confirmedAt: null,
+  };
+
+  await saveOrder(order);
+  await kvSet(userLatestKey(input.userId), order.id);
+  return order;
+}
+
+export async function attachPaymentTransaction(input: {
+  orderId: string;
+  transactionId: string;
+  paymentUrl: string;
+  providerStatus?: string | null;
+}): Promise<PaymentOrder> {
+  const order = await getPaymentOrder(input.orderId);
+  if (!order) throw new PaymentError("order_not_found");
+
+  order.transactionId = input.transactionId;
+  order.paymentUrl = input.paymentUrl;
+  order.status = providerStatusToPaymentStatus(input.providerStatus || "PENDING");
+  order.providerStatus = input.providerStatus || "PENDING";
+  order.updatedAt = new Date().toISOString();
+
+  await saveOrder(order);
+  await kvSet(transactionKey(input.transactionId), order.id);
+  return order;
+}
+
+export async function updatePaymentByTransaction(input: {
+  transactionId: string;
+  providerStatus: string;
+}): Promise<PaymentOrder> {
+  const orderId = await kvGet(transactionKey(input.transactionId));
+  if (!orderId) throw new PaymentError("transaction_not_found");
+
+  const order = await getPaymentOrder(orderId);
+  if (!order) throw new PaymentError("order_not_found");
+
+  const nextStatus = providerStatusToPaymentStatus(input.providerStatus);
+  order.providerStatus = input.providerStatus;
+  order.status = nextStatus;
+  order.updatedAt = new Date().toISOString();
+  if (nextStatus === "confirmed" && !order.confirmedAt) {
+    order.confirmedAt = order.updatedAt;
+  }
+
+  await saveOrder(order);
+  await kvSet(userLatestKey(order.userId), order.id);
+  return order;
+}
+
+export function providerStatusToPaymentStatus(status: string): PaymentStatus {
+  const normalized = status.trim().toUpperCase();
+  if (normalized === "CONFIRMED") return "confirmed";
+  if (normalized === "CANCELED") return "canceled";
+  if (normalized === "CHARGEBACKED") return "chargebacked";
+  if (normalized === "FAILED" || normalized === "EXPIRED") return "failed";
+  return "pending";
+}
+
+export function getPaymentSetupErrorCode(err: unknown) {
+  if (err instanceof KvNotConfiguredError) return "kv_not_configured";
+  return null;
+}
