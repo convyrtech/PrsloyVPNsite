@@ -38,8 +38,12 @@ export function GlobeUIOverlay({
         </motion.p>
         <h2 className="font-body font-light text-text-display text-[clamp(28px,4vw,52px)]
                        leading-[1.05] tracking-[-0.02em] max-w-[14ch] block">
-          <RevealText text={t("title_line1")} progress={titleProgress} />
-          <br />
+          {t("title_line1") && (
+            <>
+              <RevealText text={t("title_line1")} progress={titleProgress} />
+              <br />
+            </>
+          )}
           <span className="font-medium">
             <RevealText text={t("title_line2_strong")} progress={titleProgress} />
           </span>

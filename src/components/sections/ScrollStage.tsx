@@ -158,8 +158,8 @@ export function ScrollStage() {
             - Different vertical bands = no collision regardless of widths. */}
         <motion.div
           className="absolute z-20 text-center px-lg
-                     bottom-[clamp(96px,18vh,180px)] left-0 right-0
-                     md:left-auto md:px-0 md:right-2xl md:max-w-md md:text-right"
+                     bottom-[clamp(64px,12vh,128px)] left-0 right-0
+                     md:left-auto md:px-0 md:right-10 md:max-w-2xl md:text-right"
           style={{ y: headlineY, opacity: headlineOpacity, willChange: "transform, opacity" }}
         >
           <h1 className="font-body font-light text-text-display
@@ -171,20 +171,15 @@ export function ScrollStage() {
             )}
           </h1>
 
-          <motion.p
-            className="mt-md md:mt-lg font-mono text-label uppercase text-text-secondary
-                       break-words max-w-full"
-            style={{ opacity: ctaOpacity }}
-          >
-            {t("sub_price")}
-          </motion.p>
-          <motion.p
-            className="mt-xs font-mono text-label uppercase text-text-disabled
-                       break-words max-w-full"
-            style={{ opacity: ctaOpacity }}
-          >
-            {t("sub_features")}
-          </motion.p>
+          {t("sub_features") && (
+            <motion.p
+              className="mt-md md:mt-lg font-body text-body-sm text-text-secondary
+                         break-words max-w-full leading-relaxed"
+              style={{ opacity: ctaOpacity }}
+            >
+              {t("sub_features")}
+            </motion.p>
+          )}
 
           <motion.div style={{ opacity: ctaOpacity }}>
             <Link

@@ -1,18 +1,18 @@
 {
   "meta": {
-    "title": "PRSLOY — private access by invite",
-    "description": "Closed beta access to a private internet channel. Personal configuration, manual issuing, human support.",
-    "ogTitle": "PRSLOY · private access by invite",
-    "ogDescription": "Closed beta. Personal configuration. Access by request."
+    "title": "PRSLOY — private VPN by invite",
+    "description": "Private VPN with a server chain: own entry in Russia, exit beyond it. Datacenters chosen by reputation, not price. $5/mo, invite only.",
+    "ogTitle": "PRSLOY · private VPN by invite",
+    "ogDescription": "Server chain with own entry in Russia. Chosen by reputation, not price. $5/mo, invite only."
   },
   "hero": {
     "status_label": "CLOSED BETA",
-    "headline_line1": "Private access.",
-    "headline_line2": "Invite-only.",
-    "sub_price": "$5/MO · CLOSED BETA",
-    "sub_features": "INFRASTRUCTURE CHOSEN BY REPUTATION, NOT PRICE",
+    "headline_line1": "A private layer of your internet.",
+    "headline_line2": "Closed beta.",
+    "sub_price": "",
+    "sub_features": "We pick servers by reputation, not by price tag",
     "cta": "REQUEST INVITE",
-    "launch_strip": "CLOSED BETA · ACCESS BY INVITE",
+    "launch_strip": "CLOSED BETA · BY INVITATION",
     "scroll_hint": "SCROLL"
   },
   "header": {
@@ -39,9 +39,9 @@
   },
   "globe": {
     "label": "INFRASTRUCTURE",
-    "title_line1": "A connection",
-    "title_line2_strong": "that holds.",
-    "subtitle": "We choose the servers ourselves — by reputation, not by who is cheapest. That is why the connection stays steady: it does not drop, and it does not crawl.",
+    "title_line1": "",
+    "title_line2_strong": "Flawless stability.",
+    "subtitle": "We don't compromise on cheap hosting. Only servers with top-tier reputation.",
     "metric_routing": "CONNECTION",
     "metric_routing_value": "STEADY",
     "metric_logs": "ACCESS",
@@ -97,9 +97,9 @@
     "q1": "What does this actually run on?",
     "a1": "On servers we choose by the provider’s reputation, not the price tag. Cheap infrastructure lands on blocklists and under sanctions — and takes everyone’s access down with it. We don’t go there.",
     "q2": "Why invite-only?",
-    "a2": "It keeps capacity and quality in our hands. Opening access in small pools beats onboarding more people than the infrastructure can comfortably carry.",
-    "q3": "Where’s the app?",
-    "a3": "Access works through a configuration and a short guide in your dashboard. Our own client is in the works — but access shouldn’t be hostage to a single app."
+    "a2": "To keep load and quality in our hands. We'd rather give perfect speed to a limited circle than cram servers to the limit for short-term revenue. Capacity is hard-capped.",
+    "q3": "Where's the app?",
+    "a3": "Privacy shouldn't depend on a single button. Access runs through clean configuration files that set up in a minute. Our own client is in development, but we're against locking users into a single app."
   },
   "pricing_page": {
     "label": "PRICING",
@@ -386,12 +386,12 @@
       {
         "category": "product",
         "q": "Why invite-only and not for everyone?",
-        "a": "Because quality matters more than growth. We open access in small pools so infrastructure stays calm and support can help each user."
+        "a": "To keep load and quality in our hands. We'd rather give perfect speed to a limited circle than cram servers to the limit for short-term revenue. Capacity is hard-capped."
       },
       {
         "category": "product",
-        "q": "Where’s the app?",
-        "a": "For now access works through a compatible configuration and dashboard guide. Our own client is in development, but access should not depend on a single app."
+        "q": "Where's the app?",
+        "a": "Privacy shouldn't depend on a single button. Access runs through clean configuration files that set up in a minute. Our own client is in development, but we're against locking users into a single app."
       },
       {
         "category": "tech",
