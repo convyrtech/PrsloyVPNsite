@@ -28,26 +28,175 @@ type AdminReissueRequest = {
 
 type Filter = "all" | "pending" | "active" | "no_key";
 
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: "all", label: "ALL" },
-  { key: "pending", label: "PENDING" },
-  { key: "active", label: "ACTIVE" },
-  { key: "no_key", label: "NO KEY" },
-];
+type AdminUsersCopy = {
+  navUsers: string;
+  navGrant: string;
+  title: string;
+  subtitle: string;
+  secretRequired: string;
+  loadUsers: string;
+  reload: string;
+  loading: string;
+  searchPlaceholder: string;
+  searchLabel: string;
+  noAccounts: string;
+  noMatch: string;
+  copied: string;
+  copyEmail: string;
+  emailVerified: string;
+  emailUnverified: string;
+  access: string;
+  keyIssued: string;
+  noKey: string;
+  queueLabel: string;
+  queueTitle: string;
+  queueBody: string;
+  queueOpen: string;
+  queueHandled: string;
+  noReissue: string;
+  requestLabel: string;
+  userLabel: string;
+  slugLabel: string;
+  hashLabel: string;
+  saving: string;
+  markDone: string;
+  done: string;
+  filters: Record<Filter, string>;
+  statuses: Record<string, string>;
+  errors: Record<string, string>;
+};
 
-const errorMessages: Record<string, string> = {
-  unauthorized: "Wrong ADMIN_SECRET.",
-  not_found: "Admin endpoint is disabled. Add ADMIN_SECRET in Vercel env.",
-  kv_not_configured: "Account storage is not configured.",
-  auth_secret_not_configured: "AUTH_SECRET is not configured.",
-  list_failed: "Could not load users. Check server logs.",
-  reissue_list_failed: "Could not load reissue requests. Check server logs.",
-  reissue_update_failed: "Could not update the reissue request.",
-  request_not_found: "Reissue request was not found.",
-  invalid_json: "Invalid request body.",
+const FILTER_KEYS: Filter[] = ["all", "pending", "active", "no_key"];
+
+const COPY: Record<"ru" | "en", AdminUsersCopy> = {
+  ru: {
+    navUsers: "Пользователи",
+    navGrant: "Выдать доступ",
+    title: "Пользователи.",
+    subtitle:
+      "Список PRSLOY ID и заявки на перевыпуск. Конфиги здесь не показываем: только статус, email и служебные признаки.",
+    secretRequired: "Нужен ADMIN_SECRET.",
+    loadUsers: "Загрузить",
+    reload: "Обновить",
+    loading: "Загрузка...",
+    searchPlaceholder: "Поиск по email",
+    searchLabel: "Поиск по email",
+    noAccounts: "Аккаунтов пока нет.",
+    noMatch: "Ничего не найдено.",
+    copied: "Скопировано",
+    copyEmail: "Копировать email",
+    emailVerified: "Почта подтверждена",
+    emailUnverified: "Почта не подтверждена",
+    access: "Доступ",
+    keyIssued: "Ключ выдан",
+    noKey: "Без ключа",
+    queueLabel: "Очередь перевыпуска",
+    queueTitle: "Ручная замена ключей.",
+    queueBody:
+      "Заявка содержит email, id пользователя и хэш конфига. Замени ключ у провайдера, выдай новый конфиг, потом отметь заявку закрытой.",
+    queueOpen: "Открыто",
+    queueHandled: "Закрыто",
+    noReissue: "Заявок на перевыпуск пока нет.",
+    requestLabel: "Заявка",
+    userLabel: "Пользователь",
+    slugLabel: "Slug",
+    hashLabel: "Hash",
+    saving: "Сохраняем...",
+    markDone: "Закрыть",
+    done: "Готово",
+    filters: {
+      all: "Все",
+      pending: "Ожидают",
+      active: "Активные",
+      no_key: "Без ключа",
+    },
+    statuses: {
+      pending: "ожидает",
+      active: "активен",
+      blocked: "заблокирован",
+    },
+    errors: {
+      unauthorized: "Неверный ADMIN_SECRET.",
+      not_found: "Админ endpoint отключен. Добавь ADMIN_SECRET в Vercel env.",
+      kv_not_configured: "Хранилище аккаунтов не настроено.",
+      auth_secret_not_configured: "AUTH_SECRET не настроен.",
+      list_failed: "Не получилось загрузить пользователей. Проверь server logs.",
+      reissue_list_failed: "Не получилось загрузить заявки на перевыпуск.",
+      reissue_update_failed: "Не получилось обновить заявку.",
+      request_not_found: "Заявка на перевыпуск не найдена.",
+      invalid_json: "Неверное тело запроса.",
+      users_unknown: "Не получилось загрузить пользователей.",
+      reissue_unknown: "Не получилось загрузить заявки на перевыпуск.",
+      admin_unknown: "Неизвестная ошибка админки.",
+      network: "Ошибка сети.",
+    },
+  },
+  en: {
+    navUsers: "Users",
+    navGrant: "Grant access",
+    title: "Operator view.",
+    subtitle:
+      "A read-only list of PRSLOY accounts plus manual reissue requests. Raw configs are not exposed here.",
+    secretRequired: "ADMIN_SECRET is required.",
+    loadUsers: "Load users",
+    reload: "Reload",
+    loading: "Loading...",
+    searchPlaceholder: "Search by email",
+    searchLabel: "Search by email",
+    noAccounts: "No accounts yet.",
+    noMatch: "No accounts match.",
+    copied: "Copied",
+    copyEmail: "Copy email",
+    emailVerified: "Email verified",
+    emailUnverified: "Email unverified",
+    access: "Access",
+    keyIssued: "Key issued",
+    noKey: "No key",
+    queueLabel: "Reissue queue",
+    queueTitle: "Manual key replacements.",
+    queueBody:
+      "Requests contain account identifiers and a config hash only. Replace the key in the provider panel, grant the new config, then mark the request done.",
+    queueOpen: "Open",
+    queueHandled: "Handled",
+    noReissue: "No reissue requests yet.",
+    requestLabel: "Request",
+    userLabel: "User",
+    slugLabel: "Slug",
+    hashLabel: "Hash",
+    saving: "Saving...",
+    markDone: "Mark done",
+    done: "Done",
+    filters: {
+      all: "All",
+      pending: "Pending",
+      active: "Active",
+      no_key: "No key",
+    },
+    statuses: {
+      pending: "pending",
+      active: "active",
+      blocked: "blocked",
+    },
+    errors: {
+      unauthorized: "Wrong ADMIN_SECRET.",
+      not_found: "Admin endpoint is disabled. Add ADMIN_SECRET in Vercel env.",
+      kv_not_configured: "Account storage is not configured.",
+      auth_secret_not_configured: "AUTH_SECRET is not configured.",
+      list_failed: "Could not load users. Check server logs.",
+      reissue_list_failed: "Could not load reissue requests. Check server logs.",
+      reissue_update_failed: "Could not update the reissue request.",
+      request_not_found: "Reissue request was not found.",
+      invalid_json: "Invalid request body.",
+      users_unknown: "Could not load users.",
+      reissue_unknown: "Could not load reissue requests.",
+      admin_unknown: "Unknown admin error.",
+      network: "Network error.",
+    },
+  },
 };
 
 export function AdminUsersClient({ locale }: { locale: string }) {
+  const copy = getCopy(locale);
   const [secret, setSecret] = useState("");
   const [users, setUsers] = useState<AdminUser[] | null>(null);
   const [requests, setRequests] = useState<AdminReissueRequest[] | null>(null);
@@ -64,7 +213,7 @@ export function AdminUsersClient({ locale }: { locale: string }) {
     e.preventDefault();
     if (pending) return;
     if (!secret.trim()) {
-      setError("ADMIN_SECRET is required.");
+      setError(copy.secretRequired);
       return;
     }
 
@@ -73,9 +222,7 @@ export function AdminUsersClient({ locale }: { locale: string }) {
     setUsersError("");
     setReissueError("");
 
-    // Independent loads: a failure of one endpoint must not blank the
-    // other list. allSettled never rejects, so one network error does
-    // not abort the sibling fetch.
+    // Independent loads: a failure of one endpoint must not blank the other list.
     const authHeader = { Authorization: `Bearer ${secret.trim()}` };
     const [usersOutcome, reissueOutcome] = await Promise.allSettled([
       fetch("/api/admin/users", { headers: authHeader }),
@@ -93,11 +240,11 @@ export function AdminUsersClient({ locale }: { locale: string }) {
         setUsers(data.users);
       } else {
         setUsers(null);
-        setUsersError(errorMessages[data.error || ""] || "Could not load users.");
+        setUsersError(copy.errors[data.error || ""] || copy.errors.users_unknown);
       }
     } else {
       setUsers(null);
-      setUsersError("Network error.");
+      setUsersError(copy.errors.network);
     }
 
     if (reissueOutcome.status === "fulfilled") {
@@ -111,13 +258,11 @@ export function AdminUsersClient({ locale }: { locale: string }) {
         setRequests(data.requests);
       } else {
         setRequests(null);
-        setReissueError(
-          errorMessages[data.error || ""] || "Could not load reissue requests."
-        );
+        setReissueError(copy.errors[data.error || ""] || copy.errors.reissue_unknown);
       }
     } else {
       setRequests(null);
-      setReissueError("Network error.");
+      setReissueError(copy.errors.network);
     }
 
     setPending(false);
@@ -154,14 +299,14 @@ export function AdminUsersClient({ locale }: { locale: string }) {
         1500
       );
     } catch {
-      // Clipboard unavailable (insecure context) — ignore silently.
+      // Clipboard can be unavailable in insecure contexts.
     }
   }
 
   async function markRequestHandled(request: AdminReissueRequest) {
     if (requestPendingId || request.status === "handled") return;
     if (!secret.trim()) {
-      setError("ADMIN_SECRET is required.");
+      setError(copy.secretRequired);
       return;
     }
 
@@ -187,7 +332,7 @@ export function AdminUsersClient({ locale }: { locale: string }) {
       };
 
       if (!res.ok || !data.ok || !data.request) {
-        setError(errorMessages[data.error || ""] || "Unknown admin error.");
+        setError(copy.errors[data.error || ""] || copy.errors.admin_unknown);
         return;
       }
 
@@ -199,7 +344,7 @@ export function AdminUsersClient({ locale }: { locale: string }) {
           : current
       );
     } catch {
-      setError("Network error.");
+      setError(copy.errors.network);
     } finally {
       setRequestPendingId(null);
     }
@@ -208,27 +353,20 @@ export function AdminUsersClient({ locale }: { locale: string }) {
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
       <div className="max-w-6xl mx-auto px-lg flex flex-col gap-2xl">
+        <AdminNav copy={copy} active="users" />
+
         <header className="flex flex-col gap-md">
-          <div className="flex items-center justify-between gap-md">
-            <p className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
-              PRSLOY ADMIN
-            </p>
-            <Link
-              href="/admin/grant"
-              className="font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80"
-            >
-              Grant access →
-            </Link>
-          </div>
+          <p className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
+            PRSLOY ADMIN
+          </p>
           <h1
             className="font-body font-bold text-text-display leading-[0.98]"
             style={{ fontSize: "clamp(40px, 7vw, 84px)" }}
           >
-            Operator view.
+            {copy.title}
           </h1>
           <p className="max-w-2xl font-body text-body text-text-secondary leading-[1.65]">
-            A read-only list of PRSLOY accounts plus manual reissue requests. Search and
-            filtering run in the browser. Raw configs are not exposed here.
+            {copy.subtitle}
           </p>
         </header>
 
@@ -260,7 +398,7 @@ export function AdminUsersClient({ locale }: { locale: string }) {
                        hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:cursor-wait
                        transition duration-150"
           >
-            [ {pending ? "Loading..." : users ? "Reload" : "Load users"} ]
+            [ {pending ? copy.loading : users ? copy.reload : copy.loadUsers} ]
           </button>
         </form>
 
@@ -274,6 +412,7 @@ export function AdminUsersClient({ locale }: { locale: string }) {
           <ReissueQueue
             requests={requests}
             locale={locale}
+            copy={copy}
             pendingId={requestPendingId}
             onMarkHandled={markRequestHandled}
           />
@@ -290,30 +429,30 @@ export function AdminUsersClient({ locale }: { locale: string }) {
           <section className="flex flex-col gap-2xl">
             <div className="flex flex-col gap-md lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap gap-sm">
-                {FILTERS.map((f) => (
+                {FILTER_KEYS.map((key) => (
                   <button
-                    key={f.key}
+                    key={key}
                     type="button"
-                    onClick={() => setFilter(f.key)}
+                    onClick={() => setFilter(key)}
                     className={`inline-flex items-center gap-sm border px-md min-h-[44px]
                                 font-mono text-label uppercase tracking-[0.08em] transition-colors
                                 ${
-                                  filter === f.key
+                                  filter === key
                                     ? "bg-text-display text-black border-text-display"
                                     : "border-border-visible text-text-secondary hover:border-text-display"
                                 }`}
                   >
-                    {f.label}
-                    <span className="tabular-nums opacity-70">{counts[f.key]}</span>
+                    {copy.filters[key]}
+                    <span className="tabular-nums opacity-70">{counts[key]}</span>
                   </button>
                 ))}
               </div>
               <label className="flex flex-col gap-xs lg:w-[280px]">
-                <span className="sr-only">Search by email</span>
+                <span className="sr-only">{copy.searchLabel}</span>
                 <input
                   type="search"
                   value={query}
-                  placeholder="Search by email"
+                  placeholder={copy.searchPlaceholder}
                   onChange={(e) => setQuery(e.target.value)}
                   className="bg-black border border-border-visible rounded-full px-lg min-h-[44px]
                              font-mono text-body-sm text-text-display placeholder:text-text-disabled
@@ -325,7 +464,7 @@ export function AdminUsersClient({ locale }: { locale: string }) {
             {filtered.length === 0 ? (
               <p className="border border-border-visible rounded-[8px] p-xl font-mono text-label
                             uppercase tracking-[0.1em] text-text-disabled">
-                {counts.all === 0 ? "No accounts yet." : "No accounts match."}
+                {counts.all === 0 ? copy.noAccounts : copy.noMatch}
               </p>
             ) : (
               <div className="flex flex-col gap-sm">
@@ -334,6 +473,7 @@ export function AdminUsersClient({ locale }: { locale: string }) {
                     key={user.id}
                     user={user}
                     locale={locale}
+                    copy={copy}
                     copied={copiedId === user.id}
                     onCopy={() => copyEmail(user)}
                   />
@@ -354,14 +494,49 @@ export function AdminUsersClient({ locale }: { locale: string }) {
   );
 }
 
+function AdminNav({
+  copy,
+  active,
+}: {
+  copy: AdminUsersCopy;
+  active: "users" | "grant";
+}) {
+  return (
+    <nav className="flex justify-end gap-sm font-mono text-label uppercase tracking-[0.08em]">
+      <Link
+        href="/admin/users"
+        className={`border px-md py-sm transition-colors ${
+          active === "users"
+            ? "border-text-display text-text-display"
+            : "border-border-visible text-text-secondary hover:border-text-display"
+        }`}
+      >
+        {copy.navUsers}
+      </Link>
+      <Link
+        href="/admin/grant"
+        className={`border px-md py-sm transition-colors ${
+          active === "grant"
+            ? "border-text-display text-text-display"
+            : "border-border-visible text-text-secondary hover:border-text-display"
+        }`}
+      >
+        {copy.navGrant}
+      </Link>
+    </nav>
+  );
+}
+
 function ReissueQueue({
   requests,
   locale,
+  copy,
   pendingId,
   onMarkHandled,
 }: {
   requests: AdminReissueRequest[];
   locale: string;
+  copy: AdminUsersCopy;
   pendingId: string | null;
   onMarkHandled: (request: AdminReissueRequest) => void;
 }) {
@@ -374,26 +549,25 @@ function ReissueQueue({
       <div className="flex flex-col gap-md lg:flex-row lg:items-end lg:justify-between">
         <div className="flex flex-col gap-sm">
           <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
-            REISSUE QUEUE
+            {copy.queueLabel}
           </span>
           <h2 className="font-body font-bold text-text-display text-heading leading-[1.1]">
-            Manual key replacements.
+            {copy.queueTitle}
           </h2>
           <p className="max-w-2xl font-body text-body-sm text-text-secondary leading-[1.6]">
-            Requests contain account identifiers and a config hash only. Replace the
-            key in the provider panel, grant the new config, then mark the request done.
+            {copy.queueBody}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-sm font-mono text-label uppercase tracking-[0.1em]">
-          <QueueCounter label="Open" value={open.length} tone="warning" />
-          <QueueCounter label="Handled" value={handled.length} tone="success" />
+          <QueueCounter label={copy.queueOpen} value={open.length} tone="warning" />
+          <QueueCounter label={copy.queueHandled} value={handled.length} tone="success" />
         </div>
       </div>
 
       {ordered.length === 0 ? (
         <p className="border border-border-visible rounded-[8px] p-lg font-mono text-label
                       uppercase tracking-[0.1em] text-text-disabled">
-          No reissue requests yet.
+          {copy.noReissue}
         </p>
       ) : (
         <div className="flex flex-col gap-sm">
@@ -402,6 +576,7 @@ function ReissueQueue({
               key={request.requestId}
               request={request}
               locale={locale}
+              copy={copy}
               pending={pendingId === request.requestId}
               onMarkHandled={() => onMarkHandled(request)}
             />
@@ -415,11 +590,13 @@ function ReissueQueue({
 function ReissueRow({
   request,
   locale,
+  copy,
   pending,
   onMarkHandled,
 }: {
   request: AdminReissueRequest;
   locale: string;
+  copy: AdminUsersCopy;
   pending: boolean;
   onMarkHandled: () => void;
 }) {
@@ -435,15 +612,23 @@ function ReissueRow({
             {request.email}
           </span>
           <StatusChip
-            label={request.status.toUpperCase()}
+            label={isOpen ? copy.queueOpen : copy.queueHandled}
             tone={isOpen ? "warning" : "success"}
           />
         </div>
         <div className="grid gap-xs font-mono text-label uppercase tracking-[0.08em] text-text-secondary sm:grid-cols-2">
-          <span className="break-all">Request {request.requestId}</span>
-          <span className="break-all">User {request.userId}</span>
-          <span className="break-all">Slug {request.vpnSlug || "none"}</span>
-          <span className="break-all">Hash {shortHash(request.subscriptionUrlHash)}</span>
+          <span className="break-all">
+            {copy.requestLabel} {request.requestId}
+          </span>
+          <span className="break-all">
+            {copy.userLabel} {request.userId}
+          </span>
+          <span className="break-all">
+            {copy.slugLabel} {request.vpnSlug || "none"}
+          </span>
+          <span className="break-all">
+            {copy.hashLabel} {shortHash(request.subscriptionUrlHash)}
+          </span>
         </div>
         {request.reason && (
           <p className="font-body text-body-sm text-text-secondary leading-[1.55]">
@@ -464,12 +649,12 @@ function ReissueRow({
                        font-mono text-label uppercase tracking-[0.08em] text-text-display
                        hover:border-text-display disabled:opacity-60 disabled:cursor-wait transition-colors"
           >
-            [ {pending ? "Saving..." : "Mark done"} ]
+            [ {pending ? copy.saving : copy.markDone} ]
           </button>
         ) : (
           <span className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-md
                            font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
-            [ Done ]
+            [ {copy.done} ]
           </span>
         )}
       </div>
@@ -504,11 +689,13 @@ function QueueCounter({
 function UserRow({
   user,
   locale,
+  copy,
   copied,
   onCopy,
 }: {
   user: AdminUser;
   locale: string;
+  copy: AdminUsersCopy;
   copied: boolean;
   onCopy: () => void;
 }) {
@@ -523,15 +710,15 @@ function UserRow({
         </span>
         <div className="flex flex-wrap gap-xs">
           <StatusChip
-            label={user.emailVerified ? "EMAIL VERIFIED" : "EMAIL UNVERIFIED"}
+            label={user.emailVerified ? copy.emailVerified : copy.emailUnverified}
             tone={user.emailVerified ? "success" : "muted"}
           />
           <StatusChip
-            label={`ACCESS · ${user.accessStatus.toUpperCase()}`}
+            label={`${copy.access}: ${accessStatusLabel(user.accessStatus, copy)}`}
             tone={accessTone(user.accessStatus)}
           />
           <StatusChip
-            label={user.hasSubscriptionUrl ? "KEY ISSUED" : "NO KEY"}
+            label={user.hasSubscriptionUrl ? copy.keyIssued : copy.noKey}
             tone={user.hasSubscriptionUrl ? "success" : "muted"}
           />
         </div>
@@ -547,7 +734,7 @@ function UserRow({
                      font-mono text-label uppercase tracking-[0.08em] text-text-display
                      hover:border-text-display transition-colors"
         >
-          [ {copied ? "COPIED" : "COPY EMAIL"} ]
+          [ {copied ? copy.copied : copy.copyEmail} ]
         </button>
       </div>
     </article>
@@ -586,6 +773,10 @@ function accessTone(status: string): "success" | "warning" | "accent" | "muted" 
   return "muted";
 }
 
+function accessStatusLabel(status: string, copy: AdminUsersCopy) {
+  return copy.statuses[status] || status;
+}
+
 function formatAdminDate(value: string, locale: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -598,4 +789,8 @@ function formatAdminDate(value: string, locale: string) {
 
 function shortHash(value: string | null) {
   return value ? `${value.slice(0, 10)}...` : "none";
+}
+
+function getCopy(locale: string) {
+  return locale === "ru" ? COPY.ru : COPY.en;
 }

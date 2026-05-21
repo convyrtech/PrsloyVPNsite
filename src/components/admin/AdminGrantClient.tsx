@@ -18,21 +18,166 @@ type GrantResult =
   | { kind: "success"; user: GrantUser }
   | { kind: "error"; message: string };
 
-const errorMessages: Record<string, string> = {
-  unauthorized: "Wrong ADMIN_SECRET.",
-  not_found: "Admin endpoint is disabled. Add ADMIN_SECRET in Vercel env.",
-  user_not_found: "No account exists for this email.",
-  email_required: "Email is required.",
-  invalid_email: "Email looks invalid.",
-  subscription_url_required: "Subscription/config URL is required.",
-  invalid_subscription_url: "Use a supported subscription URL or config URI.",
-  kv_not_configured: "Account storage is not configured.",
-  auth_secret_not_configured: "AUTH_SECRET is not configured.",
-  invalid_json: "Invalid request body.",
-  grant_failed: "Grant failed. Check server logs.",
+type AdminGrantCopy = {
+  navUsers: string;
+  navGrant: string;
+  backToUsers: string;
+  title: string;
+  subtitle: string;
+  operator: string;
+  grant: string;
+  steps: string[];
+  inputTitle: string;
+  emailLabel: string;
+  configLabel: string;
+  granting: string;
+  grantAccess: string;
+  previewTitle: string;
+  previewEmail: string;
+  previewConfig: string;
+  previewResult: string;
+  waiting: string;
+  readyToIssue: string;
+  previewBody: string;
+  successAccess: string;
+  successVerified: string;
+  successSlug: string;
+  successUpdated: string;
+  verifiedYes: string;
+  verifiedPending: string;
+  created: string;
+  openDashboard: string;
+  notes: Array<{ title: string; body: string }>;
+  errors: Record<string, string>;
+};
+
+const COPY: Record<"ru" | "en", AdminGrantCopy> = {
+  ru: {
+    navUsers: "Пользователи",
+    navGrant: "Выдать доступ",
+    backToUsers: "К списку пользователей",
+    title: "Выдать доступ.",
+    subtitle:
+      "Привязать реальную subscription/config ссылку к существующему PRSLOY ID. Оплата здесь не создается: это ручная выдача beta-доступа.",
+    operator: "Оператор",
+    grant: "Выдача",
+    steps: ["Найти", "Привязать", "Проверить"],
+    inputTitle: "Данные выдачи",
+    emailLabel: "Email аккаунта",
+    configLabel: "VPN subscription/config URL",
+    granting: "Выдаем...",
+    grantAccess: "Выдать доступ",
+    previewTitle: "Проверка",
+    previewEmail: "Email",
+    previewConfig: "Конфиг",
+    previewResult: "Результат",
+    waiting: "ожидает",
+    readyToIssue: "готово к выдаче",
+    previewBody:
+      "Предпросмотр не вызывает API. Статус доступа изменится только после успешной выдачи.",
+    successAccess: "Доступ",
+    successVerified: "Почта",
+    successSlug: "Slug",
+    successUpdated: "Обновлено",
+    verifiedYes: "подтверждена",
+    verifiedPending: "ждет подтверждения",
+    created: "создан",
+    openDashboard: "Открыть ЛК для проверки",
+    notes: [
+      {
+        title: "Аккаунт уже должен быть",
+        body: "Пользователь сначала создает PRSLOY ID. Эта форма не регистрирует аккаунты.",
+      },
+      {
+        title: "Только реальный конфиг",
+        body: "Вставляй фактическую ссылку из панели провайдера. Неверные URL будут отклонены.",
+      },
+      {
+        title: "Пользователь обновляет ЛК",
+        body: "После успешной выдачи пользователь обновляет кабинет и сразу видит активный доступ.",
+      },
+    ],
+    errors: {
+      unauthorized: "Неверный ADMIN_SECRET.",
+      not_found: "Админ endpoint отключен. Добавь ADMIN_SECRET в Vercel env.",
+      user_not_found: "Аккаунта с таким email нет.",
+      email_required: "Нужен email.",
+      invalid_email: "Email выглядит неверно.",
+      subscription_url_required: "Нужна subscription/config ссылка.",
+      invalid_subscription_url: "Нужен поддерживаемый subscription URL или config URI.",
+      kv_not_configured: "Хранилище аккаунтов не настроено.",
+      auth_secret_not_configured: "AUTH_SECRET не настроен.",
+      invalid_json: "Неверное тело запроса.",
+      grant_failed: "Выдача не прошла. Проверь server logs.",
+      unknown: "Неизвестная ошибка админки.",
+      network: "Ошибка сети.",
+    },
+  },
+  en: {
+    navUsers: "Users",
+    navGrant: "Grant access",
+    backToUsers: "Back to users",
+    title: "Issue access.",
+    subtitle:
+      "Attach a real VPN subscription/config URL to an existing PRSLOY ID. No payment state is created here; this is manual beta issuing.",
+    operator: "Operator",
+    grant: "Grant",
+    steps: ["Find", "Attach", "Verify"],
+    inputTitle: "Access input",
+    emailLabel: "Account email",
+    configLabel: "VPN subscription/config URL",
+    granting: "Granting...",
+    grantAccess: "Grant access",
+    previewTitle: "Grant preview",
+    previewEmail: "Email",
+    previewConfig: "Config",
+    previewResult: "Result",
+    waiting: "waiting",
+    readyToIssue: "ready to issue",
+    previewBody:
+      "This preview does not call the API. The access state changes only after the grant request returns success.",
+    successAccess: "Access",
+    successVerified: "Verified",
+    successSlug: "Slug",
+    successUpdated: "Updated",
+    verifiedYes: "yes",
+    verifiedPending: "pending email",
+    created: "created",
+    openDashboard: "Open dashboard check",
+    notes: [
+      {
+        title: "Existing account",
+        body: "The user must create a PRSLOY ID first. This tool does not register accounts.",
+      },
+      {
+        title: "Real config only",
+        body: "Paste the actual subscription/config URL from the provisioning panel. Bad URLs are rejected.",
+      },
+      {
+        title: "User reloads dashboard",
+        body: "After success, the user can refresh the dashboard and see active access immediately.",
+      },
+    ],
+    errors: {
+      unauthorized: "Wrong ADMIN_SECRET.",
+      not_found: "Admin endpoint is disabled. Add ADMIN_SECRET in Vercel env.",
+      user_not_found: "No account exists for this email.",
+      email_required: "Email is required.",
+      invalid_email: "Email looks invalid.",
+      subscription_url_required: "Subscription/config URL is required.",
+      invalid_subscription_url: "Use a supported subscription URL or config URI.",
+      kv_not_configured: "Account storage is not configured.",
+      auth_secret_not_configured: "AUTH_SECRET is not configured.",
+      invalid_json: "Invalid request body.",
+      grant_failed: "Grant failed. Check server logs.",
+      unknown: "Unknown admin error.",
+      network: "Network error.",
+    },
+  },
 };
 
 export function AdminGrantClient({ locale }: { locale: string }) {
+  const copy = getCopy(locale);
   const [secret, setSecret] = useState("");
   const [email, setEmail] = useState("");
   const [subscriptionUrl, setSubscriptionUrl] = useState("");
@@ -45,7 +190,7 @@ export function AdminGrantClient({ locale }: { locale: string }) {
 
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedUrl = subscriptionUrl.trim();
-    const localError = validateGrantInput(normalizedEmail, normalizedUrl);
+    const localError = validateGrantInput(normalizedEmail, normalizedUrl, copy);
     if (localError) {
       setResult({ kind: "error", message: localError });
       return;
@@ -75,14 +220,14 @@ export function AdminGrantClient({ locale }: { locale: string }) {
       if (!res.ok || !data.ok || !data.user) {
         setResult({
           kind: "error",
-          message: errorMessages[data.error || ""] || "Unknown admin error.",
+          message: copy.errors[data.error || ""] || copy.errors.unknown,
         });
         return;
       }
 
       setResult({ kind: "success", user: data.user });
     } catch {
-      setResult({ kind: "error", message: "Network error." });
+      setResult({ kind: "error", message: copy.errors.network });
     } finally {
       setPending(false);
     }
@@ -93,6 +238,8 @@ export function AdminGrantClient({ locale }: { locale: string }) {
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
       <div className="max-w-6xl mx-auto px-lg flex flex-col gap-2xl">
+        <AdminNav copy={copy} active="grant" />
+
         <header className="grid gap-xl lg:grid-cols-[1fr_320px] lg:items-end">
           <div className="flex flex-col gap-md">
             <p className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
@@ -102,21 +249,20 @@ export function AdminGrantClient({ locale }: { locale: string }) {
               className="font-body font-bold text-text-display leading-[0.98]"
               style={{ fontSize: "clamp(40px, 7vw, 84px)" }}
             >
-              Issue access.
+              {copy.title}
             </h1>
             <p className="max-w-2xl font-body text-body text-text-secondary leading-[1.65]">
-              Attach a real VPN subscription/config URL to an existing PRSLOY ID. No payment
-              state is created here; this is manual beta issuing.
+              {copy.subtitle}
             </p>
           </div>
 
           <section className="border border-border-visible rounded-[8px] bg-surface p-lg flex flex-col gap-md">
             <div className="flex items-center justify-between gap-md font-mono text-label uppercase tracking-[0.14em]">
-              <span className="text-text-disabled">OPERATOR</span>
-              <span className="text-text-display">GRANT</span>
+              <span className="text-text-disabled">{copy.operator}</span>
+              <span className="text-text-display">{copy.grant}</span>
             </div>
             <div className="grid grid-cols-3 gap-sm">
-              {["FIND", "ATTACH", "VERIFY"].map((item, index) => (
+              {copy.steps.map((item, index) => (
                 <div key={item} className="border border-border-visible bg-black p-sm">
                   <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-disabled">
                     {String(index + 1).padStart(2, "0")}
@@ -137,7 +283,7 @@ export function AdminGrantClient({ locale }: { locale: string }) {
           >
             <div className="flex items-center gap-md border-b border-border-visible pb-lg">
               <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
-                Access input
+                {copy.inputTitle}
               </span>
               <span className="h-px flex-1 bg-border-visible/40" />
             </div>
@@ -150,14 +296,14 @@ export function AdminGrantClient({ locale }: { locale: string }) {
               autoComplete="off"
             />
             <AdminInput
-              label="Account email"
+              label={copy.emailLabel}
               type="email"
               value={email}
               onChange={setEmail}
               autoComplete="email"
             />
             <AdminInput
-              label="VPN subscription/config URL"
+              label={copy.configLabel}
               type="text"
               value={subscriptionUrl}
               onChange={setSubscriptionUrl}
@@ -172,7 +318,7 @@ export function AdminGrantClient({ locale }: { locale: string }) {
                          hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:cursor-wait
                          transition duration-150 ease-out-nothing"
             >
-              [ {pending ? "Granting..." : "Grant access"} ]
+              [ {pending ? copy.granting : copy.grantAccess} ]
             </button>
 
             {result.kind === "error" && (
@@ -185,7 +331,7 @@ export function AdminGrantClient({ locale }: { locale: string }) {
           <aside className="border border-border-visible rounded-[8px] bg-black p-xl sm:p-2xl flex flex-col gap-xl">
             <div className="flex items-center justify-between gap-md">
               <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
-                Grant preview
+                {copy.previewTitle}
               </span>
               <span
                 className={`inline-block h-3 w-3 rounded-full ${
@@ -197,20 +343,71 @@ export function AdminGrantClient({ locale }: { locale: string }) {
             </div>
 
             {result.kind === "success" ? (
-              <SuccessPanel user={result.user} locale={locale} />
+              <SuccessPanel user={result.user} locale={locale} copy={copy} />
             ) : (
-              <PreviewPanel email={email} subscriptionUrl={subscriptionUrl} hasPreview={Boolean(hasPreview)} />
+              <PreviewPanel
+                email={email}
+                subscriptionUrl={subscriptionUrl}
+                hasPreview={Boolean(hasPreview)}
+                copy={copy}
+              />
             )}
           </aside>
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-md">
-          <AdminNote index="01" title="Existing account" body="The user must create a PRSLOY ID first. This tool does not register accounts." />
-          <AdminNote index="02" title="Real config only" body="Paste the actual subscription/config URL from the provisioning panel. Bad URLs are rejected." />
-          <AdminNote index="03" title="User reloads dashboard" body="After success, the user can refresh the dashboard and see active access immediately." />
+          {copy.notes.map((note, index) => (
+            <AdminNote
+              key={note.title}
+              index={String(index + 1).padStart(2, "0")}
+              title={note.title}
+              body={note.body}
+            />
+          ))}
         </section>
       </div>
     </main>
+  );
+}
+
+function AdminNav({
+  copy,
+  active,
+}: {
+  copy: AdminGrantCopy;
+  active: "users" | "grant";
+}) {
+  return (
+    <nav className="flex flex-col gap-sm sm:flex-row sm:items-center sm:justify-between">
+      <Link
+        href="/admin/users"
+        className="font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80"
+      >
+        {copy.backToUsers} {"\u2190"}
+      </Link>
+      <div className="flex gap-sm font-mono text-label uppercase tracking-[0.08em]">
+        <Link
+          href="/admin/users"
+          className={`border px-md py-sm transition-colors ${
+            active === "users"
+              ? "border-text-display text-text-display"
+              : "border-border-visible text-text-secondary hover:border-text-display"
+          }`}
+        >
+          {copy.navUsers}
+        </Link>
+        <Link
+          href="/admin/grant"
+          className={`border px-md py-sm transition-colors ${
+            active === "grant"
+              ? "border-text-display text-text-display"
+              : "border-border-visible text-text-secondary hover:border-text-display"
+          }`}
+        >
+          {copy.navGrant}
+        </Link>
+      </div>
+    </nav>
   );
 }
 
@@ -218,44 +415,60 @@ function PreviewPanel({
   email,
   subscriptionUrl,
   hasPreview,
+  copy,
 }: {
   email: string;
   subscriptionUrl: string;
   hasPreview: boolean;
+  copy: AdminGrantCopy;
 }) {
   const trimmedUrl = subscriptionUrl.trim();
   return (
     <div className="flex flex-col gap-lg">
-      <div className="font-display font-bold text-text-display leading-[0.85]"
-           style={{ fontSize: "clamp(64px, 10vw, 112px)", letterSpacing: "0.02em" }}>
+      <div
+        className="font-display font-bold text-text-display leading-[0.85]"
+        style={{ fontSize: "clamp(64px, 10vw, 112px)", letterSpacing: "0.02em" }}
+      >
         {hasPreview ? "01" : "00"}
       </div>
       <div className="flex flex-col">
-        <PreviewRow label="Email" value={email.trim().toLowerCase() || "waiting"} />
-        <PreviewRow label="Config" value={trimmedUrl ? maskUrl(trimmedUrl) : "waiting"} />
-        <PreviewRow label="Result" value="ready to issue" />
+        <PreviewRow label={copy.previewEmail} value={email.trim().toLowerCase() || copy.waiting} />
+        <PreviewRow label={copy.previewConfig} value={trimmedUrl ? maskUrl(trimmedUrl) : copy.waiting} />
+        <PreviewRow label={copy.previewResult} value={copy.readyToIssue} />
       </div>
       <p className="font-body text-body-sm text-text-secondary leading-[1.65]">
-        This preview does not call the API. The access state changes only after the grant request
-        returns success.
+        {copy.previewBody}
       </p>
     </div>
   );
 }
 
-function SuccessPanel({ user, locale }: { user: GrantUser; locale: string }) {
+function SuccessPanel({
+  user,
+  locale,
+  copy,
+}: {
+  user: GrantUser;
+  locale: string;
+  copy: AdminGrantCopy;
+}) {
   return (
     <div className="flex flex-col gap-lg">
-      <div className="font-display font-bold text-text-display leading-[0.85]"
-           style={{ fontSize: "clamp(64px, 10vw, 112px)", letterSpacing: "0.02em" }}>
+      <div
+        className="font-display font-bold text-text-display leading-[0.85]"
+        style={{ fontSize: "clamp(64px, 10vw, 112px)", letterSpacing: "0.02em" }}
+      >
         OK
       </div>
       <div className="flex flex-col">
-        <PreviewRow label="Email" value={user.email} />
-        <PreviewRow label="Access" value={user.accessStatus} />
-        <PreviewRow label="Verified" value={user.emailVerified ? "yes" : "pending email"} />
-        <PreviewRow label="Slug" value={user.vpnSlug || "created"} />
-        <PreviewRow label="Updated" value={formatAdminDate(user.updatedAt, locale)} />
+        <PreviewRow label={copy.previewEmail} value={user.email} />
+        <PreviewRow label={copy.successAccess} value={user.accessStatus} />
+        <PreviewRow
+          label={copy.successVerified}
+          value={user.emailVerified ? copy.verifiedYes : copy.verifiedPending}
+        />
+        <PreviewRow label={copy.successSlug} value={user.vpnSlug || copy.created} />
+        <PreviewRow label={copy.successUpdated} value={formatAdminDate(user.updatedAt, locale)} />
       </div>
       {user.subscriptionUrl && (
         <a
@@ -271,7 +484,7 @@ function SuccessPanel({ user, locale }: { user: GrantUser; locale: string }) {
         href="/dashboard"
         className="self-start font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80"
       >
-        Open dashboard check →
+        {copy.openDashboard} {"\u2192"}
       </Link>
     </div>
   );
@@ -306,12 +519,16 @@ function AdminNote({ index, title, body }: { index: string; title: string; body:
   );
 }
 
-function validateGrantInput(email: string, subscriptionUrl: string): string | null {
-  if (!email) return "Email is required.";
+function validateGrantInput(
+  email: string,
+  subscriptionUrl: string,
+  copy: AdminGrantCopy
+): string | null {
+  if (!email) return copy.errors.email_required;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
-    return "Email looks invalid.";
+    return copy.errors.invalid_email;
   }
-  if (!subscriptionUrl) return "Subscription/config URL is required.";
+  if (!subscriptionUrl) return copy.errors.subscription_url_required;
   try {
     const url = new URL(subscriptionUrl);
     const allowed = new Set([
@@ -326,10 +543,10 @@ function validateGrantInput(email: string, subscriptionUrl: string): string | nu
       "wireguard:",
     ]);
     if (!allowed.has(url.protocol)) {
-      return "Use a supported subscription URL or config URI.";
+      return copy.errors.invalid_subscription_url;
     }
   } catch {
-    return "Use a supported subscription URL or config URI.";
+    return copy.errors.invalid_subscription_url;
   }
   return null;
 }
@@ -387,4 +604,8 @@ function AdminInput({
       />
     </label>
   );
+}
+
+function getCopy(locale: string) {
+  return locale === "ru" ? COPY.ru : COPY.en;
 }
