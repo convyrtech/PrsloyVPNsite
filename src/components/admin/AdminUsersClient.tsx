@@ -69,6 +69,7 @@ type AdminUsersCopy = {
   saving: string;
   markDone: string;
   grantNew: string;
+  issueKey: string;
   done: string;
   filters: Record<Filter, string>;
   statuses: Record<string, string>;
@@ -117,6 +118,7 @@ const COPY: Record<"ru" | "en", AdminUsersCopy> = {
     saving: "Сохраняем...",
     markDone: "Закрыть",
     grantNew: "Выдать новый",
+    issueKey: "Выдать ключ",
     done: "Готово",
     filters: {
       all: "Все",
@@ -187,6 +189,7 @@ const COPY: Record<"ru" | "en", AdminUsersCopy> = {
     saving: "Saving...",
     markDone: "Mark done",
     grantNew: "Issue new",
+    issueKey: "Issue key",
     done: "Done",
     filters: {
       all: "All",
@@ -830,6 +833,14 @@ function UserRow({
         <span className="font-mono text-label uppercase tracking-[0.1em] text-text-disabled tabular-nums">
           {formatAdminDate(user.createdAt, locale)}
         </span>
+        <Link
+          href={{ pathname: "/admin/grant", query: { email: user.email } }}
+          className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-md
+                     font-mono text-label uppercase tracking-[0.08em] text-black
+                     hover:opacity-90 active:scale-[0.98] transition"
+        >
+          [ {copy.issueKey} ]
+        </Link>
         <button
           type="button"
           onClick={onCopy}
