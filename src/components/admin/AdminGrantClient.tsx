@@ -245,6 +245,10 @@ export function AdminGrantClient({ locale }: { locale: string }) {
 
       storeAdminSecret(trimmedSecret);
       setResult({ kind: "success", user: data.user });
+      // Clear the per-grant inputs but keep the secret so the operator
+      // can move on to the next user without retyping.
+      setEmail("");
+      setSubscriptionUrl("");
     } catch {
       setResult({ kind: "error", message: copy.errors.network });
     } finally {
