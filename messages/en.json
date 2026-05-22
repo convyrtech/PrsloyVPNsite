@@ -220,8 +220,6 @@
   },
   "dashboard_page": {
     "label": "DASHBOARD",
-    "title": "My access",
-    "subtitle": "Only the useful parts: access status, personal configuration, setup guide, and support.",
     "telegram_cta_label": "CREATE PRSLOY ID",
     "telegram_cta_meta": "Email and password",
     "what_label": "WHAT’S IN THERE",

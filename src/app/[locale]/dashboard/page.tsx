@@ -12,8 +12,6 @@ export default async function DashboardPage({
 
   const keys = [
     "label",
-    "title",
-    "subtitle",
     "setup_title",
     "setup_body",
     "loading_body",

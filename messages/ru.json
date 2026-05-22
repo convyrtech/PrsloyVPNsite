@@ -220,8 +220,6 @@
   },
   "dashboard_page": {
     "label": "КАБИНЕТ",
-    "title": "Мой доступ",
-    "subtitle": "Здесь только главное: статус доступа, персональная конфигурация, инструкция и поддержка.",
     "telegram_cta_label": "СОЗДАТЬ PRSLOY ID",
     "telegram_cta_meta": "Email и пароль",
     "what_label": "ЧТО ТАМ ДОСТУПНО",

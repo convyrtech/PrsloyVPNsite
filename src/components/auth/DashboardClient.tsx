@@ -12,8 +12,6 @@ import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
 
 export type DashboardCopy = Record<
   | "label"
-  | "title"
-  | "subtitle"
   | "setup_title"
   | "setup_body"
   | "loading_body"
@@ -260,26 +258,13 @@ function DashboardShell({
           <PaymentResultBanner />
         </Suspense>
         <RevealOnView y={12}>
-          <div className="flex flex-col gap-xl">
-            <div className="flex items-center justify-between gap-md">
-              <SectionLabel>{copy.label}</SectionLabel>
-              {user && (
-                <span className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled truncate max-w-[52vw]">
-                  {user.email}
-                </span>
-              )}
-            </div>
-            <header className="grid gap-lg lg:grid-cols-[1fr_340px] lg:items-end">
-              <h1
-                className="font-body font-bold text-text-display leading-[0.95] tracking-[-0.03em] break-words"
-                style={{ fontSize: "clamp(40px, 8vw, 84px)" }}
-              >
-                {copy.title}
-              </h1>
-              <p className="font-body text-body text-text-secondary leading-[1.55]">
-                {copy.subtitle}
-              </p>
-            </header>
+          <div className="flex items-center justify-between gap-md">
+            <SectionLabel>{copy.label}</SectionLabel>
+            {user && (
+              <span className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled truncate max-w-[52vw]">
+                {user.email}
+              </span>
+            )}
           </div>
         </RevealOnView>
 
@@ -655,14 +640,16 @@ function PlainMetric({ label, value }: { label: string; value: string }) {
 }
 
 function StatusDot({ tone }: { tone: "success" | "warning" | "muted" }) {
+  // Success state uses the site-wide pulse-dot keyframe (same one as the
+  // header status badge) for a slow breathing ring — gives the page a
+  // single live element so it doesn't read as a static screenshot.
+  if (tone === "success") {
+    return <span className="relative inline-flex h-2 w-2 rounded-full pulse-dot" />;
+  }
   return (
     <span
       className={`inline-block h-2 w-2 rounded-full ${
-        tone === "success"
-          ? "bg-success shadow-[0_0_12px_rgba(74,158,92,0.75)]"
-          : tone === "warning"
-            ? "bg-warning animate-pulse"
-            : "bg-border-visible"
+        tone === "warning" ? "bg-warning animate-pulse" : "bg-border-visible"
       }`}
     />
   );
