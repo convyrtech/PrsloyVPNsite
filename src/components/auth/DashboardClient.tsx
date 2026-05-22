@@ -154,37 +154,41 @@ export function DashboardClient({
   if (!state.user) {
     return (
       <DashboardShell copy={copy}>
-        <RevealOnView delay={0.1}>
-          <section className="border border-border-visible rounded-[8px] p-xl sm:p-2xl bg-surface flex flex-col gap-lg">
-            <div className="flex items-center gap-sm">
-              <span className="inline-block w-[6px] h-[6px] rounded-full bg-warning animate-pulse" />
-              <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
-                {copy.auth_required_label}
-              </span>
-            </div>
-            <p className="font-body text-body text-text-secondary leading-[1.65]">
-              {copy.auth_required_body}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-sm">
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center bg-text-display text-black
-                           font-mono uppercase tracking-[0.08em] text-label px-xl min-h-[48px]
-                           rounded-full whitespace-nowrap hover:opacity-90 transition-opacity"
-              >
-                [ {copy.login_link} ]
-              </Link>
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center border border-border-visible
-                           font-mono uppercase tracking-[0.08em] text-label text-text-display
-                           px-xl min-h-[48px] rounded-full whitespace-nowrap hover:border-text-display transition-colors"
-              >
-                [ {copy.register_link} ]
-              </Link>
-            </div>
-          </section>
-        </RevealOnView>
+        {/* On mobile, push the auth-required card to the vertical centre of
+            the remaining viewport so the screen does not read as 70 % void. */}
+        <div className="min-h-[58vh] sm:min-h-0 flex items-center">
+          <RevealOnView delay={0.1}>
+            <section className="border border-border-visible rounded-[8px] p-xl sm:p-2xl bg-surface flex flex-col gap-lg">
+              <div className="flex items-center gap-sm">
+                <span className="inline-block w-[6px] h-[6px] rounded-full bg-warning animate-pulse" />
+                <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
+                  {copy.auth_required_label}
+                </span>
+              </div>
+              <p className="font-body text-body text-text-secondary leading-[1.65]">
+                {copy.auth_required_body}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-sm">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center bg-text-display text-black
+                             font-mono uppercase tracking-[0.08em] text-label px-xl min-h-[48px]
+                             rounded-full whitespace-nowrap hover:opacity-90 transition-opacity"
+                >
+                  [ {copy.login_link} ]
+                </Link>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center border border-border-visible
+                             font-mono uppercase tracking-[0.08em] text-label text-text-display
+                             px-xl min-h-[48px] rounded-full whitespace-nowrap hover:border-text-display transition-colors"
+                >
+                  [ {copy.register_link} ]
+                </Link>
+              </div>
+            </section>
+          </RevealOnView>
+        </div>
       </DashboardShell>
     );
   }
