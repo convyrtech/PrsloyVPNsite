@@ -51,7 +51,10 @@ export default async function RegisterPage({
               <div className="mt-sm pt-md border-t border-border-visible flex items-center gap-sm
                               font-mono text-label uppercase tracking-[0.08em]">
                 <span className="text-text-disabled">{t("has_account")}</span>
-                <Link href="/login" className="text-text-display hover:opacity-80">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80"
+                >
                   {t("login_link")}
                 </Link>
               </div>
