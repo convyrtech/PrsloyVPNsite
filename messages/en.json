@@ -55,7 +55,7 @@
     "hint_touch": "DRAG TO ROTATE · TAP A POINT",
     "loading": "BUILDING THE GLOBE",
     "fallback": "INFRASTRUCTURE PREVIEW UNAVAILABLE · WEBGL REQUIRED",
-    "cta": "REQUEST INVITE · $5"
+    "cta": "REQUEST INVITE"
   },
   "nothing": {
     "label": "YOUR CONNECTION · CLOSED BETA",
