@@ -148,6 +148,12 @@ export function PaymentStatusCard({ locale }: { locale: string }) {
   }
 
   const order = state.order;
+  // An order that never confirmed (no money landed) is not a subscription —
+  // showing a 'canceled subscription' card next to an admin-granted active
+  // key is misleading. Hide the card; treat it as 'no subscription yet'.
+  if (order.confirmedAt === null && order.status !== "pending" && order.status !== "created") {
+    return null;
+  }
   const isConfirmed = order.status === "confirmed";
   // If a paid order has run past its period, reframe as 'expired' rather
   // than 'canceled' — otherwise a user whose key still works sees
