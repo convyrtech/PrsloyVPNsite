@@ -196,6 +196,8 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
   },
 };
 
+const EMAIL_SUGGESTIONS_LIST_ID = "grant-email-suggestions";
+
 export function AdminGrantClient({ locale }: { locale: string }) {
   const copy = getCopy(locale);
   const searchParams = useSearchParams();
@@ -206,12 +208,44 @@ export function AdminGrantClient({ locale }: { locale: string }) {
   const [subscriptionUrl, setSubscriptionUrl] = useState("");
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<GrantResult>({ kind: "idle" });
+  const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
 
   // Prefill from sessionStorage after hydration so server and client render
   // the same empty input on first paint.
   useEffect(() => {
     const stored = getStoredAdminSecret();
     if (stored) setSecret(stored);
+  }, []);
+
+  // Best-effort email autocomplete sourced from the existing user list.
+  // Silent on failure (no secret, wrong secret, KV down) — autocomplete is
+  // a nice-to-have, the form still works without it.
+  useEffect(() => {
+    const stored = getStoredAdminSecret();
+    if (!stored) return;
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/users", {
+          headers: { Authorization: `Bearer ${stored}` },
+          cache: "no-store",
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          ok?: boolean;
+          users?: Array<{ email?: unknown }>;
+        };
+        if (!alive || !res.ok || !data.ok || !Array.isArray(data.users)) return;
+        const emails = data.users
+          .map((u) => (typeof u.email === "string" ? u.email : null))
+          .filter((value): value is string => Boolean(value));
+        setEmailSuggestions(emails);
+      } catch {
+        // ignore — autocomplete is non-critical
+      }
+    })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -338,7 +372,15 @@ export function AdminGrantClient({ locale }: { locale: string }) {
               value={email}
               onChange={setEmail}
               autoComplete="email"
+              list={emailSuggestions.length > 0 ? EMAIL_SUGGESTIONS_LIST_ID : undefined}
             />
+            {emailSuggestions.length > 0 && (
+              <datalist id={EMAIL_SUGGESTIONS_LIST_ID}>
+                {emailSuggestions.map((value) => (
+                  <option key={value} value={value} />
+                ))}
+              </datalist>
+            )}
             <AdminTextarea
               label={copy.configLabel}
               value={subscriptionUrl}
@@ -653,12 +695,14 @@ function AdminInput({
   value,
   onChange,
   autoComplete,
+  list,
 }: {
   label: string;
   type: string;
   value: string;
   onChange: (value: string) => void;
   autoComplete: string;
+  list?: string;
 }) {
   return (
     <label className="flex flex-col gap-xs">
@@ -670,6 +714,7 @@ function AdminInput({
         required
         value={value}
         autoComplete={autoComplete}
+        list={list}
         onChange={(e) => onChange(e.target.value)}
         className="bg-black border border-border-visible rounded-full px-lg min-h-[48px]
                    font-mono text-body-sm text-text-display placeholder:text-text-disabled
