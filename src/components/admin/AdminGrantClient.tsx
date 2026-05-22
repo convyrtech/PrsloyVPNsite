@@ -47,11 +47,15 @@ type AdminGrantCopy = {
   previewBody: string;
   successAccess: string;
   successVerified: string;
-  successSlug: string;
   successUpdated: string;
+  successConfigLabel: string;
+  successShow: string;
+  successHide: string;
+  successCopy: string;
+  successCopied: string;
+  successCopyError: string;
   verifiedYes: string;
   verifiedPending: string;
-  created: string;
   openDashboard: string;
   notes: Array<{ title: string; body: string }>;
   errors: Record<string, string>;
@@ -83,11 +87,15 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
       "Предпросмотр не вызывает API. Статус доступа изменится только после успешной выдачи.",
     successAccess: "Доступ",
     successVerified: "Почта",
-    successSlug: "Slug",
     successUpdated: "Обновлено",
+    successConfigLabel: "Выданный конфиг",
+    successShow: "Показать",
+    successHide: "Скрыть",
+    successCopy: "Скопировать",
+    successCopied: "Скопировано",
+    successCopyError: "Не получилось скопировать. Выдели вручную.",
     verifiedYes: "подтверждена",
     verifiedPending: "ждет подтверждения",
-    created: "создан",
     openDashboard: "Открыть ЛК для проверки",
     notes: [
       {
@@ -145,11 +153,15 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
       "This preview does not call the API. The access state changes only after the grant request returns success.",
     successAccess: "Access",
     successVerified: "Verified",
-    successSlug: "Slug",
     successUpdated: "Updated",
+    successConfigLabel: "Issued config",
+    successShow: "Show",
+    successHide: "Hide",
+    successCopy: "Copy",
+    successCopied: "Copied",
+    successCopyError: "Could not copy. Select the URL manually.",
     verifiedYes: "yes",
     verifiedPending: "pending email",
-    created: "created",
     openDashboard: "Open dashboard check",
     notes: [
       {
@@ -477,6 +489,20 @@ function SuccessPanel({
   locale: string;
   copy: AdminGrantCopy;
 }) {
+  const [revealed, setRevealed] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
+
+  async function copyUrl() {
+    if (!user.subscriptionUrl) return;
+    try {
+      await navigator.clipboard.writeText(user.subscriptionUrl);
+      setCopyState("copied");
+      window.setTimeout(() => setCopyState("idle"), 1600);
+    } catch {
+      setCopyState("error");
+    }
+  }
+
   return (
     <div className="flex flex-col gap-lg">
       <div
@@ -492,18 +518,42 @@ function SuccessPanel({
           label={copy.successVerified}
           value={user.emailVerified ? copy.verifiedYes : copy.verifiedPending}
         />
-        <PreviewRow label={copy.successSlug} value={user.vpnSlug || copy.created} />
         <PreviewRow label={copy.successUpdated} value={formatAdminDate(user.updatedAt, locale)} />
       </div>
       {user.subscriptionUrl && (
-        <a
-          href={user.subscriptionUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-mono text-body-sm text-text-display break-all hover:opacity-80"
-        >
-          {user.subscriptionUrl}
-        </a>
+        <div className="flex flex-col gap-sm border border-border-visible bg-black p-md">
+          <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
+            {copy.successConfigLabel}
+          </span>
+          <span className="font-mono text-body-sm text-text-display break-all leading-[1.55]">
+            {revealed ? user.subscriptionUrl : maskUrl(user.subscriptionUrl)}
+          </span>
+          <div className="flex flex-wrap gap-sm">
+            <button
+              type="button"
+              onClick={() => setRevealed((v) => !v)}
+              className="inline-flex min-h-[36px] items-center justify-center border border-border-visible px-md
+                         font-mono text-label uppercase tracking-[0.08em] text-text-display
+                         hover:border-text-display transition-colors"
+            >
+              [ {revealed ? copy.successHide : copy.successShow} ]
+            </button>
+            <button
+              type="button"
+              onClick={copyUrl}
+              className="inline-flex min-h-[36px] items-center justify-center border border-border-visible px-md
+                         font-mono text-label uppercase tracking-[0.08em] text-text-display
+                         hover:border-text-display transition-colors"
+            >
+              [ {copyState === "copied" ? copy.successCopied : copy.successCopy} ]
+            </button>
+          </div>
+          {copyState === "error" && (
+            <p className="font-body text-body-sm text-accent leading-[1.55]">
+              {copy.successCopyError}
+            </p>
+          )}
+        </div>
       )}
       <Link
         href="/dashboard"
