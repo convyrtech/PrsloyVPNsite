@@ -323,7 +323,7 @@
     "next_pending_3_title": "Ask for status",
     "next_pending_3_body": "If the invite is urgent, contact support with your account email.",
     "reissue_title": "Reissue",
-    "reissue_body": "Use this if the link leaked or stopped working. After replacement, the old access should no longer be used.",
+    "reissue_body": "Use this if the link leaked or stopped working. Requests are handled manually — support will attach the new key. After replacement, the old access should no longer be used.",
     "reissue_button": "REQUEST",
     "reissue_disabled": "AFTER ISSUE",
     "reissue_sending": "SENDING",
