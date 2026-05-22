@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/routing";
+import {
+  clearStoredAdminSecret,
+  getStoredAdminSecret,
+  storeAdminSecret,
+} from "@/lib/admin-secret-storage";
 
 type GrantUser = {
   id: string;
@@ -188,10 +193,18 @@ export function AdminGrantClient({ locale }: { locale: string }) {
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<GrantResult>({ kind: "idle" });
 
+  // Prefill from sessionStorage after hydration so server and client render
+  // the same empty input on first paint.
+  useEffect(() => {
+    const stored = getStoredAdminSecret();
+    if (stored) setSecret(stored);
+  }, []);
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (pending) return;
 
+    const trimmedSecret = secret.trim();
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedUrl = subscriptionUrl.trim();
     const localError = validateGrantInput(normalizedEmail, normalizedUrl, copy);
@@ -208,7 +221,7 @@ export function AdminGrantClient({ locale }: { locale: string }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${secret}`,
+          Authorization: `Bearer ${trimmedSecret}`,
         },
         body: JSON.stringify({
           email: normalizedEmail,
@@ -222,6 +235,7 @@ export function AdminGrantClient({ locale }: { locale: string }) {
       };
 
       if (!res.ok || !data.ok || !data.user) {
+        if (res.status === 401) clearStoredAdminSecret();
         setResult({
           kind: "error",
           message: copy.errors[data.error || ""] || copy.errors.unknown,
@@ -229,6 +243,7 @@ export function AdminGrantClient({ locale }: { locale: string }) {
         return;
       }
 
+      storeAdminSecret(trimmedSecret);
       setResult({ kind: "success", user: data.user });
     } catch {
       setResult({ kind: "error", message: copy.errors.network });

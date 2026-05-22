@@ -1,7 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@/i18n/routing";
+import {
+  clearStoredAdminSecret,
+  getStoredAdminSecret,
+  storeAdminSecret,
+} from "@/lib/admin-secret-storage";
 
 type AdminUser = {
   id: string;
@@ -230,10 +235,18 @@ export function AdminUsersClient({ locale }: { locale: string }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Prefill from sessionStorage after hydration so server and client render
+  // the same empty input on first paint.
+  useEffect(() => {
+    const stored = getStoredAdminSecret();
+    if (stored) setSecret(stored);
+  }, []);
+
   async function loadUsers(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (pending) return;
-    if (!secret.trim()) {
+    const trimmedSecret = secret.trim();
+    if (!trimmedSecret) {
       setError(copy.secretRequired);
       return;
     }
@@ -244,11 +257,14 @@ export function AdminUsersClient({ locale }: { locale: string }) {
     setReissueError("");
 
     // Independent loads: a failure of one endpoint must not blank the other list.
-    const authHeader = { Authorization: `Bearer ${secret.trim()}` };
+    const authHeader = { Authorization: `Bearer ${trimmedSecret}` };
     const [usersOutcome, reissueOutcome] = await Promise.allSettled([
       fetch("/api/admin/users", { headers: authHeader }),
       fetch("/api/admin/reissue", { headers: authHeader }),
     ]);
+
+    let usersOk = false;
+    let sawUnauthorized = false;
 
     if (usersOutcome.status === "fulfilled") {
       const res = usersOutcome.value;
@@ -259,7 +275,9 @@ export function AdminUsersClient({ locale }: { locale: string }) {
       };
       if (res.ok && data.ok && Array.isArray(data.users)) {
         setUsers(data.users);
+        usersOk = true;
       } else {
+        if (res.status === 401) sawUnauthorized = true;
         setUsers(null);
         setUsersError(copy.errors[data.error || ""] || copy.errors.users_unknown);
       }
@@ -278,12 +296,19 @@ export function AdminUsersClient({ locale }: { locale: string }) {
       if (res.ok && data.ok && Array.isArray(data.requests)) {
         setRequests(data.requests);
       } else {
+        if (res.status === 401) sawUnauthorized = true;
         setRequests(null);
         setReissueError(copy.errors[data.error || ""] || copy.errors.reissue_unknown);
       }
     } else {
       setRequests(null);
       setReissueError(copy.errors.network);
+    }
+
+    if (usersOk) {
+      storeAdminSecret(trimmedSecret);
+    } else if (sawUnauthorized) {
+      clearStoredAdminSecret();
     }
 
     setPending(false);
