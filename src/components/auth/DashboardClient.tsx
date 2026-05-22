@@ -534,6 +534,15 @@ function ReissueControl({
   const [state, setState] = useState<ReissueState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Re-enable the button 30s after a successful submit. The server enforces
+  // a 3/hour rate limit, so honest retries are safe; a sticky 'sent' state
+  // is just dead UI that forces a page reload.
+  useEffect(() => {
+    if (state !== "sent") return;
+    const timeout = window.setTimeout(() => setState("idle"), 30000);
+    return () => window.clearTimeout(timeout);
+  }, [state]);
+
   async function submit() {
     if (!hasKey || state === "sending" || state === "sent") return;
     setState("sending");
