@@ -222,7 +222,7 @@ export function Header() {
           >
             <Link
               href="/"
-              className="font-display text-text-display tracking-[0.12em] leading-none"
+              className="inline-flex items-center min-h-[44px] font-display text-text-display tracking-[0.12em] leading-none"
               style={{ fontSize: "18px" }}
             >
               PRSLOY
