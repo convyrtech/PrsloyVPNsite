@@ -137,6 +137,24 @@ describe("grantAccess", () => {
       code: "subscription_url_required",
     });
   });
+
+  it("refuses to re-activate a blocked account", async () => {
+    const user = await registerUser("blocked@example.com", "password123");
+    const { kvGet, kvSet } = await import("@/lib/kv");
+    const raw = await kvGet(`auth:user:${user.id}`);
+    const stored = JSON.parse(raw!);
+    stored.accessStatus = "blocked";
+    await kvSet(`auth:user:${user.id}`, JSON.stringify(stored));
+
+    await expect(
+      grantAccess("blocked@example.com", { subscriptionUrl: "https://sub.example.com/x" })
+    ).rejects.toMatchObject({ code: "user_blocked" });
+
+    // Make sure the record stayed blocked and the URL was not written.
+    const after = JSON.parse((await kvGet(`auth:user:${user.id}`))!);
+    expect(after.accessStatus).toBe("blocked");
+    expect(after.subscriptionUrl).toBeNull();
+  });
 });
 
 describe("listUsers", () => {

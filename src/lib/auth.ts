@@ -309,6 +309,12 @@ export async function grantAccess(
   const user = await getUserByEmail(email);
   if (!user) throw new AuthError("not_found");
 
+  // Blocking is a deliberate moderation action. A grant must not silently
+  // re-activate a blocked account — the operator has to unblock first.
+  if (user.accessStatus === "blocked") {
+    throw new AuthError("user_blocked");
+  }
+
   const subscriptionUrl = opts.subscriptionUrl?.trim() || user.subscriptionUrl;
   if (!subscriptionUrl) throw new AuthError("subscription_url_required");
 

@@ -74,6 +74,9 @@ export async function POST(req: Request) {
     if (err instanceof AuthError && err.code === "not_found") {
       return NextResponse.json({ ok: false, error: "user_not_found" }, { status: 404 });
     }
+    if (err instanceof AuthError && err.code === "user_blocked") {
+      return NextResponse.json({ ok: false, error: "user_blocked" }, { status: 409 });
+    }
     if (err instanceof AuthError && err.code === "subscription_url_required") {
       return NextResponse.json(
         { ok: false, error: "subscription_url_required" },
