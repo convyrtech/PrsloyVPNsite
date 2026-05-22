@@ -405,7 +405,8 @@ export function Footer() {
           transition={{ duration: 1.2, delay: 1.6 }}
           className="mt-2xl md:mt-3xl"
         >
-          <h3
+          <div
+            aria-hidden="true"
             className="font-body font-bold italic leading-[0.82]
                        tracking-[-0.06em] select-none whitespace-nowrap overflow-hidden max-w-full"
             style={{
@@ -415,7 +416,7 @@ export function Footer() {
             }}
           >
             PRSLOY
-          </h3>
+          </div>
           <div className="mt-md flex flex-wrap items-center gap-md
                           font-mono text-[10px] uppercase tracking-[0.2em] text-text-secondary">
             <span>{t("wordmark_meta")}</span>
