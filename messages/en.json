@@ -22,7 +22,7 @@
     "nav_dashboard": "DASHBOARD",
     "status_short": "CLOSED BETA",
     "status_full": "INVITE-ONLY · PRIVATE BETA",
-    "cta_buy": "INVITE · $5",
+    "cta_buy": "INVITE",
     "cta_buy_compact": "INVITE",
     "menu_open": "MENU",
     "menu_close": "CLOSE"
