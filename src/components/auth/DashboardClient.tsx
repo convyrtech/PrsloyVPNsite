@@ -49,7 +49,6 @@ export type DashboardCopy = Record<
   | "copy_error"
   | "show_key"
   | "hide_key"
-  | "open_key"
   | "setup_link"
   | "next_label"
   | "next_active_1_title"
@@ -421,16 +420,6 @@ function ConfigurationCard({
             >
               [ {revealed ? copy.hide_key : copy.show_key} ]
             </button>
-            <a
-              href={subscriptionUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
-                         font-mono text-label uppercase tracking-[0.08em] text-text-display
-                         hover:border-text-display transition-colors"
-            >
-              [ {copy.open_key} ]
-            </a>
           </div>
           {copyState === "error" && (
             <p className="font-body text-body-sm text-accent">{copy.copy_error}</p>

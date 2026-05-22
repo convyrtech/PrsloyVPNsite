@@ -50,7 +50,6 @@ export default async function DashboardPage({
     "copy_error",
     "show_key",
     "hide_key",
-    "open_key",
     "setup_link",
     "next_label",
     "next_active_1_title",

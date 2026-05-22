@@ -306,7 +306,6 @@
     "config_label": "PERSONAL CONFIGURATION",
     "show_key": "SHOW",
     "hide_key": "HIDE",
-    "open_key": "OPEN",
     "setup_link": "SETUP GUIDE",
     "ready_hint_label": "Access is issued. Keep the link private and use it only in your own client.",
     "pending_hint_label": "The account is ready for manual access attachment. Once capacity is approved, your personal configuration appears here.",
