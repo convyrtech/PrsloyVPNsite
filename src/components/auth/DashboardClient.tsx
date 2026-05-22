@@ -488,7 +488,8 @@ function SupportCard({ copy }: { copy: DashboardCopy }) {
         href={TELEGRAM_BOT_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="self-start font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80 transition-opacity"
+        className="inline-flex items-center min-h-[44px] self-start
+                   font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80 transition-opacity"
       >
         {copy.support_link} {"\u2192"}
       </a>
