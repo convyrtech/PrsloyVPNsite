@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@/i18n/routing";
 import type { PaymentOrder, PaymentStatus } from "@/lib/payments";
+import { MONTHS_BY_PERIOD, type Period } from "@/lib/pricing";
 
 type State =
   | { kind: "loading" }
@@ -16,43 +17,46 @@ type Copy = {
   pay: string;
   loading: string;
   error: string;
-  amount: string;
-  period: string;
+  perMonth: string;
+  perPeriod: (months: number) => string;
+  activeUntil: string;
   statuses: Record<PaymentStatus, string>;
 };
 
 const COPY: Record<"ru" | "en", Copy> = {
   ru: {
-    label: "Оплата",
-    emptyTitle: "Заказов пока нет",
-    emptyBody: "Когда оплатишь подписку, статус появится здесь.",
+    label: "Подписка",
+    emptyTitle: "Подписки пока нет",
+    emptyBody: "Когда оплатишь, статус подписки появится здесь.",
     pay: "Оплатить",
-    loading: "Проверяем оплату...",
-    error: "Не получилось загрузить оплату.",
-    amount: "Сумма",
-    period: "Период",
+    loading: "Проверяем подписку...",
+    error: "Не получилось загрузить статус подписки.",
+    perMonth: "за мес",
+    perPeriod: (m) => `за ${m} мес`,
+    activeUntil: "Действует до",
     statuses: {
       created: "создан",
       pending: "ожидает оплаты",
-      confirmed: "оплачено",
-      canceled: "отменено",
-      chargebacked: "возврат/спор",
-      failed: "не прошло",
+      confirmed: "активна",
+      canceled: "отменена",
+      chargebacked: "возврат / спор",
+      failed: "не прошла",
     },
   },
   en: {
-    label: "Payment",
-    emptyTitle: "No orders yet",
-    emptyBody: "Once you pay for a subscription, the payment status appears here.",
+    label: "Subscription",
+    emptyTitle: "No subscription yet",
+    emptyBody: "Once you pay, the subscription status appears here.",
     pay: "Pay",
-    loading: "Checking payment...",
-    error: "Could not load payment status.",
-    amount: "Amount",
-    period: "Period",
+    loading: "Checking subscription...",
+    error: "Could not load subscription status.",
+    perMonth: "per month",
+    perPeriod: (m) => `for ${m} months`,
+    activeUntil: "Active until",
     statuses: {
       created: "created",
       pending: "pending",
-      confirmed: "paid",
+      confirmed: "active",
       canceled: "canceled",
       chargebacked: "chargeback",
       failed: "failed",
@@ -131,27 +135,38 @@ export function PaymentStatusCard({ locale }: { locale: string }) {
           href="/pricing"
           className="self-start font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80 transition-opacity"
         >
-          {copy.pay} {"\u2192"}
+          {copy.pay} {"→"}
         </Link>
       </Shell>
     );
   }
 
   const order = state.order;
-  const tone = order.status === "confirmed" ? "bg-success" : "bg-warning";
+  const isConfirmed = order.status === "confirmed";
+  const tone = isConfirmed
+    ? "bg-success shadow-[0_0_10px_rgba(74,158,92,0.7)]"
+    : "bg-warning";
+  const periodText =
+    order.period === "1mo"
+      ? copy.perMonth
+      : copy.perPeriod(MONTHS_BY_PERIOD[order.period as Period] ?? 1);
+  const activeUntil = isConfirmed
+    ? computeActiveUntil(order.confirmedAt, order.period as Period, locale)
+    : null;
 
   return (
     <Shell label={copy.label}>
-      <div className="flex items-center gap-sm">
+      <div className="flex items-center gap-sm flex-wrap">
         <span className={`h-[7px] w-[7px] rounded-full ${tone}`} />
         <span className="font-mono text-label uppercase tracking-[0.1em] text-text-display">
-          {copy.statuses[order.status]}
+          {copy.statuses[order.status]} · {order.amountRub} ₽ {periodText}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-sm">
-        <Metric label={copy.amount} value={`${order.amountRub} RUB`} />
-        <Metric label={copy.period} value={order.period} />
-      </div>
+      {activeUntil && (
+        <p className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
+          {copy.activeUntil}: {activeUntil}
+        </p>
+      )}
     </Shell>
   );
 }
@@ -173,15 +188,22 @@ function Shell({
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border border-border-visible bg-black p-md min-w-0">
-      <span className="block font-mono text-label uppercase tracking-[0.1em] text-text-disabled">
-        {label}
-      </span>
-      <span className="mt-xs block font-mono text-body-sm uppercase tracking-[0.02em] text-text-display truncate">
-        {value}
-      </span>
-    </div>
-  );
+// One-shot SBP payments — there is no recurring billing. We just show the end
+// of the paid period (confirmedAt + N months) so the user knows when access
+// stops, not when "the next charge" happens.
+function computeActiveUntil(
+  confirmedAt: string | null,
+  period: Period,
+  locale: string
+): string | null {
+  if (!confirmedAt) return null;
+  const start = new Date(confirmedAt);
+  if (Number.isNaN(start.getTime())) return null;
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + (MONTHS_BY_PERIOD[period] ?? 1));
+  return new Intl.DateTimeFormat(locale === "ru" ? "ru-RU" : "en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(end);
 }

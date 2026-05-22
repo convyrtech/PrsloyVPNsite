@@ -50,7 +50,9 @@ export type DashboardCopy = Record<
   | "setup_link"
   | "next_label"
   | "next_active_1_title"
-  | "next_active_1_body"
+  | "next_active_step_1"
+  | "next_active_step_2"
+  | "next_active_step_3"
   | "next_pending_1_title"
   | "next_pending_1_body"
   | "reissue_title"
@@ -440,9 +442,17 @@ function NextStepCard({ copy, hasKey }: { copy: DashboardCopy; hasKey: boolean }
       <h2 className="font-body font-bold text-text-display text-subheading leading-[1.15]">
         {hasKey ? copy.next_active_1_title : copy.next_pending_1_title}
       </h2>
-      <p className="font-body text-body-sm text-text-secondary leading-[1.6]">
-        {hasKey ? copy.next_active_1_body : copy.next_pending_1_body}
-      </p>
+      {hasKey ? (
+        <ol className="font-body text-body-sm text-text-secondary leading-[1.6] list-decimal list-inside marker:text-text-disabled space-y-1">
+          <li>{copy.next_active_step_1}</li>
+          <li>{copy.next_active_step_2}</li>
+          <li>{copy.next_active_step_3}</li>
+        </ol>
+      ) : (
+        <p className="font-body text-body-sm text-text-secondary leading-[1.6]">
+          {copy.next_pending_1_body}
+        </p>
+      )}
     </section>
   );
 }
