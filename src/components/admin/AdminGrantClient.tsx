@@ -339,12 +339,10 @@ export function AdminGrantClient({ locale }: { locale: string }) {
               onChange={setEmail}
               autoComplete="email"
             />
-            <AdminInput
+            <AdminTextarea
               label={copy.configLabel}
-              type="text"
               value={subscriptionUrl}
               onChange={setSubscriptionUrl}
-              autoComplete="off"
             />
 
             <button
@@ -676,6 +674,37 @@ function AdminInput({
         className="bg-black border border-border-visible rounded-full px-lg min-h-[48px]
                    font-mono text-body-sm text-text-display placeholder:text-text-disabled
                    focus:outline-none focus:border-text-display transition-colors"
+      />
+    </label>
+  );
+}
+
+// Multiline variant for fields that hold long opaque values (e.g. vless://
+// subscription URLs that overflow a single-line input).
+function AdminTextarea({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="flex flex-col gap-xs">
+      <span className="font-mono text-label uppercase tracking-[0.12em] text-text-disabled">
+        {label}
+      </span>
+      <textarea
+        required
+        rows={3}
+        value={value}
+        autoComplete="off"
+        spellCheck={false}
+        onChange={(e) => onChange(e.target.value)}
+        className="bg-black border border-border-visible rounded-[16px] px-lg py-md
+                   font-mono text-body-sm text-text-display placeholder:text-text-disabled
+                   focus:outline-none focus:border-text-display transition-colors resize-y break-all"
       />
     </label>
   );
