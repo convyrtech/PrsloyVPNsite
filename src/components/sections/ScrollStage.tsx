@@ -173,7 +173,7 @@ export function ScrollStage() {
 
           {t("sub_features") && (
             <motion.p
-              className="mt-md md:mt-lg font-body text-body-sm text-text-secondary
+              className="mt-md md:mt-lg font-body text-body text-text-secondary
                          break-words max-w-full leading-relaxed"
               style={{ opacity: ctaOpacity }}
             >
