@@ -194,7 +194,6 @@ export function NothingStage() {
                      pointer-events-none text-center"
           style={{ opacity: metaOpacity }}
         >
-          <div>{t("meta_route")}</div>
           <div className="text-text-disabled">{t("meta_invisible")}</div>
         </motion.div>
 

@@ -59,10 +59,9 @@
   },
   "nothing": {
     "label": "YOUR CONNECTION · CLOSED BETA",
-    "your_isp_sees": "Your traffic. Your route. Only",
-    "nothing_word": "PRIVATE",
-    "meta_route": "Every configuration is assembled and validated by hand, not stamped out by automated bots.",
-    "meta_invisible": "Isolated digital perimeter · personal gateway · engineer support",
+    "your_isp_sees": "Your ISP sees",
+    "nothing_word": "NOTHING",
+    "meta_invisible": "Your own perimeter · Personal gateway · No logs",
     "scroll_cue": "ACCESS"
   },
   "pricing": {
