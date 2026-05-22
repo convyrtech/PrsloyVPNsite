@@ -397,9 +397,18 @@ function ConfigurationCard({
             <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
               {copy.config_label}
             </span>
-            <span className="font-mono text-body-sm text-text-display break-all leading-[1.6]">
-              {revealed ? subscriptionUrl : maskAccessUrl(subscriptionUrl)}
-            </span>
+            {revealed ? (
+              // Single line with horizontal scroll: break-all turns a long
+              // URL into a wall of characters on narrow viewports.
+              <span className="font-mono text-body-sm text-text-display leading-[1.6]
+                               block max-w-full overflow-x-auto whitespace-nowrap">
+                {subscriptionUrl}
+              </span>
+            ) : (
+              <span className="font-mono text-body-sm text-text-display leading-[1.6] break-all">
+                {maskAccessUrl(subscriptionUrl)}
+              </span>
+            )}
           </div>
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-sm">
             <button
