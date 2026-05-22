@@ -63,6 +63,7 @@ type AdminUsersCopy = {
   hashLabel: string;
   saving: string;
   markDone: string;
+  grantNew: string;
   done: string;
   filters: Record<Filter, string>;
   statuses: Record<string, string>;
@@ -110,6 +111,7 @@ const COPY: Record<"ru" | "en", AdminUsersCopy> = {
     hashLabel: "Hash",
     saving: "Сохраняем...",
     markDone: "Закрыть",
+    grantNew: "Выдать новый",
     done: "Готово",
     filters: {
       all: "Все",
@@ -179,6 +181,7 @@ const COPY: Record<"ru" | "en", AdminUsersCopy> = {
     hashLabel: "Hash",
     saving: "Saving...",
     markDone: "Mark done",
+    grantNew: "Issue new",
     done: "Done",
     filters: {
       all: "All",
@@ -702,16 +705,26 @@ function ReissueRow({
           {formatAdminDate(request.handledAt || request.createdAt, locale)}
         </span>
         {isOpen ? (
-          <button
-            type="button"
-            onClick={onMarkHandled}
-            disabled={pending}
-            className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-md
-                       font-mono text-label uppercase tracking-[0.08em] text-text-display
-                       hover:border-text-display disabled:opacity-60 disabled:cursor-wait transition-colors"
-          >
-            [ {pending ? copy.saving : copy.markDone} ]
-          </button>
+          <>
+            <Link
+              href={{ pathname: "/admin/grant", query: { email: request.email } }}
+              className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-md
+                         font-mono text-label uppercase tracking-[0.08em] text-black
+                         hover:opacity-90 active:scale-[0.98] transition"
+            >
+              [ {copy.grantNew} ]
+            </Link>
+            <button
+              type="button"
+              onClick={onMarkHandled}
+              disabled={pending}
+              className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-md
+                         font-mono text-label uppercase tracking-[0.08em] text-text-display
+                         hover:border-text-display disabled:opacity-60 disabled:cursor-wait transition-colors"
+            >
+              [ {pending ? copy.saving : copy.markDone} ]
+            </button>
+          </>
         ) : (
           <span className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-md
                            font-mono text-label uppercase tracking-[0.08em] text-text-disabled">

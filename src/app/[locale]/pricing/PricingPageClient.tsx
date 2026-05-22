@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { FeatureCell } from "@/components/pricing/FeatureCell";
@@ -10,6 +10,7 @@ import { RevealOnView } from "@/components/ui/RevealOnView";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
 import { isValidEmail } from "@/lib/validation";
 import { PaymentCheckout } from "@/components/payments/PaymentCheckout";
+import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
 import {
   type Period,
   PERIODS,
@@ -70,6 +71,9 @@ export function PricingPageClient({ locale }: { locale: string }) {
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
       <div className="max-w-6xl mx-auto px-lg flex flex-col gap-3xl">
+        <Suspense>
+          <PaymentResultBanner />
+        </Suspense>
         <RevealOnView y={12}>
           <SectionLabel>{t("label")}</SectionLabel>
         </RevealOnView>

@@ -66,20 +66,37 @@ export function PaymentStatusCard({ locale }: { locale: string }) {
 
   useEffect(() => {
     let alive = true;
-    fetch("/api/payments/me", { cache: "no-store" })
-      .then(async (res) => {
+
+    async function fetchOrder() {
+      try {
+        const res = await fetch("/api/payments/me", { cache: "no-store" });
         const data = (await res.json().catch(() => ({}))) as {
           ok?: boolean;
           order?: PaymentOrder | null;
         };
         if (!alive) return;
-        setState(res.ok && data.ok ? { kind: "ready", order: data.order ?? null } : { kind: "error" });
-      })
-      .catch(() => {
-        if (alive) setState({ kind: "error" });
-      });
+        setState(
+          res.ok && data.ok
+            ? { kind: "ready", order: data.order ?? null }
+            : { kind: "error" }
+        );
+      } catch {
+        // On refetch we keep whatever data we already have; only the
+        // initial load downgrades to "error".
+        if (!alive) return;
+        setState((prev) => (prev.kind === "loading" ? { kind: "error" } : prev));
+      }
+    }
+
+    function onVisible() {
+      if (document.visibilityState === "visible") fetchOrder();
+    }
+
+    fetchOrder();
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       alive = false;
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 

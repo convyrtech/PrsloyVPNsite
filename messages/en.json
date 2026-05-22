@@ -340,6 +340,13 @@
     "account_label": "ACCOUNT",
     "logout": "LOG OUT"
   },
+  "payment_result": {
+    "success_title": "PAYMENT RECEIVED",
+    "success_body": "Your subscription is active. The connection key appears in the card below after manual issue — support already sees your payment.",
+    "failed_title": "PAYMENT DID NOT GO THROUGH",
+    "failed_body": "The payment did not complete and no money was charged. Try again or contact support if something is off.",
+    "dismiss": "Dismiss"
+  },
   "auth": {
     "login_label": "PRSLOY ID",
     "login_title": "Sign in",

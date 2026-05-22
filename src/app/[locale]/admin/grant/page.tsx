@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { AdminGrantClient } from "@/components/admin/AdminGrantClient";
@@ -18,5 +19,11 @@ export default async function AdminGrantPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  return <AdminGrantClient locale={locale} />;
+  // Suspense is required because AdminGrantClient calls useSearchParams,
+  // which forces a CSR bailout during static prerendering.
+  return (
+    <Suspense>
+      <AdminGrantClient locale={locale} />
+    </Suspense>
+  );
 }

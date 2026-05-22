@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Link } from "@/i18n/routing";
 import { LogoutButton, ResendVerificationButton } from "@/components/auth/AccountActions";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -8,6 +8,7 @@ import { RevealOnView } from "@/components/ui/RevealOnView";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
 import type { PublicAuthUser } from "@/lib/auth";
 import { PaymentStatusCard } from "@/components/payments/PaymentStatusCard";
+import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
 
 export type DashboardCopy = Record<
   | "label"
@@ -94,8 +95,10 @@ export function DashboardClient({
 
   useEffect(() => {
     let alive = true;
-    fetch("/api/auth/me", { cache: "no-store" })
-      .then(async (res) => {
+
+    async function fetchMe() {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
         const data = (await res.json().catch(() => ({}))) as {
           ok?: boolean;
           user?: PublicAuthUser | null;
@@ -111,12 +114,25 @@ export function DashboardClient({
         } else {
           setState({ kind: "ready", user: data.user ?? null });
         }
-      })
-      .catch(() => {
-        if (alive) setState({ kind: "ready", user: null });
-      });
+      } catch {
+        // On refetch we keep whatever data we already have; only the
+        // initial load downgrades to "no user" so the login UI appears.
+        if (!alive) return;
+        setState((prev) =>
+          prev.kind === "loading" ? { kind: "ready", user: null } : prev
+        );
+      }
+    }
+
+    function onVisible() {
+      if (document.visibilityState === "visible") fetchMe();
+    }
+
+    fetchMe();
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       alive = false;
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 
@@ -220,7 +236,6 @@ export function DashboardClient({
         <AccountCard
           copy={copy}
           user={user}
-          hasKey={hasKey}
           createdAt={createdAt}
           updatedAt={updatedAt}
           locale={locale}
@@ -242,6 +257,9 @@ function DashboardShell({
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
       <div className="max-w-5xl mx-auto px-lg flex flex-col gap-2xl">
+        <Suspense>
+          <PaymentResultBanner />
+        </Suspense>
         <RevealOnView y={12}>
           <div className="flex flex-col gap-xl">
             <div className="flex items-center justify-between gap-md">
@@ -484,26 +502,20 @@ function SupportCard({ copy }: { copy: DashboardCopy }) {
 function AccountCard({
   copy,
   user,
-  hasKey,
   createdAt,
   updatedAt,
   locale,
 }: {
   copy: DashboardCopy;
   user: PublicAuthUser;
-  hasKey: boolean;
   createdAt: string;
   updatedAt: string;
   locale: string;
 }) {
   return (
     <section className="border-t border-border-visible pt-xl grid gap-md lg:grid-cols-[1fr_auto] lg:items-end">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-md">
         <PlainMetric label={copy.email_label} value={user.email} />
-        <PlainMetric
-          label={copy.access_label}
-          value={hasKey ? copy.access_active : copy.access_pending}
-        />
         <PlainMetric label={copy.account_created_label} value={createdAt} />
         <PlainMetric label={copy.updated_label} value={updatedAt} />
       </div>
@@ -661,14 +673,15 @@ function formatDashboardDate(value: string, locale: string) {
 }
 
 function maskAccessUrl(value: string) {
-  const mask = "************";
+  const dots = "••••••";
+  const tail = value.length >= 4 ? value.slice(-4) : value;
   try {
     const url = new URL(value);
     if (url.origin !== "null") {
-      return `${url.origin}${url.pathname.slice(0, 8)}${mask}`;
+      return `${url.origin}/${dots}${tail}`;
     }
-    return `${url.protocol}//${url.host || url.pathname.slice(0, 8)}${mask}`;
+    return `${url.protocol}//${dots}${tail}`;
   } catch {
-    return `${value.slice(0, 12)}${mask}`;
+    return `${dots}${tail}`;
   }
 }

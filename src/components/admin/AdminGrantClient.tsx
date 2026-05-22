@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/routing";
 
 type GrantUser = {
@@ -178,8 +179,11 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
 
 export function AdminGrantClient({ locale }: { locale: string }) {
   const copy = getCopy(locale);
+  const searchParams = useSearchParams();
   const [secret, setSecret] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() =>
+    (searchParams.get("email") ?? "").trim().toLowerCase()
+  );
   const [subscriptionUrl, setSubscriptionUrl] = useState("");
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<GrantResult>({ kind: "idle" });
