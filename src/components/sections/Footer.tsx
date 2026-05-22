@@ -360,29 +360,18 @@ export function Footer() {
           className="flex flex-col md:flex-row md:items-center md:justify-between gap-lg
                      pt-lg border-t border-border-subtle"
         >
-          {/* Left: navigation */}
-          <nav className="flex flex-wrap gap-lg font-mono text-[12px] uppercase tracking-[0.16em] text-text-secondary">
-            <Link href="/#pricing" className="hover:text-text-display transition-colors">
-              {t("nav_pricing")}
-            </Link>
-            <Link href="/faq" className="hover:text-text-display transition-colors">
-              {t("nav_faq")}
-            </Link>
-            <Link href="/blog" className="hover:text-text-display transition-colors">
-              {t("nav_blog")}
-            </Link>
-            <Link href="/dashboard" className="hover:text-text-display transition-colors">
-              {t("nav_dashboard")}
-            </Link>
-            <Link href="/privacy" className="hover:text-text-display transition-colors">
-              {t("nav_privacy")}
-            </Link>
-            <Link href="/terms" className="hover:text-text-display transition-colors">
-              {t("nav_terms")}
-            </Link>
-            <Link href="/refunds" className="hover:text-text-display transition-colors">
-              {t("nav_refunds")}
-            </Link>
+          {/* Left: navigation. min-h on each link gives a real tap target on
+              mobile without changing the visual rhythm on desktop. */}
+          <nav className="flex flex-wrap gap-x-lg font-mono text-[12px] uppercase tracking-[0.16em] text-text-secondary
+                          [&_a]:inline-flex [&_a]:items-center [&_a]:min-h-[44px]
+                          [&_a]:hover:text-text-display [&_a]:transition-colors">
+            <Link href="/#pricing">{t("nav_pricing")}</Link>
+            <Link href="/faq">{t("nav_faq")}</Link>
+            <Link href="/blog">{t("nav_blog")}</Link>
+            <Link href="/dashboard">{t("nav_dashboard")}</Link>
+            <Link href="/privacy">{t("nav_privacy")}</Link>
+            <Link href="/terms">{t("nav_terms")}</Link>
+            <Link href="/refunds">{t("nav_refunds")}</Link>
           </nav>
 
           {/* Right: Telegram link */}
@@ -391,7 +380,7 @@ export function Footer() {
             target="_blank"
             rel="noopener noreferrer"
             className="font-mono text-[12px] uppercase tracking-[0.16em] text-text-display
-                       flex items-center gap-sm group hover:text-accent transition-colors"
+                       inline-flex items-center min-h-[44px] gap-sm group hover:text-accent transition-colors"
           >
             <span className="inline-block w-[6px] h-[6px] rounded-full bg-accent group-hover:bg-text-display transition-colors" />
             {t("telegram")} →

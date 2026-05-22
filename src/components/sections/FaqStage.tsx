@@ -184,7 +184,8 @@ export function FaqStage() {
         <span className="h-px flex-1 max-w-[180px] bg-border-visible/40" />
         <Link
           href="/faq"
-          className="font-mono text-label uppercase tracking-[0.16em]
+          className="inline-flex items-center min-h-[44px] px-sm
+                     font-mono text-label uppercase tracking-[0.16em]
                      text-text-secondary hover:text-text-display
                      transition-colors duration-150 ease-out-nothing"
         >
