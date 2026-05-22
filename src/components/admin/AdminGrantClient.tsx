@@ -458,28 +458,31 @@ function AdminNav({
     <nav className="flex flex-col gap-sm sm:flex-row sm:items-center sm:justify-between">
       <Link
         href="/admin/users"
-        className="font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80"
+        className="inline-flex items-center min-h-[44px] self-start
+                   font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80"
       >
         {copy.backToUsers} {"\u2190"}
       </Link>
-      <div className="flex gap-sm font-mono text-label uppercase tracking-[0.08em]">
+      <div className="flex gap-sm font-mono text-label uppercase tracking-[0.08em]
+                      [&_a]:inline-flex [&_a]:items-center [&_a]:min-h-[44px] [&_a]:border [&_a]:px-md
+                      [&_a]:transition-colors">
         <Link
           href="/admin/users"
-          className={`border px-md py-sm transition-colors ${
+          className={
             active === "users"
               ? "border-text-display text-text-display"
               : "border-border-visible text-text-secondary hover:border-text-display"
-          }`}
+          }
         >
           {copy.navUsers}
         </Link>
         <Link
           href="/admin/grant"
-          className={`border px-md py-sm transition-colors ${
+          className={
             active === "grant"
               ? "border-text-display text-text-display"
               : "border-border-visible text-text-secondary hover:border-text-display"
-          }`}
+          }
         >
           {copy.navGrant}
         </Link>

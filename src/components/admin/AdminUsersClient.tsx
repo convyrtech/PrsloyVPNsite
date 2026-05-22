@@ -594,24 +594,26 @@ function AdminNav({
   active: "users" | "grant";
 }) {
   return (
-    <nav className="flex justify-end gap-sm font-mono text-label uppercase tracking-[0.08em]">
+    <nav className="flex justify-end gap-sm font-mono text-label uppercase tracking-[0.08em]
+                    [&_a]:inline-flex [&_a]:items-center [&_a]:min-h-[44px] [&_a]:border [&_a]:px-md
+                    [&_a]:transition-colors">
       <Link
         href="/admin/users"
-        className={`border px-md py-sm transition-colors ${
+        className={
           active === "users"
             ? "border-text-display text-text-display"
             : "border-border-visible text-text-secondary hover:border-text-display"
-        }`}
+        }
       >
         {copy.navUsers}
       </Link>
       <Link
         href="/admin/grant"
-        className={`border px-md py-sm transition-colors ${
+        className={
           active === "grant"
             ? "border-text-display text-text-display"
             : "border-border-visible text-text-secondary hover:border-text-display"
-        }`}
+        }
       >
         {copy.navGrant}
       </Link>
