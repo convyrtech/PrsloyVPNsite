@@ -108,7 +108,7 @@
     "promo_strip": "BETA ACCESS · $5/MO",
     "waitlist_label": "REQUEST INVITE",
     "waitlist_title": "Pay or request an invite",
-    "waitlist_description": "SBP QR is connected. After payment, the subscription activates in your dashboard, while the key is still issued manually until the API is connected. If you want to ask first, leave your email.",
+    "waitlist_description": "SBP and USDT are connected. After payment your subscription activates in the dashboard; the key is still issued manually until the API is connected. If you want to ask first, leave your email.",
     "email_placeholder": "your@email.com",
     "submit": "REQUEST INVITE",
     "submitting": "SENDING…",
@@ -131,7 +131,7 @@
     "refunds_link": "Refund policy",
     "faq_label": "More questions?",
     "faq_link": "Full FAQ",
-    "beta_note": "SBP QR is connected. The key is issued manually after payment until the API is connected"
+    "beta_note": "SBP and USDT are connected. The key is issued manually after payment until the API is connected"
   },
   "setup_page": {
     "label": "SETUP",

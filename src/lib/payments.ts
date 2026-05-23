@@ -7,7 +7,7 @@ import {
 } from "@/lib/pricing";
 
 export type PaymentProvider = "platega";
-export type PaymentMethod = "sbp_qr";
+export type PaymentMethod = "sbp_qr" | "crypto";
 export type PaymentStatus =
   | "created"
   | "pending"

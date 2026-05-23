@@ -3,14 +3,20 @@
 import { useState } from "react";
 import { Link } from "@/i18n/routing";
 import type { Period } from "@/lib/pricing";
+import type { PaymentMethod } from "@/lib/payments";
 
-type CheckoutState = "idle" | "loading" | "error";
+type CheckoutState =
+  | { kind: "idle" }
+  | { kind: "loading"; method: PaymentMethod }
+  | { kind: "error" };
 
 type Copy = {
   title: string;
   body: string;
-  pay: string;
-  loading: string;
+  paySbp: string;
+  payCrypto: string;
+  loadingSbp: string;
+  loadingCrypto: string;
   login: string;
   register: string;
   authError: string;
@@ -20,11 +26,13 @@ type Copy = {
 
 const COPY: Record<"ru" | "en", Copy> = {
   ru: {
-    title: "Оплата СБП",
+    title: "Оплата",
     body:
-      "Сейчас подключен СБП QR. После оплаты подписка активируется в ЛК, ключ выдаем вручную до подключения API.",
-    pay: "Оплатить СБП",
-    loading: "Создаем платеж...",
+      "СБП QR и USDT подключены. После оплаты подписка активируется в ЛК, ключ выдаём вручную до подключения API.",
+    paySbp: "Оплатить СБП",
+    payCrypto: "Оплатить USDT",
+    loadingSbp: "Создаём СБП-платёж...",
+    loadingCrypto: "Создаём крипто-платёж...",
     login: "Войти",
     register: "Создать аккаунт",
     authError: "Сначала войди или создай PRSLOY ID, чтобы оплата привязалась к кабинету.",
@@ -32,11 +40,13 @@ const COPY: Record<"ru" | "en", Copy> = {
     genericError: "Не получилось создать платеж. Попробуй еще раз или напиши в поддержку.",
   },
   en: {
-    title: "Pay with SBP",
+    title: "Payment",
     body:
-      "SBP QR is the first method connected. After payment, your subscription activates in the dashboard; the key is issued manually until the API is connected.",
-    pay: "Pay with SBP",
-    loading: "Creating payment...",
+      "SBP QR and USDT are both connected. After payment your subscription activates in the dashboard; the key is issued manually until the API is connected.",
+    paySbp: "Pay with SBP",
+    payCrypto: "Pay with USDT",
+    loadingSbp: "Creating SBP payment...",
+    loadingCrypto: "Creating crypto payment...",
     login: "Sign in",
     register: "Create account",
     authError: "Sign in or create a PRSLOY ID first so the payment is tied to your dashboard.",
@@ -53,13 +63,13 @@ export function PaymentCheckout({
   locale: string;
 }) {
   const copy = locale === "en" ? COPY.en : COPY.ru;
-  const [state, setState] = useState<CheckoutState>("idle");
+  const [state, setState] = useState<CheckoutState>({ kind: "idle" });
   const [error, setError] = useState("");
   const [needsAuth, setNeedsAuth] = useState(false);
 
-  async function startPayment() {
-    if (state === "loading") return;
-    setState("loading");
+  async function startPayment(method: PaymentMethod) {
+    if (state.kind === "loading") return;
+    setState({ kind: "loading", method });
     setError("");
     setNeedsAuth(false);
 
@@ -67,7 +77,7 @@ export function PaymentCheckout({
       const res = await fetch("/api/payments/platega/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ period, locale }),
+        body: JSON.stringify({ period, locale, method }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
@@ -88,12 +98,15 @@ export function PaymentCheckout({
       } else {
         setError(copy.genericError);
       }
-      setState("error");
+      setState({ kind: "error" });
     } catch {
       setError(copy.genericError);
-      setState("error");
+      setState({ kind: "error" });
     }
   }
+
+  const loadingMethod = state.kind === "loading" ? state.method : null;
+  const isLoading = state.kind === "loading";
 
   return (
     <div className="border border-border-visible rounded-[8px] bg-black p-lg flex flex-col gap-md">
@@ -106,17 +119,30 @@ export function PaymentCheckout({
         </p>
       </div>
 
-      <button
-        type="button"
-        onClick={startPayment}
-        disabled={state === "loading"}
-        className="inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
-                   font-mono text-label uppercase tracking-[0.08em] text-black rounded-full
-                   hover:opacity-90 active:scale-[0.98] transition disabled:opacity-60
-                   disabled:cursor-wait"
-      >
-        [ {state === "loading" ? copy.loading : copy.pay} ]
-      </button>
+      <div className="flex flex-col gap-sm">
+        <button
+          type="button"
+          onClick={() => startPayment("sbp_qr")}
+          disabled={isLoading}
+          className="inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
+                     font-mono text-label uppercase tracking-[0.08em] text-black rounded-full
+                     hover:opacity-90 active:scale-[0.98] transition disabled:opacity-60
+                     disabled:cursor-wait"
+        >
+          [ {loadingMethod === "sbp_qr" ? copy.loadingSbp : copy.paySbp} ]
+        </button>
+        <button
+          type="button"
+          onClick={() => startPayment("crypto")}
+          disabled={isLoading}
+          className="inline-flex min-h-[48px] items-center justify-center border border-border-visible px-lg
+                     font-mono text-label uppercase tracking-[0.08em] text-text-display rounded-full
+                     hover:border-text-display active:scale-[0.98] transition disabled:opacity-60
+                     disabled:cursor-wait"
+        >
+          [ {loadingMethod === "crypto" ? copy.loadingCrypto : copy.payCrypto} ]
+        </button>
+      </div>
 
       {error && (
         <div className="flex flex-col gap-sm">
@@ -127,7 +153,7 @@ export function PaymentCheckout({
             <div className="flex flex-col sm:flex-row gap-sm">
               <Link
                 href="/login"
-                className="inline-flex min-h-[40px] items-center justify-center border border-border-visible px-md
+                className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-md
                            font-mono text-label uppercase tracking-[0.08em] text-text-display
                            hover:border-text-display transition-colors"
               >
@@ -135,7 +161,7 @@ export function PaymentCheckout({
               </Link>
               <Link
                 href="/register"
-                className="inline-flex min-h-[40px] items-center justify-center border border-border-visible px-md
+                className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-md
                            font-mono text-label uppercase tracking-[0.08em] text-text-display
                            hover:border-text-display transition-colors"
               >

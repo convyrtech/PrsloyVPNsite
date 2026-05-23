@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from "crypto";
-import type { PaymentOrder } from "@/lib/payments";
+import type { PaymentMethod, PaymentOrder } from "@/lib/payments";
 
 export type PlategaPayment = {
   transactionId: string;
@@ -31,6 +31,7 @@ type PlategaCreateResponse = {
 const DEFAULT_BASE_URL = "https://app.platega.io";
 const DEFAULT_PROCESS_PATH = "/transaction/process";
 const DEFAULT_SBP_METHOD_ID = 2;
+const DEFAULT_CRYPTO_METHOD_ID = 13;
 
 function getPlategaEnv() {
   const merchantId = process.env.PLATEGA_MERCHANT_ID?.trim();
@@ -45,8 +46,11 @@ function getPlategaEnv() {
   const sbpMethodId = Number(
     process.env.PLATEGA_SBP_PAYMENT_METHOD_ID || DEFAULT_SBP_METHOD_ID
   );
+  const cryptoMethodId = Number(
+    process.env.PLATEGA_CRYPTO_PAYMENT_METHOD_ID || DEFAULT_CRYPTO_METHOD_ID
+  );
 
-  return { merchantId, secret, baseUrl, processPath, sbpMethodId };
+  return { merchantId, secret, baseUrl, processPath, sbpMethodId, cryptoMethodId };
 }
 
 export function isPlategaConfigured(): boolean {
@@ -70,11 +74,14 @@ export async function createPlategaPayment(input: {
   order: PaymentOrder;
   siteUrl: string;
   locale: string;
+  method: PaymentMethod;
 }): Promise<PlategaPayment> {
   const env = getPlategaEnv();
   const locale = input.locale === "en" ? "en" : "ru";
   const returnUrl = `${input.siteUrl}/${locale}/dashboard?payment=success`;
   const failedUrl = `${input.siteUrl}/${locale}/pricing?payment=failed`;
+  const paymentMethodId =
+    input.method === "crypto" ? env.cryptoMethodId : env.sbpMethodId;
 
   const res = await fetch(`${env.baseUrl}${env.processPath}`, {
     method: "POST",
@@ -84,7 +91,7 @@ export async function createPlategaPayment(input: {
       "X-Secret": env.secret,
     },
     body: JSON.stringify({
-      paymentMethod: env.sbpMethodId,
+      paymentMethod: paymentMethodId,
       paymentDetails: {
         amount: input.order.amountRub,
         currency: "RUB",

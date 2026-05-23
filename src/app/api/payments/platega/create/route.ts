@@ -10,13 +10,17 @@ import {
   getPlategaSetupErrorCode,
 } from "@/lib/platega";
 import { type Period, PERIODS } from "@/lib/pricing";
+import type { PaymentMethod } from "@/lib/payments";
 
 export const runtime = "nodejs";
 
 type CreateBody = {
   period?: unknown;
   locale?: unknown;
+  method?: unknown;
 };
+
+const ALLOWED_METHODS: ReadonlySet<PaymentMethod> = new Set(["sbp_qr", "crypto"]);
 
 export async function POST(req: Request) {
   let body: CreateBody;
@@ -29,6 +33,12 @@ export async function POST(req: Request) {
   const period = typeof body.period === "string" ? body.period : "";
   if (!PERIODS.includes(period as Period)) {
     return NextResponse.json({ ok: false, error: "invalid_period" }, { status: 400 });
+  }
+
+  const requestedMethod =
+    typeof body.method === "string" ? (body.method as PaymentMethod) : "sbp_qr";
+  if (!ALLOWED_METHODS.has(requestedMethod)) {
+    return NextResponse.json({ ok: false, error: "invalid_method" }, { status: 400 });
   }
 
   try {
@@ -44,13 +54,14 @@ export async function POST(req: Request) {
       userId: user.id,
       email: user.email,
       period: period as Period,
-      method: "sbp_qr",
+      method: requestedMethod,
     });
     const siteUrl = getSiteUrl(req);
     const platega = await createPlategaPayment({
       order,
       siteUrl,
       locale: typeof body.locale === "string" ? body.locale : "ru",
+      method: requestedMethod,
     });
     const attached = await attachPaymentTransaction({
       orderId: order.id,
