@@ -105,7 +105,6 @@
     "headline_line1": "Private access by invite.",
     "headline_line2": "",
     "subheadline": "Personal configuration. No extra setup.",
-    "promo_strip": "BETA ACCESS · $5/MO",
     "waitlist_label": "REQUEST INVITE",
     "waitlist_title": "Pay or request an invite",
     "waitlist_description": "SBP and USDT are connected. After payment your subscription activates in the dashboard; the key is still issued manually until the API is connected. If you want to ask first, leave your email.",
@@ -130,8 +129,7 @@
     "refunds_label": "Refunds",
     "refunds_link": "Refund policy",
     "faq_label": "More questions?",
-    "faq_link": "Full FAQ",
-    "beta_note": "SBP and USDT are connected. The key is issued manually after payment until the API is connected"
+    "faq_link": "Full FAQ"
   },
   "setup_page": {
     "label": "SETUP",

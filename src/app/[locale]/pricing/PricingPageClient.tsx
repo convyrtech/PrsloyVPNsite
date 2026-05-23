@@ -109,28 +109,13 @@ export function PricingPageClient({ locale }: { locale: string }) {
             }}
           />
 
-          <div className="flex flex-col items-center gap-sm">
+          <div className="flex flex-col items-center">
             <div
               className="font-body font-bold text-text-display leading-[0.85] tabular-nums flex items-baseline"
               style={{ fontSize: "clamp(96px, 18vw, 180px)", letterSpacing: "-0.05em" }}
             >
               <span>$</span>
               <span>{basePrice}</span>
-            </div>
-            <p className="font-mono text-label uppercase tracking-[0.12em] text-text-secondary">
-              {tShared("per_month")}
-            </p>
-            <div className="flex items-center gap-sm mt-sm">
-              <span className="inline-block w-[6px] h-[6px] rounded-full bg-accent animate-pulse" />
-              <span className="font-mono text-label uppercase tracking-[0.12em] text-accent">
-                {t("promo_strip")}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center gap-sm">
-            <div className="font-mono text-label uppercase tracking-[0.12em] text-text-secondary text-center">
-              {t("beta_note")}
             </div>
           </div>
 
