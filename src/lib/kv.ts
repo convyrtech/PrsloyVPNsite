@@ -74,8 +74,9 @@ export async function kvSAdd(key: string, member: string): Promise<number> {
   return await redisCommand<number>(["SADD", key, member]);
 }
 
-export async function kvSRem(key: string, member: string): Promise<void> {
-  await redisCommand<number>(["SREM", key, member]);
+export async function kvSRem(key: string, member: string): Promise<number> {
+  const result = await redisCommand<number>(["SREM", key, member]);
+  return typeof result === "number" ? result : 0;
 }
 
 export async function kvSMembers(key: string): Promise<string[]> {
