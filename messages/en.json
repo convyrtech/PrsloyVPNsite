@@ -263,7 +263,7 @@
     "status_ready_title": "Access is active",
     "status_ready_body": "Your configuration is ready to use. Copy the personal link below and set up your device using the guide.",
     "status_pending_title": "Access is being prepared",
-    "status_pending_body": "The account is created. Once access is issued, the personal configuration and setup buttons will appear here.",
+    "status_pending_body": "Waiting for access to be issued. The key and connection buttons will appear here once it is ready.",
     "status_blocked_title": "Access is limited",
     "status_blocked_body": "Contact support with your account email. We will check the status and tell you what to do next.",
     "vpn_section_label": "Connection",

@@ -380,9 +380,11 @@ function UtilityFooter({
   hasKey: boolean;
   locale: string;
 }) {
+  // Hide ReissueRow entirely when the user has no key yet — 'нужно
+  // перевыпустить ключ?' is a question only key-holders can answer.
   return (
     <section className="flex flex-col gap-md pt-xl border-t border-border-visible">
-      <ReissueRow copy={copy} hasKey={hasKey} />
+      {hasKey && <ReissueRow copy={copy} />}
       <SupportRow copy={copy} />
       <div className="flex justify-end pt-md">
         <LogoutButton label={copy.logout} locale={locale} />
@@ -391,7 +393,7 @@ function UtilityFooter({
   );
 }
 
-function ReissueRow({ copy, hasKey }: { copy: DashboardCopy; hasKey: boolean }) {
+function ReissueRow({ copy }: { copy: DashboardCopy }) {
   const [state, setState] = useState<ReissueState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -405,7 +407,7 @@ function ReissueRow({ copy, hasKey }: { copy: DashboardCopy; hasKey: boolean }) 
   }, [state]);
 
   async function submit() {
-    if (!hasKey || state === "sending" || state === "sent") return;
+    if (state === "sending" || state === "sent") return;
     setState("sending");
     setErrorMessage("");
     try {
@@ -449,22 +451,16 @@ function ReissueRow({ copy, hasKey }: { copy: DashboardCopy; hasKey: boolean }) 
     <div className="flex flex-col gap-xs">
       <div className="flex items-center justify-between gap-md font-mono text-label uppercase tracking-[0.08em]">
         <span className="text-text-secondary">{copy.reissue_body}</span>
-        {hasKey ? (
-          <button
-            type="button"
-            onClick={submit}
-            disabled={state === "sending" || state === "sent"}
-            className="inline-flex items-center min-h-[44px] text-text-display
-                       hover:opacity-80 disabled:opacity-50 disabled:cursor-default
-                       transition-opacity whitespace-nowrap"
-          >
-            {buttonLabel} {"→"}
-          </button>
-        ) : (
-          <span className="inline-flex items-center min-h-[44px] text-text-disabled whitespace-nowrap">
-            {copy.reissue_disabled}
-          </span>
-        )}
+        <button
+          type="button"
+          onClick={submit}
+          disabled={state === "sending" || state === "sent"}
+          className="inline-flex items-center min-h-[44px] text-text-display
+                     hover:opacity-80 disabled:opacity-50 disabled:cursor-default
+                     transition-opacity whitespace-nowrap"
+        >
+          {buttonLabel} {"→"}
+        </button>
       </div>
       {state === "sent" && (
         <p className="font-mono text-label uppercase tracking-[0.08em] text-success">
