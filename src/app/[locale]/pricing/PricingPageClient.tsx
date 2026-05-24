@@ -82,7 +82,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
           <header className="flex flex-col gap-lg">
             <h1
               className="font-body font-bold text-text-display leading-[0.95] tracking-[-0.03em] break-words"
-              style={{ fontSize: "clamp(36px, 7vw, 72px)" }}
+              style={{ fontSize: "clamp(28px, 5vw, 56px)" }}
             >
               <span className="block">{t("headline_line1")}</span>
               {t("headline_line2") && (
@@ -95,10 +95,11 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </header>
         </RevealOnView>
 
-        {/* MAIN ROW — price card + feature grid, side-by-side on desktop */}
-        <div className="grid gap-3xl lg:gap-xl lg:grid-cols-2 lg:items-start">
+        {/* MAIN ROW — price (left) + feature grid (right), asymmetric */}
+        <div className="grid gap-3xl lg:gap-2xl lg:grid-cols-[1.2fr_1fr] lg:items-start">
         <RevealOnView delay={0.1}>
-        <section className="border border-border-visible rounded-[24px] p-2xl flex flex-col gap-xl">
+        {/* Pricing 'card' has no border — the most important element floats on the canvas. */}
+        <section className="flex flex-col gap-xl">
           <PeriodSwitcher
             value={period}
             onChange={setPeriod}
@@ -111,8 +112,8 @@ export function PricingPageClient({ locale }: { locale: string }) {
 
           <div className="flex flex-col items-center">
             <div
-              className="font-body font-bold text-text-display leading-[0.85] tabular-nums flex items-baseline"
-              style={{ fontSize: "clamp(96px, 18vw, 180px)", letterSpacing: "-0.05em" }}
+              className="font-display text-text-display leading-[0.85] tabular-nums flex items-baseline"
+              style={{ fontSize: "clamp(96px, 18vw, 180px)", letterSpacing: "0.02em" }}
             >
               <span>$</span>
               <span>{basePrice}</span>
@@ -141,7 +142,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
         {/* SECONDARY ROW — waitlist + how-it-works, side-by-side on desktop */}
         <div className="grid gap-3xl lg:gap-xl lg:grid-cols-2 lg:items-start">
         <RevealOnView>
-        <section className="flex flex-col gap-lg border border-border-visible rounded-[24px] p-2xl">
+        <section className="flex flex-col gap-lg border border-border-visible rounded-[8px] p-2xl">
           <DividerLabel>{t("waitlist_label")}</DividerLabel>
           <h2 className="font-body font-bold text-text-display text-heading">
             {t("waitlist_title")}
