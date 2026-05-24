@@ -4,7 +4,7 @@ import {
   createSession,
   getAuthSetupErrorCode,
   loginUser,
-  SESSION_COOKIE,
+  setSessionCookie,
 } from "@/lib/auth";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
@@ -17,16 +17,6 @@ type LoginBody = {
   email?: unknown;
   password?: unknown;
 };
-
-function setSessionCookie(res: NextResponse, session: string) {
-  res.cookies.set(SESSION_COOKIE, session, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
-}
 
 export async function POST(req: Request) {
   const limit = await rateLimit("login", getClientIp(req), LOGIN_LIMIT, LOGIN_WINDOW_SECONDS);

@@ -2,9 +2,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { AuthForm } from "@/components/auth/AuthForm";
+import { TelegramAuthButton } from "@/components/auth/TelegramAuthButton";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { RevealOnView } from "@/components/ui/RevealOnView";
 import { getCurrentUser, isAuthSetupError } from "@/lib/auth";
+import { isTelegramConfigured } from "@/lib/telegram-auth";
 
 export default async function RegisterPage({
   params,
@@ -21,6 +23,8 @@ export default async function RegisterPage({
   } catch (err) {
     if (!isAuthSetupError(err)) throw err;
   }
+
+  const telegramEnabled = isTelegramConfigured();
 
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl flex flex-col">
@@ -102,6 +106,36 @@ export default async function RegisterPage({
                   generic: t("generic_error"),
                 }}
               />
+
+              {telegramEnabled && (
+                <div className="mt-xl pt-lg border-t border-border-visible flex flex-col gap-md">
+                  <div className="flex items-center justify-between font-mono text-label uppercase tracking-[0.14em] text-text-disabled">
+                    <span>{t("or_separator")}</span>
+                    <span className="text-text-display">TELEGRAM</span>
+                  </div>
+                  <TelegramAuthButton
+                    mode="register"
+                    locale={locale}
+                    copy={{
+                      button: t("tg_register_button"),
+                      awaiting: t("tg_awaiting"),
+                      awaitingHint: t("tg_awaiting_hint"),
+                      reopen: t("tg_reopen"),
+                      inviteLabel: t("invite_label"),
+                      invitePlaceholder: t("invite_placeholder"),
+                      inviteRequired: t("invite_required"),
+                      inviteInvalid: t("invite_invalid"),
+                      inviteConsumed: t("invite_consumed"),
+                      expired: t("tg_expired"),
+                      consumed: t("tg_consumed"),
+                      notConfigured: t("tg_not_configured"),
+                      rateLimited: t("rate_limited"),
+                      telegramIdTaken: t("tg_id_taken"),
+                      generic: t("generic_error"),
+                    }}
+                  />
+                </div>
+              )}
             </section>
           </RevealOnView>
         </div>

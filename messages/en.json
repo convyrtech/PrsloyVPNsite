@@ -350,7 +350,22 @@
     "no_account": "NO ACCOUNT?",
     "has_account": "ALREADY REGISTERED?",
     "register_link": "CREATE ACCOUNT",
-    "login_link": "SIGN IN"
+    "login_link": "SIGN IN",
+    "or_separator": "OR",
+    "tg_login_button": "SIGN IN WITH TELEGRAM",
+    "tg_register_button": "CONTINUE WITH TELEGRAM",
+    "tg_awaiting": "WAITING FOR CONFIRMATION…",
+    "tg_awaiting_hint": "Open the bot in Telegram and tap “confirm”. You can leave this tab open.",
+    "tg_reopen": "REOPEN IN TELEGRAM",
+    "invite_label": "INVITE CODE",
+    "invite_placeholder": "Code from your invitation",
+    "invite_required": "Add the invite code we sent you.",
+    "invite_invalid": "This invite code is not recognised.",
+    "invite_consumed": "This invite has already been used.",
+    "tg_expired": "Took too long. Tap the button again to retry.",
+    "tg_consumed": "This sign-in link was already used. Tap the button to start over.",
+    "tg_not_configured": "Telegram sign-in is not available yet.",
+    "tg_id_taken": "This Telegram account is already in use."
   },
   "faq_page": {
     "label": "FAQ",

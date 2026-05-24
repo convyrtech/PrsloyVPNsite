@@ -177,7 +177,7 @@ export function DashboardClient({
 
   return (
     <DashboardShell copy={copy} user={user}>
-      {!user.emailVerified && (
+      {user.email && !user.emailVerified && (
         <RevealOnView delay={0.1}>
           <StatusPanel tone="warning" title={copy.verify_title} body={copy.verify_body}>
             <ResendVerificationButton
@@ -231,7 +231,12 @@ function DashboardShell({
             <SectionLabel>{copy.label}</SectionLabel>
             {user && (
               <span className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled truncate max-w-[52vw]">
-                {user.email}
+                {user.email ??
+                  (user.telegramUsername
+                    ? `@${user.telegramUsername}`
+                    : user.telegramId
+                      ? `tg:${user.telegramId}`
+                      : "")}
               </span>
             )}
           </div>

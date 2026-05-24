@@ -76,7 +76,7 @@ export async function POST(req: Request) {
         subject: message.subject,
         html: message.html,
         text: message.text,
-        replyTo: record.email,
+        replyTo: record.email ?? undefined,
       });
       if (!sent.ok && !sent.skipped) {
         console.warn("[reissue] notification email failed", sent.error);

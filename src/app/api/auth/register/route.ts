@@ -5,7 +5,7 @@ import {
   getAuthSetupErrorCode,
   issueVerificationToken,
   registerUser,
-  SESSION_COOKIE,
+  setSessionCookie,
 } from "@/lib/auth";
 import { buildVerificationEmail } from "@/lib/auth-email";
 import { sendTransactionalEmail } from "@/lib/email";
@@ -27,16 +27,6 @@ function getSiteUrl(req: Request) {
     process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
     new URL(req.url).origin
   ).replace(/\/$/, "");
-}
-
-function setSessionCookie(res: NextResponse, session: string) {
-  res.cookies.set(SESSION_COOKIE, session, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
 }
 
 async function sendVerification(req: Request, email: string, userId: string, locale?: string) {
@@ -79,6 +69,8 @@ export async function POST(req: Request) {
   try {
     const user = await registerUser(email, password);
     const session = await createSession(user.id);
+    // registerUser always sets email — narrowing here for the type checker.
+    if (!user.email) throw new Error("register: email missing after createSession");
     const emailResult = await sendVerification(req, user.email, user.id, locale);
 
     const res = NextResponse.json({

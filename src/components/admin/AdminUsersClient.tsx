@@ -10,11 +10,13 @@ import {
 
 type AdminUser = {
   id: string;
-  email: string;
+  email: string | null;
   emailVerified: boolean;
   accessStatus: string;
   vpnSlug: string | null;
   hasSubscriptionUrl: boolean;
+  telegramId: string | null;
+  telegramUsername: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -22,7 +24,7 @@ type AdminUser = {
 type AdminReissueRequest = {
   requestId: string;
   userId: string;
-  email: string;
+  email: string | null;
   vpnSlug: string | null;
   subscriptionUrlHash: string | null;
   reason: string | null;
@@ -30,6 +32,19 @@ type AdminReissueRequest = {
   createdAt: string;
   handledAt?: string;
 };
+
+// Whatever identity a user has, render it so the operator can find them.
+// Email wins when present; otherwise @username; otherwise raw telegram id.
+function displayIdentity(user: {
+  email: string | null;
+  telegramUsername: string | null;
+  telegramId: string | null;
+}): string {
+  if (user.email) return user.email;
+  if (user.telegramUsername) return `@${user.telegramUsername}`;
+  if (user.telegramId) return `tg:${user.telegramId}`;
+  return "—";
+}
 
 type Filter = "all" | "pending" | "active" | "no_key";
 
@@ -331,7 +346,16 @@ export function AdminUsersClient({ locale }: { locale: string }) {
     const list = users ?? [];
     const needle = query.trim().toLowerCase();
     return list.filter((u) => {
-      if (needle && !u.email.includes(needle)) return false;
+      if (needle) {
+        const haystack = [
+          u.email ?? "",
+          u.telegramUsername ?? "",
+          u.telegramId ?? "",
+        ]
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(needle)) return false;
+      }
       if (filter === "pending") return u.accessStatus === "pending";
       if (filter === "active") return u.accessStatus === "active";
       if (filter === "no_key") return !u.hasSubscriptionUrl;
@@ -340,8 +364,10 @@ export function AdminUsersClient({ locale }: { locale: string }) {
   }, [users, query, filter]);
 
   async function copyEmail(user: AdminUser) {
+    const value = displayIdentity(user);
+    if (value === "—") return;
     try {
-      await navigator.clipboard.writeText(user.email);
+      await navigator.clipboard.writeText(value);
       setCopiedId(user.id);
       window.setTimeout(
         () => setCopiedId((current) => (current === user.id ? null : current)),
@@ -703,7 +729,7 @@ function ReissueRow({
       <div className="flex min-w-0 flex-col gap-sm">
         <div className="flex flex-wrap items-center gap-sm">
           <span className="font-mono text-body-sm text-text-display break-all">
-            {request.email}
+            {request.email ?? `user:${request.userId}`}
           </span>
           <StatusChip
             label={isOpen ? copy.queueOpen : copy.queueHandled}
@@ -737,7 +763,10 @@ function ReissueRow({
         {isOpen ? (
           <>
             <Link
-              href={{ pathname: "/admin/grant", query: { email: request.email } }}
+              href={{
+                pathname: "/admin/grant",
+                query: { identifier: request.email ?? request.userId },
+              }}
               className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-md
                          font-mono text-label uppercase tracking-[0.08em] text-black
                          hover:opacity-90 active:scale-[0.98] transition"
@@ -814,13 +843,22 @@ function UserRow({
     >
       <div className="flex min-w-0 flex-col gap-sm">
         <span className="font-mono text-body-sm text-text-display break-all">
-          {user.email}
+          {displayIdentity(user)}
         </span>
+        {user.email && user.telegramUsername && (
+          // Both identities present (linking shipped) — show the secondary
+          // one as a muted subtitle so the operator sees the whole account.
+          <span className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled break-all">
+            {`@${user.telegramUsername}`}
+          </span>
+        )}
         <div className="flex flex-wrap gap-xs">
-          <StatusChip
-            label={user.emailVerified ? copy.emailVerified : copy.emailUnverified}
-            tone={user.emailVerified ? "success" : "muted"}
-          />
+          {user.email && (
+            <StatusChip
+              label={user.emailVerified ? copy.emailVerified : copy.emailUnverified}
+              tone={user.emailVerified ? "success" : "muted"}
+            />
+          )}
           <StatusChip
             label={`${copy.access}: ${accessStatusLabel(user.accessStatus, copy)}`}
             tone={accessTone(user.accessStatus)}
@@ -836,7 +874,7 @@ function UserRow({
           {formatAdminDate(user.createdAt, locale)}
         </span>
         <Link
-          href={{ pathname: "/admin/grant", query: { email: user.email } }}
+          href={{ pathname: "/admin/grant", query: { identifier: displayIdentity(user) } }}
           className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-md
                      font-mono text-label uppercase tracking-[0.08em] text-black
                      hover:opacity-90 active:scale-[0.98] transition"
