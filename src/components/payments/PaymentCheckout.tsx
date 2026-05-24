@@ -11,8 +11,6 @@ type CheckoutState =
   | { kind: "error" };
 
 type Copy = {
-  title: string;
-  body: string;
   paySbp: string;
   payCrypto: string;
   loadingSbp: string;
@@ -26,9 +24,6 @@ type Copy = {
 
 const COPY: Record<"ru" | "en", Copy> = {
   ru: {
-    title: "Оплата",
-    body:
-      "СБП QR и USDT подключены. После оплаты подписка активируется в ЛК, ключ выдаём вручную до подключения API.",
     paySbp: "Оплатить СБП",
     payCrypto: "Оплатить USDT",
     loadingSbp: "Создаём СБП-платёж...",
@@ -40,9 +35,6 @@ const COPY: Record<"ru" | "en", Copy> = {
     genericError: "Не получилось создать платеж. Попробуй еще раз или напиши в поддержку.",
   },
   en: {
-    title: "Payment",
-    body:
-      "SBP QR and USDT are both connected. After payment your subscription activates in the dashboard; the key is issued manually until the API is connected.",
     paySbp: "Pay with SBP",
     payCrypto: "Pay with USDT",
     loadingSbp: "Creating SBP payment...",
@@ -109,40 +101,29 @@ export function PaymentCheckout({
   const isLoading = state.kind === "loading";
 
   return (
-    <div className="border border-border-visible rounded-[8px] bg-black p-lg flex flex-col gap-md">
-      <div className="flex flex-col gap-xs">
-        <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
-          {copy.title}
-        </span>
-        <p className="font-body text-body-sm text-text-secondary leading-[1.55]">
-          {copy.body}
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-sm">
-        <button
-          type="button"
-          onClick={() => startPayment("sbp_qr")}
-          disabled={isLoading}
-          className="inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
-                     font-mono text-label uppercase tracking-[0.08em] text-black rounded-full
-                     hover:opacity-90 active:scale-[0.98] transition disabled:opacity-60
-                     disabled:cursor-wait"
-        >
-          [ {loadingMethod === "sbp_qr" ? copy.loadingSbp : copy.paySbp} ]
-        </button>
-        <button
-          type="button"
-          onClick={() => startPayment("crypto")}
-          disabled={isLoading}
-          className="inline-flex min-h-[48px] items-center justify-center border border-border-visible px-lg
-                     font-mono text-label uppercase tracking-[0.08em] text-text-display rounded-full
-                     hover:border-text-display active:scale-[0.98] transition disabled:opacity-60
-                     disabled:cursor-wait"
-        >
-          [ {loadingMethod === "crypto" ? copy.loadingCrypto : copy.payCrypto} ]
-        </button>
-      </div>
+    <div className="flex flex-col gap-sm">
+      <button
+        type="button"
+        onClick={() => startPayment("sbp_qr")}
+        disabled={isLoading}
+        className="inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
+                   font-mono text-label uppercase tracking-[0.08em] text-black rounded-full
+                   hover:opacity-90 active:scale-[0.98] transition disabled:opacity-60
+                   disabled:cursor-wait"
+      >
+        [ {loadingMethod === "sbp_qr" ? copy.loadingSbp : copy.paySbp} ]
+      </button>
+      <button
+        type="button"
+        onClick={() => startPayment("crypto")}
+        disabled={isLoading}
+        className="inline-flex min-h-[48px] items-center justify-center border border-border-visible px-lg
+                   font-mono text-label uppercase tracking-[0.08em] text-text-display rounded-full
+                   hover:border-text-display active:scale-[0.98] transition disabled:opacity-60
+                   disabled:cursor-wait"
+      >
+        [ {loadingMethod === "crypto" ? copy.loadingCrypto : copy.payCrypto} ]
+      </button>
 
       {error && (
         <div className="flex flex-col gap-sm">
