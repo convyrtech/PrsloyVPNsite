@@ -24,38 +24,21 @@ export type DashboardCopy = Record<
   | "verify_resend"
   | "verify_sent"
   | "verify_error"
-  | "email_label"
-  | "email_verified"
-  | "email_pending"
   | "access_label"
-  | "access_active"
-  | "access_pending"
-  | "key_ready"
-  | "key_not_issued"
   | "status_ready_title"
   | "status_ready_body"
   | "status_pending_title"
   | "status_pending_body"
   | "status_blocked_title"
   | "status_blocked_body"
-  | "vpn_section_label"
   | "key_ready_body"
   | "key_pending_body"
-  | "config_label"
   | "copy_key"
   | "copy_done"
   | "copy_error"
   | "show_key"
   | "hide_key"
   | "setup_link"
-  | "next_label"
-  | "next_active_1_title"
-  | "next_active_step_1"
-  | "next_active_step_2"
-  | "next_active_step_3"
-  | "next_pending_1_title"
-  | "next_pending_1_body"
-  | "reissue_title"
   | "reissue_body"
   | "reissue_button"
   | "reissue_disabled"
@@ -66,12 +49,8 @@ export type DashboardCopy = Record<
   | "reissue_rate_limited"
   | "reissue_no_key"
   | "reissue_auth_required"
-  | "support_title"
   | "support_body"
   | "support_link"
-  | "account_label"
-  | "account_created_label"
-  | "updated_label"
   | "logout",
   string
 >;
@@ -154,8 +133,6 @@ export function DashboardClient({
   if (!state.user) {
     return (
       <DashboardShell copy={copy}>
-        {/* On mobile, push the auth-required card to the vertical centre of
-            the remaining viewport so the screen does not read as 70 % void. */}
         <div className="min-h-[58vh] sm:min-h-0 flex items-center">
           <RevealOnView delay={0.1}>
             <section className="border border-border-visible rounded-[8px] p-xl sm:p-2xl bg-surface flex flex-col gap-lg">
@@ -197,8 +174,6 @@ export function DashboardClient({
   const hasKey = Boolean(user.subscriptionUrl);
   const blocked = user.accessStatus === "blocked";
   const active = hasKey && user.accessStatus === "active";
-  const createdAt = formatDashboardDate(user.createdAt, locale);
-  const updatedAt = formatDashboardDate(user.updatedAt, locale);
 
   return (
     <DashboardShell copy={copy} user={user}>
@@ -216,33 +191,21 @@ export function DashboardClient({
       )}
 
       <RevealOnView delay={0.12}>
-        <AccessHero copy={copy} active={active} blocked={blocked} />
+        <FloatingHero copy={copy} active={active} blocked={blocked} />
       </RevealOnView>
 
-      <RevealOnView delay={0.15}>
-        <section className="grid grid-cols-1 lg:grid-cols-[1.18fr_0.82fr] gap-md lg:items-start">
-          <ConfigurationCard
-            copy={copy}
-            subscriptionUrl={user.subscriptionUrl}
-            hasKey={hasKey}
-          />
-          <div className="grid grid-cols-1 gap-md">
-            <PaymentStatusCard locale={locale} />
-            <NextStepCard copy={copy} hasKey={hasKey} />
-            <ReissueCard copy={copy} hasKey={hasKey} />
-            <SupportCard copy={copy} />
-          </div>
-        </section>
+      {hasKey && user.subscriptionUrl && (
+        <RevealOnView delay={0.15}>
+          <KeyBlock copy={copy} subscriptionUrl={user.subscriptionUrl} />
+        </RevealOnView>
+      )}
+
+      <RevealOnView delay={0.18}>
+        <PaymentStatusCard locale={locale} />
       </RevealOnView>
 
-      <RevealOnView>
-        <AccountCard
-          copy={copy}
-          user={user}
-          createdAt={createdAt}
-          updatedAt={updatedAt}
-          locale={locale}
-        />
+      <RevealOnView delay={0.2}>
+        <UtilityFooter copy={copy} hasKey={hasKey} locale={locale} />
       </RevealOnView>
     </DashboardShell>
   );
@@ -259,7 +222,7 @@ function DashboardShell({
 }) {
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
-      <div className="max-w-5xl mx-auto px-lg flex flex-col gap-2xl">
+      <div className="max-w-3xl mx-auto px-lg flex flex-col gap-2xl">
         <Suspense>
           <PaymentResultBanner />
         </Suspense>
@@ -280,7 +243,9 @@ function DashboardShell({
   );
 }
 
-function AccessHero({
+// Floating hero — no card, no surface, no backdrop. Just dot + heading + body
+// + two CTAs. Per Nothing §2.4 the most important element should not be boxed.
+function FloatingHero({
   copy,
   active,
   blocked,
@@ -302,62 +267,55 @@ function AccessHero({
   const tone = blocked ? "warning" : active ? "success" : "muted";
 
   return (
-    <section className="relative overflow-hidden border border-border-visible rounded-[8px] bg-surface p-xl sm:p-2xl">
-      <div aria-hidden="true" className="absolute inset-0 dot-grid-subtle opacity-40" />
-      <div className="relative z-10 grid gap-xl lg:grid-cols-[1fr_auto] lg:items-end">
-        <div className="flex flex-col gap-md">
-          <div className="flex items-center gap-sm">
-            <StatusDot tone={tone} />
-            <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
-              {copy.access_label}
-            </span>
-          </div>
-          <h2 className="font-body font-bold text-text-display text-heading leading-[1.05]">
-            {title}
-          </h2>
-          <p className="font-body text-body text-text-secondary leading-[1.65] max-w-2xl">
-            {body}
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row lg:flex-col gap-sm lg:min-w-[220px]">
-          <Link
-            href="/setup"
-            className="inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
-                       font-mono text-label uppercase tracking-[0.08em] text-black
-                       rounded-full hover:opacity-90 active:scale-[0.98] transition"
-          >
-            [ {copy.setup_link} ]
-          </Link>
-          <a
-            href={TELEGRAM_BOT_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-[48px] items-center justify-center border border-border-visible px-lg
-                       font-mono text-label uppercase tracking-[0.08em] text-text-display
-                       rounded-full hover:border-text-display transition-colors"
-          >
-            [ {copy.support_link} ]
-          </a>
-        </div>
+    <section className="flex flex-col gap-md">
+      <div className="flex items-center gap-sm">
+        <StatusDot tone={tone} />
+        <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
+          {copy.access_label}
+        </span>
+      </div>
+      <h1 className="font-body font-bold text-text-display text-heading leading-[1.05]">
+        {title}
+      </h1>
+      <p className="font-body text-body text-text-secondary leading-[1.65] max-w-2xl">
+        {body}
+      </p>
+      <div className="mt-sm flex flex-col sm:flex-row gap-sm">
+        <Link
+          href="/setup"
+          className="inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
+                     font-mono text-label uppercase tracking-[0.08em] text-black
+                     rounded-full hover:opacity-90 active:scale-[0.98] transition"
+        >
+          [ {copy.setup_link} ]
+        </Link>
+        <a
+          href={TELEGRAM_BOT_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-[48px] items-center justify-center border border-border-visible px-lg
+                     font-mono text-label uppercase tracking-[0.08em] text-text-display
+                     rounded-full hover:border-text-display transition-colors"
+        >
+          [ {copy.support_link} ]
+        </a>
       </div>
     </section>
   );
 }
 
-function ConfigurationCard({
+// KEY block — separator label + monospace URL + inline action row. No box.
+function KeyBlock({
   copy,
   subscriptionUrl,
-  hasKey,
 }: {
   copy: DashboardCopy;
-  subscriptionUrl: string | null;
-  hasKey: boolean;
+  subscriptionUrl: string;
 }) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
   const [revealed, setRevealed] = useState(false);
 
   async function copyAccessKey() {
-    if (!subscriptionUrl) return;
     try {
       await navigator.clipboard.writeText(subscriptionUrl);
       setCopyState("copied");
@@ -368,167 +326,72 @@ function ConfigurationCard({
   }
 
   return (
-    <section className="border border-border-visible rounded-[8px] p-xl sm:p-2xl flex flex-col gap-lg">
-      <div className="flex items-center justify-between gap-md">
-        <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
-          {copy.vpn_section_label}
+    <section className="flex flex-col gap-md">
+      <SeparatorLabel>KEY</SeparatorLabel>
+      <p className="font-body text-body-sm text-text-secondary leading-[1.6]">
+        {copy.key_ready_body}
+      </p>
+      {revealed ? (
+        // Single-line horizontal scroll so a long URL stays one line.
+        <span className="font-mono text-body-sm text-text-display leading-[1.6]
+                         block max-w-full overflow-x-auto whitespace-nowrap py-sm">
+          {subscriptionUrl}
         </span>
-        <span className="font-mono text-label uppercase tracking-[0.1em] text-text-disabled">
-          {hasKey ? copy.key_ready : copy.key_not_issued}
+      ) : (
+        <span className="font-mono text-body-sm text-text-display leading-[1.6] break-all py-sm">
+          {maskAccessUrl(subscriptionUrl)}
         </span>
+      )}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-sm">
+        <button
+          type="button"
+          onClick={copyAccessKey}
+          className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-lg
+                     font-mono text-label uppercase tracking-[0.08em] text-black rounded-full
+                     hover:opacity-90 active:scale-[0.98] transition"
+        >
+          [ {copyState === "copied" ? copy.copy_done : copy.copy_key} ]
+        </button>
+        <button
+          type="button"
+          onClick={() => setRevealed((v) => !v)}
+          className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
+                     font-mono text-label uppercase tracking-[0.08em] text-text-display rounded-full
+                     hover:border-text-display transition-colors"
+        >
+          [ {revealed ? copy.hide_key : copy.show_key} ]
+        </button>
       </div>
-
-      <p className="font-body text-body text-text-secondary leading-[1.65]">
-        {hasKey ? copy.key_ready_body : copy.key_pending_body}
-      </p>
-
-      {hasKey && subscriptionUrl ? (
-        <>
-          <div className="border border-border-visible bg-black p-md flex flex-col gap-sm">
-            <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
-              {copy.config_label}
-            </span>
-            {revealed ? (
-              // Single line with horizontal scroll: break-all turns a long
-              // URL into a wall of characters on narrow viewports.
-              <span className="font-mono text-body-sm text-text-display leading-[1.6]
-                               block max-w-full overflow-x-auto whitespace-nowrap">
-                {subscriptionUrl}
-              </span>
-            ) : (
-              <span className="font-mono text-body-sm text-text-display leading-[1.6] break-all">
-                {maskAccessUrl(subscriptionUrl)}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-sm">
-            <button
-              type="button"
-              onClick={copyAccessKey}
-              className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-lg
-                         font-mono text-label uppercase tracking-[0.08em] text-black
-                         hover:opacity-90 active:scale-[0.98] transition"
-            >
-              [ {copyState === "copied" ? copy.copy_done : copy.copy_key} ]
-            </button>
-            <button
-              type="button"
-              onClick={() => setRevealed((v) => !v)}
-              className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
-                         font-mono text-label uppercase tracking-[0.08em] text-text-display
-                         hover:border-text-display transition-colors"
-            >
-              [ {revealed ? copy.hide_key : copy.show_key} ]
-            </button>
-          </div>
-          {copyState === "error" && (
-            <p className="font-body text-body-sm text-accent">{copy.copy_error}</p>
-          )}
-        </>
-      ) : (
-        <div className="border border-border-visible bg-black p-md flex items-center gap-md">
-          <StatusDot tone="muted" />
-          <span className="font-mono text-label uppercase tracking-[0.1em] text-text-disabled">
-            {copy.config_label}
-          </span>
-        </div>
+      {copyState === "error" && (
+        <p role="alert" className="font-body text-body-sm text-accent">{copy.copy_error}</p>
       )}
     </section>
   );
 }
 
-function NextStepCard({ copy, hasKey }: { copy: DashboardCopy; hasKey: boolean }) {
-  return (
-    <section className="border border-border-visible rounded-[8px] p-lg flex flex-col gap-md">
-      <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
-        {copy.next_label}
-      </span>
-      <h2 className="font-body font-bold text-text-display text-subheading leading-[1.15]">
-        {hasKey ? copy.next_active_1_title : copy.next_pending_1_title}
-      </h2>
-      {hasKey ? (
-        <ol className="font-body text-body-sm text-text-secondary leading-[1.6] list-decimal list-inside marker:text-text-disabled space-y-1">
-          <li>{copy.next_active_step_1}</li>
-          <li>{copy.next_active_step_2}</li>
-          <li>{copy.next_active_step_3}</li>
-        </ol>
-      ) : (
-        <p className="font-body text-body-sm text-text-secondary leading-[1.6]">
-          {copy.next_pending_1_body}
-        </p>
-      )}
-    </section>
-  );
-}
-
-function ReissueCard({ copy, hasKey }: { copy: DashboardCopy; hasKey: boolean }) {
-  return (
-    <section className="border border-border-visible rounded-[8px] p-lg flex flex-col gap-md">
-      <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
-        {copy.reissue_title}
-      </span>
-      <p className="font-body text-body-sm text-text-secondary leading-[1.6]">
-        {copy.reissue_body}
-      </p>
-      <ReissueControl copy={copy} hasKey={hasKey} />
-    </section>
-  );
-}
-
-function SupportCard({ copy }: { copy: DashboardCopy }) {
-  return (
-    <section className="border border-border-visible rounded-[8px] p-lg flex flex-col gap-md">
-      <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
-        {copy.support_title}
-      </span>
-      <p className="font-body text-body-sm text-text-secondary leading-[1.6]">
-        {copy.support_body}
-      </p>
-      <a
-        href={TELEGRAM_BOT_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center min-h-[44px] self-start
-                   font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80 transition-opacity"
-      >
-        {copy.support_link} {"\u2192"}
-      </a>
-    </section>
-  );
-}
-
-function AccountCard({
+// UTILITY footer — reissue request, support link, logout. Compressed into
+// label-link rows instead of three separate cards.
+function UtilityFooter({
   copy,
-  user,
-  createdAt,
-  updatedAt,
+  hasKey,
   locale,
 }: {
   copy: DashboardCopy;
-  user: PublicAuthUser;
-  createdAt: string;
-  updatedAt: string;
+  hasKey: boolean;
   locale: string;
 }) {
   return (
-    <section className="border-t border-border-visible pt-xl grid gap-md lg:grid-cols-[1fr_auto] lg:items-end">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-md">
-        <PlainMetric label={copy.email_label} value={user.email} />
-        <PlainMetric label={copy.account_created_label} value={createdAt} />
-        <PlainMetric label={copy.updated_label} value={updatedAt} />
+    <section className="flex flex-col gap-md pt-xl border-t border-border-visible">
+      <ReissueRow copy={copy} hasKey={hasKey} />
+      <SupportRow copy={copy} />
+      <div className="flex justify-end pt-md">
+        <LogoutButton label={copy.logout} locale={locale} />
       </div>
-      <LogoutButton label={copy.logout} locale={locale} />
     </section>
   );
 }
 
-function ReissueControl({
-  copy,
-  hasKey,
-}: {
-  copy: DashboardCopy;
-  hasKey: boolean;
-}) {
+function ReissueRow({ copy, hasKey }: { copy: DashboardCopy; hasKey: boolean }) {
   const [state, setState] = useState<ReissueState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -575,7 +438,7 @@ function ReissueControl({
     }
   }
 
-  const label =
+  const buttonLabel =
     state === "sending"
       ? copy.reissue_sending
       : state === "sent"
@@ -583,35 +446,61 @@ function ReissueControl({
         : copy.reissue_button;
 
   return (
-    <div className="flex flex-col gap-sm">
-      {hasKey ? (
-        <button
-          type="button"
-          onClick={submit}
-          disabled={state === "sending" || state === "sent"}
-          className="inline-flex min-h-[44px] items-center justify-center bg-text-display px-lg
-                     font-mono text-label uppercase tracking-[0.08em] text-black
-                     hover:opacity-90 active:scale-[0.98] transition
-                     disabled:opacity-60 disabled:cursor-default disabled:active:scale-100"
-        >
-          [ {label} ]
-        </button>
-      ) : (
-        <span className="inline-flex min-h-[44px] items-center justify-center border border-border-visible px-lg
-                         font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
-          [ {copy.reissue_disabled} ]
-        </span>
-      )}
+    <div className="flex flex-col gap-xs">
+      <div className="flex items-center justify-between gap-md font-mono text-label uppercase tracking-[0.08em]">
+        <span className="text-text-secondary">{copy.reissue_body}</span>
+        {hasKey ? (
+          <button
+            type="button"
+            onClick={submit}
+            disabled={state === "sending" || state === "sent"}
+            className="inline-flex items-center min-h-[44px] text-text-display
+                       hover:opacity-80 disabled:opacity-50 disabled:cursor-default
+                       transition-opacity whitespace-nowrap"
+          >
+            {buttonLabel} {"→"}
+          </button>
+        ) : (
+          <span className="inline-flex items-center min-h-[44px] text-text-disabled whitespace-nowrap">
+            {copy.reissue_disabled}
+          </span>
+        )}
+      </div>
       {state === "sent" && (
-        <p className="font-body text-body-sm text-success leading-[1.55]">
+        <p className="font-mono text-label uppercase tracking-[0.08em] text-success">
           {copy.reissue_sent_body}
         </p>
       )}
       {state === "error" && (
-        <p role="alert" className="font-body text-body-sm text-accent leading-[1.55]">
+        <p role="alert" className="font-mono text-label uppercase tracking-[0.08em] text-accent">
           {errorMessage}
         </p>
       )}
+    </div>
+  );
+}
+
+function SupportRow({ copy }: { copy: DashboardCopy }) {
+  return (
+    <div className="flex items-center justify-between gap-md font-mono text-label uppercase tracking-[0.08em]">
+      <span className="text-text-secondary">{copy.support_body}</span>
+      <a
+        href={TELEGRAM_BOT_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80 transition-opacity whitespace-nowrap"
+      >
+        {copy.support_link} {"→"}
+      </a>
+    </div>
+  );
+}
+
+function SeparatorLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-md font-mono text-label uppercase tracking-[0.16em]">
+      <span className="text-text-display">{children}</span>
+      <span className="flex-1 h-px bg-border-visible/40" />
     </div>
   );
 }
@@ -641,23 +530,9 @@ function StatusPanel({
   );
 }
 
-function PlainMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-xs min-w-0">
-      <span className="font-mono text-label uppercase tracking-[0.12em] text-text-disabled">
-        {label}
-      </span>
-      <span className="font-mono text-[12px] uppercase tracking-[0.02em] text-text-display truncate">
-        {value}
-      </span>
-    </div>
-  );
-}
-
 function StatusDot({ tone }: { tone: "success" | "warning" | "muted" }) {
   // Success state uses the site-wide pulse-dot keyframe (same one as the
-  // header status badge) for a slow breathing ring — gives the page a
-  // single live element so it doesn't read as a static screenshot.
+  // header status badge) for a slow breathing ring.
   if (tone === "success") {
     return <span className="relative inline-flex h-2 w-2 rounded-full pulse-dot" />;
   }
@@ -668,17 +543,6 @@ function StatusDot({ tone }: { tone: "success" | "warning" | "muted" }) {
       }`}
     />
   );
-}
-
-function formatDashboardDate(value: string, locale: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat(locale === "ru" ? "ru-RU" : "en-US", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
 }
 
 function maskAccessUrl(value: string) {

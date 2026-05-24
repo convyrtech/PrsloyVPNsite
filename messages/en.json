@@ -302,7 +302,7 @@
     "next_pending_3_title": "Ask for status",
     "next_pending_3_body": "If the invite is urgent, contact support with your account email.",
     "reissue_title": "Reissue",
-    "reissue_body": "If the link is compromised or stops working, contact tech support. We will revoke the old access and issue a new key automatically.",
+    "reissue_body": "Need to reissue the key?",
     "reissue_button": "REQUEST",
     "reissue_disabled": "AFTER ISSUE",
     "reissue_sending": "SENDING",
@@ -313,7 +313,7 @@
     "reissue_no_key": "There is no active configuration to reissue yet.",
     "reissue_auth_required": "Session expired. Refresh the page and sign in again.",
     "support_title": "Support",
-    "support_body": "If setup fails, send your account email and an error screenshot. No bots, no long forms.",
+    "support_body": "Connection issues?",
     "support_link": "MESSAGE",
     "account_label": "ACCOUNT",
     "logout": "LOG OUT"

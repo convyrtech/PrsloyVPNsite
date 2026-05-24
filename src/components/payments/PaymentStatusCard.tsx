@@ -27,7 +27,7 @@ type Copy = {
 
 const COPY: Record<"ru" | "en", Copy> = {
   ru: {
-    label: "Подписка",
+    label: "SUBSCRIPTION",
     emptyTitle: "Подписки пока нет",
     emptyBody: "Когда оплатишь, статус подписки появится здесь.",
     pay: "Оплатить",
@@ -48,7 +48,7 @@ const COPY: Record<"ru" | "en", Copy> = {
     },
   },
   en: {
-    label: "Subscription",
+    label: "SUBSCRIPTION",
     emptyTitle: "No subscription yet",
     emptyBody: "Once you pay, the subscription status appears here.",
     pay: "Pay",
@@ -112,56 +112,54 @@ export function PaymentStatusCard({ locale }: { locale: string }) {
 
   if (state.kind === "loading") {
     return (
-      <Shell label={copy.label}>
-        <p className="font-body text-body-sm text-text-secondary leading-[1.6]">
+      <Strip label={copy.label}>
+        <span className="font-mono text-label uppercase tracking-[0.1em] text-text-disabled">
           {copy.loading}
-        </p>
-      </Shell>
+        </span>
+      </Strip>
     );
   }
 
   if (state.kind === "error") {
     return (
-      <Shell label={copy.label}>
-        <p className="font-body text-body-sm text-accent leading-[1.6]">{copy.error}</p>
-      </Shell>
+      <Strip label={copy.label}>
+        <span className="font-mono text-label uppercase tracking-[0.1em] text-accent">
+          {copy.error}
+        </span>
+      </Strip>
     );
   }
 
   if (!state.order) {
     return (
-      <Shell label={copy.label}>
-        <h2 className="font-body font-bold text-text-display text-subheading leading-[1.15]">
+      <Strip label={copy.label}>
+        <span className="font-mono text-label uppercase tracking-[0.1em] text-text-secondary">
           {copy.emptyTitle}
-        </h2>
-        <p className="font-body text-body-sm text-text-secondary leading-[1.6]">
-          {copy.emptyBody}
-        </p>
+        </span>
         <Link
           href="/pricing"
-          className="self-start font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80 transition-opacity"
+          className="inline-flex items-center min-h-[44px]
+                     font-mono text-label uppercase tracking-[0.08em]
+                     text-text-display hover:opacity-80 transition-opacity whitespace-nowrap"
         >
           {copy.pay} {"→"}
         </Link>
-      </Shell>
+      </Strip>
     );
   }
 
   const order = state.order;
   // An order that never confirmed (no money landed) is not a subscription —
-  // showing a 'canceled subscription' card next to an admin-granted active
-  // key is misleading. Hide the card; treat it as 'no subscription yet'.
+  // a 'canceled subscription' line next to an admin-granted active key is
+  // misleading. Hide the strip; treat it as 'no subscription yet'.
   if (order.confirmedAt === null && order.status !== "pending" && order.status !== "created") {
     return null;
   }
   const isConfirmed = order.status === "confirmed";
   // If a paid order has run past its period, reframe as 'expired' rather
-  // than 'canceled' — otherwise a user whose key still works sees
-  // contradictory copy ('access active' next to 'subscription canceled').
+  // than 'canceled' so the user does not see contradictory copy.
   const isExpired = !isConfirmed && hasPeriodElapsed(order.confirmedAt, order.period as Period);
-  const tone = isConfirmed
-    ? "bg-success shadow-[0_0_10px_rgba(74,158,92,0.7)]"
-    : "bg-warning";
+  const isActionable = !isConfirmed; // pending / failed / expired all get a Pay/Renew CTA
   const periodText =
     order.period === "1mo"
       ? copy.perMonth
@@ -172,28 +170,26 @@ export function PaymentStatusCard({ locale }: { locale: string }) {
   const statusLabel = isExpired ? copy.expired : copy.statuses[order.status];
 
   return (
-    <Shell label={copy.label}>
-      <div className="flex items-center gap-sm flex-wrap">
-        <span className={`h-[7px] w-[7px] rounded-full ${tone}`} />
-        <span className="font-mono text-label uppercase tracking-[0.1em] text-text-display">
-          {statusLabel} · {order.amountRub} ₽ {periodText}
-        </span>
-      </div>
-      {activeUntil && (
-        <p className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled">
-          {copy.activeUntil}: {activeUntil}
-        </p>
-      )}
-      {isExpired && (
+    <Strip label={copy.label}>
+      <span className="font-mono text-label uppercase tracking-[0.1em] text-text-display">
+        {statusLabel} · {order.amountRub} ₽ {periodText}
+        {activeUntil && (
+          <span className="text-text-disabled">
+            {" "} · {copy.activeUntil} {activeUntil}
+          </span>
+        )}
+      </span>
+      {isActionable && (
         <Link
           href="/pricing"
-          className="inline-flex items-center min-h-[44px] self-start
-                     font-mono text-label uppercase tracking-[0.08em] text-text-display hover:opacity-80 transition-opacity"
+          className="inline-flex items-center min-h-[44px]
+                     font-mono text-label uppercase tracking-[0.08em]
+                     text-text-display hover:opacity-80 transition-opacity whitespace-nowrap"
         >
-          {copy.renew} {"→"}
+          {isExpired ? copy.renew : copy.pay} {"→"}
         </Link>
       )}
-    </Shell>
+    </Strip>
   );
 }
 
@@ -206,7 +202,9 @@ function hasPeriodElapsed(confirmedAt: string | null, period: Period): boolean {
   return end.getTime() < Date.now();
 }
 
-function Shell({
+// Strip layout — separator label + horizontal content row + optional CTA.
+// No card border; spacing handles the section break.
+function Strip({
   label,
   children,
 }: {
@@ -214,11 +212,14 @@ function Shell({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border border-border-visible rounded-[8px] p-lg flex flex-col gap-md">
-      <span className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled">
-        {label}
-      </span>
-      {children}
+    <section className="flex flex-col gap-md">
+      <div className="flex items-center gap-md font-mono text-label uppercase tracking-[0.16em]">
+        <span className="text-text-display">{label}</span>
+        <span className="flex-1 h-px bg-border-visible/40" />
+      </div>
+      <div className="flex items-center justify-between gap-md flex-wrap">
+        {children}
+      </div>
     </section>
   );
 }
