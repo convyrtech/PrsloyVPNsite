@@ -168,6 +168,40 @@ describe("track", () => {
     expect(redis.store.strings.get(`analytics:dev:funnel:${date}:payment:tg`)).toBe("1");
   });
 
+  it("accumulates revenue total AND per-source on payment_confirmed", async () => {
+    await track({
+      name: "payment_confirmed",
+      orderId: "o1",
+      amountRub: 500,
+      utmSource: "tg",
+    });
+    await track({
+      name: "payment_confirmed",
+      orderId: "o2",
+      amountRub: 2400,
+      utmSource: "tg",
+    });
+    await track({
+      name: "payment_confirmed",
+      orderId: "o3",
+      amountRub: 500,
+    });
+    expect(redis.store.strings.get(`analytics:dev:revenue:${date}:_total`)).toBe("3400");
+    expect(redis.store.strings.get(`analytics:dev:revenue:${date}:tg`)).toBe("2900");
+    expect(redis.store.strings.get(`analytics:dev:revenue:${date}:direct`)).toBe("500");
+  });
+
+  it("skips revenue write for zero or negative amounts", async () => {
+    await track({
+      name: "payment_confirmed",
+      orderId: "o-bad",
+      amountRub: 0,
+    });
+    expect(redis.store.strings.get(`analytics:dev:revenue:${date}:_total`)).toBeUndefined();
+    // The funnel counter still bumps because the event itself happened.
+    expect(redis.store.strings.get(`analytics:dev:funnel:${date}:payment:direct`)).toBe("1");
+  });
+
   it("counts payment_started under funnel:payment_started AND method counter", async () => {
     await track({
       name: "payment_started",

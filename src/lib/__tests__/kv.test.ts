@@ -4,6 +4,7 @@ import {
   getIndexedIds,
   kvExpire,
   kvIncr,
+  kvIncrBy,
   kvSAdd,
   kvScanKeys,
 } from "@/lib/kv";
@@ -29,6 +30,23 @@ describe("kvIncr", () => {
     await kvIncr("counter:a");
     expect(await kvIncr("counter:b")).toBe(1);
     expect(await kvIncr("counter:a")).toBe(3);
+  });
+});
+
+describe("kvIncrBy", () => {
+  it("adds the amount on first call", async () => {
+    expect(await kvIncrBy("revenue:a", 500)).toBe(500);
+  });
+
+  it("accumulates across calls", async () => {
+    await kvIncrBy("revenue:a", 500);
+    await kvIncrBy("revenue:a", 250);
+    expect(await kvIncrBy("revenue:a", 100)).toBe(850);
+  });
+
+  it("floors fractional amounts before INCRBY", async () => {
+    await kvIncrBy("revenue:b", 99.7);
+    expect(redis.store.strings.get("revenue:b")).toBe("99");
   });
 });
 

@@ -97,6 +97,12 @@ export function installFakeRedis(): FakeRedis {
         store.strings.set(key, String(next));
         return next;
       }
+      case "INCRBY": {
+        const current = Number(store.strings.get(key) ?? "0");
+        const next = current + Number(cmd[2]);
+        store.strings.set(key, String(next));
+        return next;
+      }
       case "MGET":
         // cmd shape: ["MGET", k1, k2, ...]. Return values in order;
         // missing keys yield null.

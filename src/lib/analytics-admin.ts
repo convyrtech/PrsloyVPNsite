@@ -15,10 +15,14 @@ export type DailyAggregate = {
   env: AnalyticsEnv;
   date: string;
   totalPageviews: number;
+  totalRevenueRub: number;
   pageviews: AggregateRow[];
   utmSources: AggregateRow[];
   funnel: FunnelRow[];
   methods: AggregateRow[];
+  // Revenue split by traffic source. `_total` is folded into
+  // totalRevenueRub so it does not appear here.
+  revenue: AggregateRow[];
 };
 
 function indexKeyFor(env: AnalyticsEnv, date: string): string {
@@ -44,6 +48,7 @@ function parseKey(
   | { kind: "utm"; source: string }
   | { kind: "funnel"; step: string; source: string }
   | { kind: "method"; method: string }
+  | { kind: "revenue"; source: string }
   | null {
   const parts = key.split(":");
   // parts: ["analytics", env, kind, date, ...rest]
@@ -54,6 +59,7 @@ function parseKey(
   if (kind === "pv") return { kind: "pv", path: rest };
   if (kind === "utm") return { kind: "utm", source: rest };
   if (kind === "method") return { kind: "method", method: rest };
+  if (kind === "revenue") return { kind: "revenue", source: rest };
   if (kind === "funnel") {
     const fp = rest.split(":");
     if (fp.length < 2) return null;
@@ -77,10 +83,12 @@ export async function readDailyAggregate(
     env,
     date,
     totalPageviews: 0,
+    totalRevenueRub: 0,
     pageviews: [],
     utmSources: [],
     funnel: [],
     methods: [],
+    revenue: [],
   };
   if (keys.length === 0) return empty;
 
@@ -89,7 +97,9 @@ export async function readDailyAggregate(
   const utm = new Map<string, number>();
   const funnel: FunnelRow[] = [];
   const methods = new Map<string, number>();
+  const revenue = new Map<string, number>();
   let totalPv = 0;
+  let totalRevenue = 0;
 
   keys.forEach((key, i) => {
     const raw = values[i];
@@ -114,6 +124,15 @@ export async function readDailyAggregate(
       case "method":
         methods.set(parsed.method, count);
         break;
+      case "revenue":
+        // `_total` is the cross-source sum and surfaces as totalRevenueRub
+        // — keeping it in the per-source list too would double-count.
+        if (parsed.source === "_total") {
+          totalRevenue = count;
+        } else {
+          revenue.set(parsed.source, count);
+        }
+        break;
     }
   });
 
@@ -121,6 +140,7 @@ export async function readDailyAggregate(
     env,
     date,
     totalPageviews: totalPv,
+    totalRevenueRub: totalRevenue,
     pageviews: sortRows(
       Array.from(pv.entries()).map(([label, count]) => ({ label, count }))
     ),
@@ -134,6 +154,9 @@ export async function readDailyAggregate(
     ),
     methods: sortRows(
       Array.from(methods.entries()).map(([label, count]) => ({ label, count }))
+    ),
+    revenue: sortRows(
+      Array.from(revenue.entries()).map(([label, count]) => ({ label, count }))
     ),
   };
 }

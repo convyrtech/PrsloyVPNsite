@@ -15,10 +15,12 @@ type Aggregate = {
   env: string;
   date: string;
   totalPageviews: number;
+  totalRevenueRub: number;
   pageviews: AggregateRow[];
   utmSources: AggregateRow[];
   funnel: FunnelRow[];
   methods: AggregateRow[];
+  revenue: AggregateRow[];
 };
 
 type ApiResponse = {
@@ -270,9 +272,22 @@ function Field({
 function AggregateView({ aggregate }: { aggregate: Aggregate }) {
   return (
     <section className="flex flex-col gap-2xl">
-      <HeroNumber
-        label={`Всего pageview за ${aggregate.date} · env ${aggregate.env}`}
-        value={aggregate.totalPageviews}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-xl">
+        <HeroNumber
+          label={`Всего pageview за ${aggregate.date} · env ${aggregate.env}`}
+          value={aggregate.totalPageviews}
+        />
+        <HeroNumber
+          label={`Выручка за ${aggregate.date}, ₽`}
+          value={aggregate.totalRevenueRub}
+        />
+      </div>
+
+      <CountTable
+        title="REVENUE BY SOURCE, ₽"
+        columnLabel="Источник"
+        rows={aggregate.revenue}
+        empty="Платежей пока нет."
       />
 
       <CountTable

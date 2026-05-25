@@ -75,6 +75,14 @@ export async function kvIncr(key: string): Promise<number> {
   return typeof result === "number" ? result : Number(result ?? 0);
 }
 
+// Increment by an arbitrary positive amount. Used for revenue counters
+// where each event adds the order's amountRub, not just 1. Redis INCRBY
+// only accepts integers, so we floor the amount.
+export async function kvIncrBy(key: string, amount: number): Promise<number> {
+  const result = await redisCommand<number>(["INCRBY", key, Math.floor(amount)]);
+  return typeof result === "number" ? result : Number(result ?? 0);
+}
+
 // Returns true when the TTL was set, false when the key does not exist.
 // Callers should not treat a false return as an error — analytics counters
 // create-then-expire in two round-trips, and a missing key just means the

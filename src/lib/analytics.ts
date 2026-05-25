@@ -2,6 +2,7 @@ import { isbot } from "isbot";
 import {
   kvExpire,
   kvIncr,
+  kvIncrBy,
   kvListPushCapped,
   kvSAdd,
   KvNotConfiguredError,
@@ -126,6 +127,25 @@ async function bumpCounter(
   ]);
 }
 
+// Same shape as bumpCounter but adds an arbitrary amount instead of +1.
+// Used for revenue accumulation on payment_confirmed.
+async function bumpRevenue(
+  env: AnalyticsEnv,
+  date: string,
+  suffix: string,
+  amount: number
+): Promise<void> {
+  if (!Number.isFinite(amount) || amount <= 0) return;
+  const key = buildKey(env, suffix);
+  const indexKey = buildKey(env, "keys", date);
+  await kvIncrBy(key, amount);
+  await Promise.allSettled([
+    kvSAdd(indexKey, key),
+    kvExpire(key, COUNTER_TTL_SECONDS),
+    kvExpire(indexKey, COUNTER_TTL_SECONDS),
+  ]);
+}
+
 async function appendLog(
   env: AnalyticsEnv,
   date: string,
@@ -172,6 +192,20 @@ export async function track(event: AnalyticsEvent): Promise<void> {
         break;
       case "payment_confirmed":
         await bumpCounter(env, date, `funnel:${date}:payment:${source}`);
+        // Revenue: total across the day AND per-source split so the admin
+        // can answer both "how much earned today" and "how much from tg".
+        await bumpRevenue(
+          env,
+          date,
+          `revenue:${date}:_total`,
+          event.amountRub
+        );
+        await bumpRevenue(
+          env,
+          date,
+          `revenue:${date}:${source}`,
+          event.amountRub
+        );
         break;
       case "key_issued":
         await bumpCounter(env, date, `funnel:${date}:key:_`);

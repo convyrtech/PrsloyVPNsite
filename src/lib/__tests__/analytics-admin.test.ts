@@ -23,11 +23,30 @@ describe("readDailyAggregate", () => {
       env: "dev",
       date: "2026-05-24",
       totalPageviews: 0,
+      totalRevenueRub: 0,
       pageviews: [],
       utmSources: [],
       funnel: [],
       methods: [],
+      revenue: [],
     });
+  });
+
+  it("surfaces revenue total and per-source split, excluding _total from the list", async () => {
+    await track({ name: "payment_confirmed", orderId: "o1", amountRub: 500, utmSource: "tg" });
+    await track({ name: "payment_confirmed", orderId: "o2", amountRub: 2400, utmSource: "tg" });
+    await track({ name: "payment_confirmed", orderId: "o3", amountRub: 500 });
+
+    const date = new Date().toISOString().slice(0, 10);
+    const agg = await readDailyAggregate(date);
+
+    expect(agg.totalRevenueRub).toBe(3400);
+    expect(agg.revenue).toEqual([
+      { label: "tg", count: 2900 },
+      { label: "direct", count: 500 },
+    ]);
+    // _total must not appear in the per-source list (would double-count).
+    expect(agg.revenue.find((r) => r.label === "_total")).toBeUndefined();
   });
 
   it("aggregates pageviews, utm, funnel, and method counters for the day", async () => {
