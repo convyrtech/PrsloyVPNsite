@@ -19,6 +19,7 @@ type Copy = {
   register: string;
   authError: string;
   configError: string;
+  emailRequired: string;
   genericError: string;
 };
 
@@ -32,6 +33,7 @@ const COPY: Record<"ru" | "en", Copy> = {
     register: "Создать аккаунт",
     authError: "Сначала войди или создай PRSLOY ID, чтобы оплата привязалась к кабинету.",
     configError: "Оплата временно недоступна. Напиши в поддержку.",
+    emailRequired: "Для оплаты нужен email. Привязка email появится отдельным шагом.",
     genericError: "Не получилось создать платеж. Попробуй еще раз или напиши в поддержку.",
   },
   en: {
@@ -43,6 +45,7 @@ const COPY: Record<"ru" | "en", Copy> = {
     register: "Create account",
     authError: "Sign in or create a PRSLOY ID first so the payment is tied to your dashboard.",
     configError: "Payment is temporarily unavailable. Message support.",
+    emailRequired: "Payment requires an email. Email linking ships in a follow-up step.",
     genericError: "Could not create a payment. Try again or contact support.",
   },
 };
@@ -87,6 +90,8 @@ export function PaymentCheckout({
         setError(copy.authError);
       } else if (data.error === "platega_not_configured") {
         setError(copy.configError);
+      } else if (data.error === "email_required_for_payment") {
+        setError(copy.emailRequired);
       } else {
         setError(copy.genericError);
       }
