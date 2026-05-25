@@ -47,6 +47,11 @@ describe("isTelegramConfigured", () => {
     delete process.env.TELEGRAM_WEBHOOK_SECRET;
     expect(isTelegramConfigured()).toBe(false);
   });
+
+  it("returns false when the webhook secret is shorter than the floor", () => {
+    process.env.TELEGRAM_WEBHOOK_SECRET = "too-short";
+    expect(isTelegramConfigured()).toBe(false);
+  });
 });
 
 describe("validateWebhookSecret", () => {
@@ -195,6 +200,29 @@ describe("nonce lifecycle", () => {
     const state = await getNonceState(nonce);
     if (state?.status !== "confirmed") throw new Error("expected confirmed");
     expect(state.telegramId).toBe("555");
+  });
+
+  it("two concurrent confirmNonces with different identities: first wins", async () => {
+    const nonce = await mintNonce();
+
+    await Promise.all([
+      confirmNonce(nonce, "victim", "victim_user"),
+      confirmNonce(nonce, "attacker", "attacker_user"),
+    ]);
+
+    // NX-write means exactly one of the two payloads landed. We can't
+    // know which raced first in a fake store, but the captured identity
+    // must equal one of them and the second confirmNonce must not have
+    // overwritten the first.
+    const state = await getNonceState(nonce);
+    if (state?.status !== "confirmed") throw new Error("expected confirmed");
+    expect(["victim", "attacker"]).toContain(state.telegramId);
+
+    // A subsequent confirm from yet a third id must also be a no-op.
+    await confirmNonce(nonce, "third", "third_user");
+    const afterThird = await getNonceState(nonce);
+    if (afterThird?.status !== "confirmed") throw new Error("expected confirmed");
+    expect(afterThird.telegramId).toBe(state.telegramId);
   });
 });
 

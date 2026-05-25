@@ -308,6 +308,25 @@ describe("loginOrRegisterByTelegram", () => {
     ).rejects.toMatchObject({ code: "invite_invalid" });
   });
 
+  it("rejects a previously-consumed code with invite_consumed (not invite_invalid)", async () => {
+    await addInviteCodes(["once-only"]);
+    // First user burns the code.
+    await loginOrRegisterByTelegram({
+      telegramId: "first",
+      telegramUsername: null,
+      inviteCode: "once-only",
+    });
+    // Second user with the same code — pool SREM returns 0, used-marker
+    // exists, so the error must be invite_consumed (not invite_invalid).
+    await expect(
+      loginOrRegisterByTelegram({
+        telegramId: "second",
+        telegramUsername: null,
+        inviteCode: "once-only",
+      })
+    ).rejects.toMatchObject({ code: "invite_consumed" });
+  });
+
   it("rejects malformed invite codes via translated error", async () => {
     await expect(
       loginOrRegisterByTelegram({

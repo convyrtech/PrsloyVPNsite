@@ -11,7 +11,7 @@ import {
   kvSet,
   KvNotConfiguredError,
 } from "@/lib/kv";
-import { AccessPoolError, consumeInviteCode } from "@/lib/access-pool";
+import { AccessPoolError, consumeInviteCode, getCodeUsage } from "@/lib/access-pool";
 import { isValidEmail } from "@/lib/validation";
 
 const scryptAsync = promisify(scrypt);
@@ -408,7 +408,6 @@ export async function loginOrRegisterByTelegram(params: {
   inviteCode?: string;
 }): Promise<{ user: PublicAuthUser; isNew: boolean }> {
   const { telegramId, telegramUsername, inviteCode } = params;
-  if (!telegramId) throw new AuthError("telegram_id_required");
 
   const existing = await getUserByTelegramId(telegramId);
   if (existing) {
@@ -440,7 +439,13 @@ export async function loginOrRegisterByTelegram(params: {
       }
       throw err;
     }
-    if (!consumed) throw new AuthError("invite_invalid");
+    if (!consumed) {
+      // Distinguish "code exists but already burned" from "code never
+      // existed (typo / not in pool)" — the UI shows a different message
+      // for each. The extra read only fires on the error path.
+      const usedBy = await getCodeUsage(inviteCode).catch(() => null);
+      throw new AuthError(usedBy ? "invite_consumed" : "invite_invalid");
+    }
 
     const user: AuthUser = {
       id,
@@ -466,7 +471,19 @@ export async function loginOrRegisterByTelegram(params: {
 
     return { user: publicUser(user), isNew: true };
   } catch (err) {
-    await kvDel(telegramKey(telegramId)).catch(() => undefined);
+    try {
+      await kvDel(telegramKey(telegramId));
+    } catch (cleanupErr) {
+      // Rollback failed: the telegram→user reservation is stuck. Future
+      // NX-reserve calls for this telegram_id will return null and the
+      // user will see "telegram_id_taken" with no real owner. Surface
+      // loudly so an operator can DEL the key manually.
+      console.error(
+        "[auth] failed to roll back telegram reservation — operator must DEL the key",
+        telegramKey(telegramId),
+        cleanupErr
+      );
+    }
     if (consumed) {
       console.error(
         "[auth] saveUser failed after invite consume — invite burned",

@@ -15,7 +15,7 @@ import { kvGet, kvSAdd, kvSMembers, kvSet, kvSRem } from "@/lib/kv";
 const POOL_KEY = "access:pool:reserved";
 const USED_PREFIX = "access:pool:used:";
 const CODE_PATTERN = /^[A-Za-z0-9_-]+$/;
-const MAX_CODE_LENGTH = 128;
+export const MAX_INVITE_CODE_LENGTH = 128;
 const MAX_OWNER_LABEL_LENGTH = 256;
 
 export class AccessPoolError extends Error {
@@ -33,7 +33,7 @@ function usedKey(code: string): string {
 }
 
 function assertValidCode(code: string): void {
-  if (!code || code.length > MAX_CODE_LENGTH || !CODE_PATTERN.test(code)) {
+  if (!code || code.length > MAX_INVITE_CODE_LENGTH || !CODE_PATTERN.test(code)) {
     throw new AccessPoolError("invalid_code");
   }
 }

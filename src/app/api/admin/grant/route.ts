@@ -64,6 +64,15 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
+  // Three shapes the resolver knows: numeric Telegram id, @username, or
+  // an email. Anything else is a typo — surface as invalid_identifier so
+  // the operator sees "формат неверен" instead of 404 user_not_found.
+  if (!isAllowedIdentifierShape(identifier)) {
+    return NextResponse.json(
+      { ok: false, error: "invalid_identifier" },
+      { status: 400 }
+    );
+  }
 
   const subscriptionUrl =
     typeof body.subscriptionUrl === "string" ? body.subscriptionUrl.trim() : "";
@@ -103,6 +112,21 @@ export async function POST(req: Request) {
     console.warn("[admin] grant failed", err);
     return NextResponse.json({ ok: false, error: "grant_failed" }, { status: 500 });
   }
+}
+
+// One of: numeric Telegram id (e.g. 12345), @username (Telegram alias,
+// 5–32 alphanumeric/underscore), or an RFC-shaped email. Resolver
+// downstream dispatches by the same three shapes — keep them in sync.
+const TELEGRAM_NUMERIC = /^\d{1,20}$/;
+const TELEGRAM_USERNAME = /^@[A-Za-z0-9_]{4,32}$/;
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isAllowedIdentifierShape(value: string): boolean {
+  return (
+    TELEGRAM_NUMERIC.test(value) ||
+    TELEGRAM_USERNAME.test(value) ||
+    EMAIL_SHAPE.test(value)
+  );
 }
 
 function isAllowedSubscriptionUrl(value: string): boolean {

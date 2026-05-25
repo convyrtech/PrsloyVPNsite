@@ -19,6 +19,10 @@ const NONCE_LENGTH_BYTES = 16;
 export const NONCE_TTL_SECONDS = 5 * 60;
 const CLAIMED_TTL_SECONDS = 60 * 60;
 const NONCE_PATTERN = /^[A-Za-z0-9_-]+$/;
+// Floor for TELEGRAM_WEBHOOK_SECRET — README recommends ≥32 bytes for
+// production. The code refuses to consider Telegram "configured" below
+// this minimum so a stub like "test" cannot stand in for a real secret.
+const MIN_WEBHOOK_SECRET_LENGTH = 22;
 
 export type NonceState =
   | { status: "pending"; createdAt: string }
@@ -53,15 +57,20 @@ function nonceKey(nonce: string): string {
   return `tg-auth:nonce:${nonce}`;
 }
 
+function confirmedKey(nonce: string): string {
+  return `tg-auth:confirmed:${nonce}`;
+}
+
 function claimedKey(nonce: string): string {
   return `tg-auth:claimed:${nonce}`;
 }
 
 export function isTelegramConfigured(): boolean {
+  const secret = process.env.TELEGRAM_WEBHOOK_SECRET?.trim() ?? "";
   return Boolean(
     process.env.TELEGRAM_BOT_TOKEN?.trim() &&
       process.env.TELEGRAM_BOT_USERNAME?.trim() &&
-      process.env.TELEGRAM_WEBHOOK_SECRET?.trim()
+      secret.length >= MIN_WEBHOOK_SECRET_LENGTH
   );
 }
 
@@ -149,36 +158,57 @@ export async function mintNonce(): Promise<string> {
   return nonce;
 }
 
+// Reads the union of the two keys that back a nonce. The confirmed key
+// wins when present — it's the only writer's record of who claimed the
+// pending nonce first (NX-protected in confirmNonce), so its existence
+// implies the pending key is logically superseded even if it still
+// sits there until TTL expires.
 export async function getNonceState(nonce: string): Promise<NonceState | null> {
   if (!NONCE_PATTERN.test(nonce)) return null;
-  const raw = await kvGet(nonceKey(nonce));
-  if (!raw) return null;
+  const confirmedRaw = await kvGet(confirmedKey(nonce));
+  if (confirmedRaw) {
+    try {
+      const parsed = JSON.parse(confirmedRaw) as {
+        telegramId: string;
+        telegramUsername: string | null;
+        confirmedAt: string;
+      };
+      return {
+        status: "confirmed",
+        telegramId: parsed.telegramId,
+        telegramUsername: parsed.telegramUsername,
+        confirmedAt: parsed.confirmedAt,
+      };
+    } catch {
+      return null;
+    }
+  }
+  const pendingRaw = await kvGet(nonceKey(nonce));
+  if (!pendingRaw) return null;
   try {
-    return JSON.parse(raw) as NonceState;
+    return JSON.parse(pendingRaw) as NonceState;
   } catch {
     return null;
   }
 }
 
-// Marks a pending nonce as confirmed. A retry from Telegram (network
-// blip, our 5xx) must not overwrite a payload that has already been
-// confirmed by a previous delivery — so this is a no-op unless the
-// current state is "pending".
+// NX-write the confirmed payload. The first webhook for a given nonce
+// wins atomically; later retries (Telegram resend on transient failure,
+// or a different user tapping a leaked deep-link) all see the key
+// already set and silently no-op. This is the fix for the read-then-
+// write race that the previous single-key version had.
 export async function confirmNonce(
   nonce: string,
   telegramId: string,
   telegramUsername: string | null
 ): Promise<void> {
-  const current = await getNonceState(nonce);
-  if (!current || current.status !== "pending") return;
-
-  const next: NonceState = {
-    status: "confirmed",
+  const payload = JSON.stringify({
     telegramId,
     telegramUsername,
     confirmedAt: new Date().toISOString(),
-  };
-  await kvSet(nonceKey(nonce), JSON.stringify(next), {
+  });
+  await kvSet(confirmedKey(nonce), payload, {
+    nx: true,
     ex: NONCE_TTL_SECONDS,
   });
 }

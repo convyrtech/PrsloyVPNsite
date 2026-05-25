@@ -68,9 +68,11 @@ export async function POST(req: Request) {
 
   try {
     const user = await registerUser(email, password);
+    // registerUser always sets email — narrow BEFORE createSession so a
+    // (theoretically impossible) failure does not leak an orphan session
+    // into KV. The runtime check stays as a defense-in-depth assertion.
+    if (!user.email) throw new Error("register: email missing after registerUser");
     const session = await createSession(user.id);
-    // registerUser always sets email — narrowing here for the type checker.
-    if (!user.email) throw new Error("register: email missing after createSession");
     const emailResult = await sendVerification(req, user.email, user.id, locale);
 
     const res = NextResponse.json({

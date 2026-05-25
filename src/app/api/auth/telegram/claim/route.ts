@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { isTelegramConfigured, tryClaimNonce } from "@/lib/telegram-auth";
+import { MAX_INVITE_CODE_LENGTH } from "@/lib/access-pool";
 
 export const runtime = "nodejs";
 
@@ -17,7 +18,6 @@ export const runtime = "nodejs";
 const CLAIM_LIMIT = 60;
 const CLAIM_WINDOW_SECONDS = 120;
 const NONCE_PATTERN = /^[A-Za-z0-9_-]+$/;
-const MAX_INVITE_CODE_LENGTH = 128;
 
 type ClaimBody = {
   nonce?: unknown;
@@ -114,9 +114,11 @@ export async function POST(req: Request) {
           ? 400
           : err.code === "telegram_id_taken"
             ? 409
-            : err.code === "invite_invalid"
-              ? 403
-              : 400;
+            : err.code === "invite_consumed"
+              ? 409
+              : err.code === "invite_invalid"
+                ? 403
+                : 400;
       return NextResponse.json({ ok: false, error: err.code }, { status });
     }
     console.warn("[auth] telegram claim failed", err);
