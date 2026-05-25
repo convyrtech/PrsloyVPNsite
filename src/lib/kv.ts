@@ -84,6 +84,15 @@ export async function kvExpire(key: string, seconds: number): Promise<boolean> {
   return result === 1;
 }
 
+// Returns one entry per requested key, preserving order. Missing keys
+// come back as null. A single round-trip — used by the analytics admin
+// to batch-read hundreds of counters at once.
+export async function kvMGet(keys: string[]): Promise<Array<string | null>> {
+  if (keys.length === 0) return [];
+  const result = await redisCommand<Array<string | null>>(["MGET", ...keys]);
+  return Array.isArray(result) ? result : [];
+}
+
 export async function kvSAdd(key: string, member: string): Promise<number> {
   return await redisCommand<number>(["SADD", key, member]);
 }
