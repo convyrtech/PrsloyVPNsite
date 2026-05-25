@@ -7,6 +7,7 @@ import {
   getStoredAdminSecret,
   storeAdminSecret,
 } from "@/lib/admin-secret-storage";
+import { displayIdentity } from "@/lib/identity";
 
 type AdminUser = {
   id: string;
@@ -32,19 +33,6 @@ type AdminReissueRequest = {
   createdAt: string;
   handledAt?: string;
 };
-
-// Whatever identity a user has, render it so the operator can find them.
-// Email wins when present; otherwise @username; otherwise raw telegram id.
-function displayIdentity(user: {
-  email: string | null;
-  telegramUsername: string | null;
-  telegramId: string | null;
-}): string {
-  if (user.email) return user.email;
-  if (user.telegramUsername) return `@${user.telegramUsername}`;
-  if (user.telegramId) return `tg:${user.telegramId}`;
-  return "—";
-}
 
 type Filter = "all" | "pending" | "active" | "no_key";
 

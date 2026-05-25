@@ -8,6 +8,7 @@ import {
   getStoredAdminSecret,
   storeAdminSecret,
 } from "@/lib/admin-secret-storage";
+import { displayIdentity } from "@/lib/identity";
 
 type GrantUser = {
   id: string;
@@ -20,17 +21,6 @@ type GrantUser = {
   telegramUsername: string | null;
   updatedAt: string;
 };
-
-function displayIdentity(user: {
-  email: string | null;
-  telegramUsername: string | null;
-  telegramId: string | null;
-}): string {
-  if (user.email) return user.email;
-  if (user.telegramUsername) return `@${user.telegramUsername}`;
-  if (user.telegramId) return `tg:${user.telegramId}`;
-  return "—";
-}
 
 type GrantResult =
   | { kind: "idle" }
