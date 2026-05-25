@@ -6,6 +6,7 @@ import { Doto, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { routing, type Locale } from "@/i18n/routing";
 import { MotionConfig } from "motion/react";
 import { Header } from "@/components/sections/Header";
+import { Beacon } from "@/components/analytics/Beacon";
 import "@/app/globals.css";
 
 function isValidLocale(value: string): value is Locale {
@@ -113,6 +114,7 @@ export default async function LocaleLayout({
       <body>
         <NextIntlClientProvider messages={messages} locale={locale}>
           <MotionConfig reducedMotion="user">
+            <Beacon />
             <Header />
             {children}
           </MotionConfig>
