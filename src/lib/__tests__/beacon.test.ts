@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { __resetBeaconDedupeForTest, sendBeacon } from "@/lib/beacon";
+import {
+  __resetBeaconDedupeForTest,
+  sendBeacon,
+  sendBeaconForce,
+} from "@/lib/beacon";
 
 let fetchMock: ReturnType<typeof vi.fn>;
 
@@ -81,5 +85,22 @@ describe("sendBeacon", () => {
   it("omits utmSource for an empty utm_source param", () => {
     sendBeacon("/ru", "?utm_source=");
     expect(lastBody()).toEqual({ name: "pageview", path: "/ru" });
+  });
+});
+
+describe("sendBeaconForce", () => {
+  it("fires even when the same path was just sent (bfcache restore)", () => {
+    sendBeacon("/ru", "");
+    sendBeacon("/ru", ""); // would normally dedupe
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    sendBeaconForce("/ru", "");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("still dedupes a subsequent sendBeacon with the same key", () => {
+    sendBeaconForce("/ru", "");
+    sendBeacon("/ru", ""); // now dedupes against the forced send
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

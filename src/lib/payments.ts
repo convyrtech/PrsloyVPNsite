@@ -37,8 +37,10 @@ export type PaymentOrder = {
   // Sanitized utm_source captured at order creation. Threaded into the
   // payment_confirmed analytics event in the callback so the funnel
   // can attribute revenue to a traffic source without persisting any
-  // per-user UTM record.
-  utmSource: string | null;
+  // per-user UTM record. Optional because orders serialized before this
+  // field was introduced rehydrate as undefined — readers must use
+  // `order.utmSource ?? null` (or falsy check) and never `=== null`.
+  utmSource?: string | null;
 };
 
 export class PaymentError extends Error {
