@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link } from "@/i18n/routing";
 import type { Period } from "@/lib/pricing";
 import type { PaymentMethod } from "@/lib/payments";
+import { readUtmSource } from "@/lib/client-utm";
 
 type CheckoutState =
   | { kind: "idle" }
@@ -69,10 +70,16 @@ export function PaymentCheckout({
     setNeedsAuth(false);
 
     try {
+      const utmSource = readUtmSource();
       const res = await fetch("/api/payments/platega/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ period, locale, method }),
+        body: JSON.stringify({
+          period,
+          locale,
+          method,
+          ...(utmSource ? { utmSource } : {}),
+        }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;

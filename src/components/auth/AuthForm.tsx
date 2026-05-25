@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isValidEmail } from "@/lib/validation";
+import { readUtmSource } from "@/lib/client-utm";
 
 type AuthCopy = {
   email: string;
@@ -92,12 +93,14 @@ function AuthFormInner({
     setError("");
 
     try {
+      const utmSource = mode === "register" ? readUtmSource() : undefined;
       const body: Record<string, string> = {
         email: trimmedEmail,
         password,
         locale,
       };
       if (mode === "register") body.inviteCode = inviteCode.trim();
+      if (utmSource) body.utmSource = utmSource;
 
       const res = await fetch(`/api/auth/${mode}`, {
         method: "POST",
