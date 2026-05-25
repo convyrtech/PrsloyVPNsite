@@ -153,7 +153,7 @@ After every session where the agent did something wrong:
 - Storage: Vercel KV (Upstash Redis REST).
 - Email: Resend (transactional).
 - Payments: Platega (SBP QR only is wired live). See `CONTEXT.md` and `src/lib/platega.ts`.
-- Auth: custom (not NextAuth) — see `src/lib/auth.ts`.
+- Auth: custom (not NextAuth) — email/password and Telegram bot deep-link, see `src/lib/auth.ts` + `src/lib/telegram-auth.ts`. Invite codes are pre-loaded via `src/lib/access-pool.ts`.
 - Package manager: `npm`.
 - Runtime: Vercel (Node.js).
 - Deployment: **manual** via `vercel --prod` (no GitHub Actions, no PR-merge auto-deploy).
@@ -212,6 +212,7 @@ These are project-specific anti-failure rules. Numbered for easy reference in co
 7. **Plans decay.** `PRSLOY_PHASES.md` and `docs/plans/*.md` are dated snapshots. Use them for historical context, not as current spec.
 8. **Partner's old backend is not load-bearing.** Anything referencing Marzneshin / XUI / double-hop is reference material at best. Don't propose changes to it; don't assume it's current.
 9. **Never name the payment provider in user-facing copy.** Users see the METHOD ("СБП" / "SBP" / "card" / "USDT") — never the backend processor brand (Platega, etc.). Naming the provider looks amateur, leaks competitive intel, and conflicts with [[feedback_no_tech_jargon]] and [[feedback_marketing_voice]]. Applies to UI labels, FAQ, privacy, terms — everywhere a customer reads. Internal code, env vars, file paths, route URLs, and these docs can keep the brand name; those aren't user-visible surfaces.
+10. **Telegram is a sign-in method, not a payment provider.** The Telegram bot deep-link flow exists purely for authentication (and waitlist forwarding); never imply that it accepts payment, holds money, or replaces SBP. When writing copy that mentions both auth and payment, keep them in separate sentences so the user does not conflate them. Mirror of rule 9 for the auth surface.
 
 ---
 
