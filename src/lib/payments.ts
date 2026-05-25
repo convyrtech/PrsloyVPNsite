@@ -34,6 +34,11 @@ export type PaymentOrder = {
   createdAt: string;
   updatedAt: string;
   confirmedAt: string | null;
+  // Sanitized utm_source captured at order creation. Threaded into the
+  // payment_confirmed analytics event in the callback so the funnel
+  // can attribute revenue to a traffic source without persisting any
+  // per-user UTM record.
+  utmSource: string | null;
 };
 
 export class PaymentError extends Error {
@@ -89,6 +94,7 @@ export async function createPaymentOrder(input: {
   email: string;
   period: Period;
   method: PaymentMethod;
+  utmSource?: string | null;
 }): Promise<PaymentOrder> {
   const now = new Date().toISOString();
   const order: PaymentOrder = {
@@ -108,6 +114,7 @@ export async function createPaymentOrder(input: {
     createdAt: now,
     updatedAt: now,
     confirmedAt: null,
+    utmSource: input.utmSource ?? null,
   };
 
   await saveOrder(order);
@@ -135,16 +142,25 @@ export async function attachPaymentTransaction(input: {
   return order;
 }
 
+export type UpdatePaymentResult = {
+  order: PaymentOrder;
+  // True only on the transition where status flips into "confirmed" for
+  // the first time. Webhooks retry; emitting payment_confirmed analytics
+  // on every callback would inflate revenue counts 2-3x.
+  confirmedNow: boolean;
+};
+
 export async function updatePaymentByTransaction(input: {
   transactionId: string;
   providerStatus: string;
-}): Promise<PaymentOrder> {
+}): Promise<UpdatePaymentResult> {
   const orderId = await kvGet(transactionKey(input.transactionId));
   if (!orderId) throw new PaymentError("transaction_not_found");
 
   const order = await getPaymentOrder(orderId);
   if (!order) throw new PaymentError("order_not_found");
 
+  const previousStatus = order.status;
   const nextStatus = providerStatusToPaymentStatus(input.providerStatus);
   // First-time transition guard. Platega retries the callback for the
   // same transactionId on transient errors, so we use the confirmedAt
@@ -174,7 +190,10 @@ export async function updatePaymentByTransaction(input: {
     }
   }
 
-  return order;
+  // confirmedNow gates the upstream payment_confirmed analytics emit —
+  // wasFirstConfirmation guarantees one true per real transition.
+  // (Hardened against the concurrent-callback race in a later commit.)
+  return { order, confirmedNow: wasFirstConfirmation };
 }
 
 export function providerStatusToPaymentStatus(status: string): PaymentStatus {

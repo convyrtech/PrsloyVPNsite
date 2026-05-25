@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import {
   getPaymentSetupErrorCode,
   PaymentError,
@@ -8,6 +8,7 @@ import {
   isPlategaCallbackAuthorized,
   isPlategaConfigured,
 } from "@/lib/platega";
+import { track } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 
@@ -42,10 +43,25 @@ export async function POST(req: Request) {
   }
 
   try {
-    const order = await updatePaymentByTransaction({
+    const { order, confirmedNow } = await updatePaymentByTransaction({
       transactionId,
       providerStatus: status,
     });
+
+    // Idempotency: only the first callback that flips status to
+    // confirmed gets attributed to the funnel. Retries (and Platega
+    // does retry) land here as no-ops.
+    if (confirmedNow) {
+      after(() =>
+        track({
+          name: "payment_confirmed",
+          orderId: order.id,
+          amountRub: order.amountRub,
+          ...(order.utmSource ? { utmSource: order.utmSource } : {}),
+        })
+      );
+    }
+
     return NextResponse.json({ ok: true, orderId: order.id, status: order.status });
   } catch (err) {
     const setupError = getPaymentSetupErrorCode(err);
