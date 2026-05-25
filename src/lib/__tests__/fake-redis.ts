@@ -97,6 +97,13 @@ export function installFakeRedis(): FakeRedis {
         store.strings.set(key, String(next));
         return next;
       }
+      case "EXPIRE": {
+        // Fake store does not track TTL; mirror Redis return semantics
+        // (1 if the key exists, 0 otherwise) so tests can assert on it.
+        const exists =
+          store.strings.has(key) || store.sets.has(key) || store.lists.has(key);
+        return exists ? 1 : 0;
+      }
       case "LPUSH": {
         const list = store.lists.get(key) ?? [];
         list.unshift(String(cmd[2]));

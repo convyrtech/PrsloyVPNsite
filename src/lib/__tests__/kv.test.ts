@@ -1,10 +1,57 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeRedis } from "./fake-redis";
-import { getIndexedIds, kvSAdd, kvScanKeys } from "@/lib/kv";
+import {
+  getIndexedIds,
+  kvExpire,
+  kvIncr,
+  kvSAdd,
+  kvScanKeys,
+} from "@/lib/kv";
 
 const redis = installFakeRedis();
 
 beforeEach(() => redis.reset());
+
+describe("kvIncr", () => {
+  it("creates the key at 1 on first call", async () => {
+    expect(await kvIncr("counter:a")).toBe(1);
+    expect(redis.store.strings.get("counter:a")).toBe("1");
+  });
+
+  it("increments on subsequent calls", async () => {
+    await kvIncr("counter:a");
+    expect(await kvIncr("counter:a")).toBe(2);
+    expect(await kvIncr("counter:a")).toBe(3);
+  });
+
+  it("is independent across keys", async () => {
+    await kvIncr("counter:a");
+    await kvIncr("counter:a");
+    expect(await kvIncr("counter:b")).toBe(1);
+    expect(await kvIncr("counter:a")).toBe(3);
+  });
+});
+
+describe("kvExpire", () => {
+  it("returns true when the key exists", async () => {
+    redis.store.strings.set("ttl:a", "1");
+    expect(await kvExpire("ttl:a", 60)).toBe(true);
+  });
+
+  it("returns false when the key does not exist", async () => {
+    expect(await kvExpire("ttl:missing", 60)).toBe(false);
+  });
+
+  it("works on set-backed keys", async () => {
+    redis.store.sets.set("ttl:s", new Set(["x"]));
+    expect(await kvExpire("ttl:s", 60)).toBe(true);
+  });
+
+  it("works on list-backed keys", async () => {
+    redis.store.lists.set("ttl:l", ["x"]);
+    expect(await kvExpire("ttl:l", 60)).toBe(true);
+  });
+});
 
 describe("kvScanKeys", () => {
   it("returns matching keys and complete=true on a finished scan", async () => {

@@ -75,6 +75,15 @@ export async function kvIncr(key: string): Promise<number> {
   return typeof result === "number" ? result : Number(result ?? 0);
 }
 
+// Returns true when the TTL was set, false when the key does not exist.
+// Callers should not treat a false return as an error — analytics counters
+// create-then-expire in two round-trips, and a missing key just means the
+// INCR has not landed yet (race with eviction), which is benign.
+export async function kvExpire(key: string, seconds: number): Promise<boolean> {
+  const result = await redisCommand<number>(["EXPIRE", key, seconds]);
+  return result === 1;
+}
+
 export async function kvSAdd(key: string, member: string): Promise<number> {
   return await redisCommand<number>(["SADD", key, member]);
 }
