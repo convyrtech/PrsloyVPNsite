@@ -350,7 +350,22 @@
     "no_account": "НЕТ АККАУНТА?",
     "has_account": "УЖЕ ЕСТЬ АККАУНТ?",
     "register_link": "СОЗДАТЬ АККАУНТ",
-    "login_link": "ВОЙТИ"
+    "login_link": "ВОЙТИ",
+    "or_separator": "ИЛИ",
+    "tg_login_button": "ВОЙТИ ЧЕРЕЗ TELEGRAM",
+    "tg_register_button": "ПРОДОЛЖИТЬ ЧЕРЕЗ TELEGRAM",
+    "tg_awaiting": "ЖДЁМ ПОДТВЕРЖДЕНИЯ…",
+    "tg_awaiting_hint": "Открой бота в Telegram и нажми «подтвердить». Эту вкладку можно не закрывать.",
+    "tg_reopen": "ОТКРЫТЬ В TELEGRAM",
+    "invite_label": "КОД ПРИГЛАШЕНИЯ",
+    "invite_placeholder": "Код из приглашения",
+    "invite_required": "Введи код приглашения, который мы прислали.",
+    "invite_invalid": "Такой код не подходит.",
+    "invite_consumed": "Этот код уже использован.",
+    "tg_expired": "Слишком долго. Нажми кнопку ещё раз.",
+    "tg_consumed": "Эта ссылка уже использована. Нажми кнопку ещё раз.",
+    "tg_not_configured": "Вход через Telegram пока недоступен.",
+    "tg_id_taken": "Этот Telegram-аккаунт уже занят."
   },
   "faq_page": {
     "label": "FAQ",

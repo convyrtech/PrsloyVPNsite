@@ -42,6 +42,15 @@ export async function POST(req: Request) {
     if (current.emailVerified) {
       return NextResponse.json({ ok: true, alreadyVerified: true });
     }
+    // Telegram-only users have no email to resend to. Linking ships in a
+    // later step; until then the dashboard should not surface this action
+    // for them.
+    if (!current.email) {
+      return NextResponse.json(
+        { ok: false, error: "email_required" },
+        { status: 409 }
+      );
+    }
 
     const limit = await rateLimit("resend", current.id, RESEND_LIMIT, RESEND_WINDOW_SECONDS);
     if (!limit.ok) {

@@ -7,6 +7,7 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { RevealOnView } from "@/components/ui/RevealOnView";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
 import type { PublicAuthUser } from "@/lib/auth";
+import { displayIdentity } from "@/lib/identity";
 import { PaymentStatusCard } from "@/components/payments/PaymentStatusCard";
 import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
 
@@ -177,7 +178,7 @@ export function DashboardClient({
 
   return (
     <DashboardShell copy={copy} user={user}>
-      {!user.emailVerified && (
+      {user.email && !user.emailVerified && (
         <RevealOnView delay={0.1}>
           <StatusPanel tone="warning" title={copy.verify_title} body={copy.verify_body}>
             <ResendVerificationButton
@@ -231,7 +232,7 @@ function DashboardShell({
             <SectionLabel>{copy.label}</SectionLabel>
             {user && (
               <span className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled truncate max-w-[52vw]">
-                {user.email}
+                {displayIdentity(user)}
               </span>
             )}
           </div>

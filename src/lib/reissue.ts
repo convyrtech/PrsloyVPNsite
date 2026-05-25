@@ -24,7 +24,7 @@ import {
 export type ReissueRequest = {
   requestId: string;
   userId: string;
-  email: string;
+  email: string | null;
   vpnSlug: string | null;
   subscriptionUrlHash: string | null;
   reason: string | null;
@@ -75,7 +75,7 @@ async function getReissueRequest(requestId: string): Promise<ReissueRequest | nu
 
 export async function createReissueRequest(input: {
   userId: string;
-  email: string;
+  email: string | null;
   vpnSlug: string | null;
   subscriptionUrl: string | null;
   reason?: string | null;
@@ -198,12 +198,13 @@ function escapeHtml(value: string): string {
 // Operator-facing notification. Contains no configuration — only the
 // account identifiers support needs to replace the key manually.
 export function buildReissueRequestEmail(record: ReissueRequest) {
+  const identity = record.email ?? `user ${record.userId}`;
   const lines = [
     "New key reissue request.",
     "",
     `Request: ${record.requestId}`,
     `User: ${record.userId}`,
-    `Email: ${record.email}`,
+    `Email: ${record.email ?? "—"}`,
     `Slug: ${record.vpnSlug ?? "—"}`,
     `Config hash: ${record.subscriptionUrlHash ?? "—"}`,
     `Reason: ${record.reason ?? "—"}`,
@@ -212,7 +213,7 @@ export function buildReissueRequestEmail(record: ReissueRequest) {
     "Replace the configuration manually, then mark the request handled.",
   ];
   return {
-    subject: `PRSLOY: key reissue request — ${record.email}`,
+    subject: `PRSLOY: key reissue request — ${identity}`,
     text: lines.join("\n"),
     html: lines
       .map((line) => (line === "" ? "<br/>" : `<p>${escapeHtml(line)}</p>`))

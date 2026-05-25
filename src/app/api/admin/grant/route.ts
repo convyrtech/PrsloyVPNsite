@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthorized, isAdminConfigured } from "@/lib/admin-auth";
 import { AuthError, getAuthSetupErrorCode, grantAccess } from "@/lib/auth";
-import { isValidEmail } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
 type GrantBody = {
+  // `identifier` is the canonical field name (email, @username, or
+  // numeric Telegram id). `email` stays accepted for back-compat with
+  // any tooling still posting the older shape.
+  identifier?: unknown;
   email?: unknown;
   subscriptionUrl?: unknown;
 };
+
+const MAX_IDENTIFIER_LENGTH = 256;
 
 const MAX_SUBSCRIPTION_URL_LENGTH = 4096;
 const ALLOWED_CONFIG_PROTOCOLS = new Set([
@@ -40,12 +45,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
 
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-  if (!email) {
-    return NextResponse.json({ ok: false, error: "email_required" }, { status: 400 });
+  const rawIdentifier =
+    typeof body.identifier === "string"
+      ? body.identifier
+      : typeof body.email === "string"
+        ? body.email
+        : "";
+  const identifier = rawIdentifier.trim();
+  if (!identifier) {
+    return NextResponse.json(
+      { ok: false, error: "identifier_required" },
+      { status: 400 }
+    );
   }
-  if (!isValidEmail(email)) {
-    return NextResponse.json({ ok: false, error: "invalid_email" }, { status: 400 });
+  if (identifier.length > MAX_IDENTIFIER_LENGTH) {
+    return NextResponse.json(
+      { ok: false, error: "invalid_identifier" },
+      { status: 400 }
+    );
+  }
+  // Three shapes the resolver knows: numeric Telegram id, @username, or
+  // an email. Anything else is a typo — surface as invalid_identifier so
+  // the operator sees "формат неверен" instead of 404 user_not_found.
+  if (!isAllowedIdentifierShape(identifier)) {
+    return NextResponse.json(
+      { ok: false, error: "invalid_identifier" },
+      { status: 400 }
+    );
   }
 
   const subscriptionUrl =
@@ -64,7 +90,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const user = await grantAccess(email, { subscriptionUrl });
+    const user = await grantAccess(identifier, { subscriptionUrl });
     return NextResponse.json({ ok: true, user });
   } catch (err) {
     const setupError = getAuthSetupErrorCode(err);
@@ -86,6 +112,21 @@ export async function POST(req: Request) {
     console.warn("[admin] grant failed", err);
     return NextResponse.json({ ok: false, error: "grant_failed" }, { status: 500 });
   }
+}
+
+// One of: numeric Telegram id (e.g. 12345), @username (Telegram alias,
+// 5–32 alphanumeric/underscore), or an RFC-shaped email. Resolver
+// downstream dispatches by the same three shapes — keep them in sync.
+const TELEGRAM_NUMERIC = /^\d{1,20}$/;
+const TELEGRAM_USERNAME = /^@[A-Za-z0-9_]{4,32}$/;
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isAllowedIdentifierShape(value: string): boolean {
+  return (
+    TELEGRAM_NUMERIC.test(value) ||
+    TELEGRAM_USERNAME.test(value) ||
+    EMAIL_SHAPE.test(value)
+  );
 }
 
 function isAllowedSubscriptionUrl(value: string): boolean {

@@ -8,14 +8,17 @@ import {
   getStoredAdminSecret,
   storeAdminSecret,
 } from "@/lib/admin-secret-storage";
+import { displayIdentity } from "@/lib/identity";
 
 type GrantUser = {
   id: string;
-  email: string;
+  email: string | null;
   emailVerified: boolean;
   accessStatus: string;
   vpnSlug: string | null;
   subscriptionUrl: string | null;
+  telegramId: string | null;
+  telegramUsername: string | null;
   updatedAt: string;
 };
 
@@ -73,7 +76,7 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
     grant: "Выдача",
     steps: ["Найти", "Привязать", "Проверить"],
     inputTitle: "Данные выдачи",
-    emailLabel: "Email аккаунта",
+    emailLabel: "Email, @telegram или Telegram ID",
     configLabel: "VPN subscription/config URL",
     granting: "Выдаем...",
     grantAccess: "Выдать доступ",
@@ -114,10 +117,12 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
     errors: {
       unauthorized: "Неверный ADMIN_SECRET.",
       not_found: "Админ endpoint отключен. Добавь ADMIN_SECRET в Vercel env.",
-      user_not_found: "Аккаунта с таким email нет.",
+      user_not_found: "Нет аккаунта с таким идентификатором.",
       user_blocked: "Аккаунт заблокирован. Сначала сними блокировку, потом выдавай ключ.",
       email_required: "Нужен email.",
       invalid_email: "Email выглядит неверно.",
+      identifier_required: "Введи email, @telegram или Telegram ID.",
+      invalid_identifier: "Идентификатор выглядит неверно.",
       subscription_url_required: "Нужна subscription/config ссылка.",
       invalid_subscription_url: "Нужен поддерживаемый subscription URL или config URI.",
       kv_not_configured: "Хранилище аккаунтов не настроено.",
@@ -139,7 +144,7 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
     grant: "Grant",
     steps: ["Find", "Attach", "Verify"],
     inputTitle: "Access input",
-    emailLabel: "Account email",
+    emailLabel: "Email, @telegram, or Telegram ID",
     configLabel: "VPN subscription/config URL",
     granting: "Granting...",
     grantAccess: "Grant access",
@@ -180,10 +185,12 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
     errors: {
       unauthorized: "Wrong ADMIN_SECRET.",
       not_found: "Admin endpoint is disabled. Add ADMIN_SECRET in Vercel env.",
-      user_not_found: "No account exists for this email.",
+      user_not_found: "No account matches that identifier.",
       user_blocked: "The account is blocked. Unblock it before issuing a key.",
       email_required: "Email is required.",
       invalid_email: "Email looks invalid.",
+      identifier_required: "Enter an email, @telegram, or Telegram ID.",
+      invalid_identifier: "That identifier looks invalid.",
       subscription_url_required: "Subscription/config URL is required.",
       invalid_subscription_url: "Use a supported subscription URL or config URI.",
       kv_not_configured: "Account storage is not configured.",
@@ -202,9 +209,12 @@ export function AdminGrantClient({ locale }: { locale: string }) {
   const copy = getCopy(locale);
   const searchParams = useSearchParams();
   const [secret, setSecret] = useState("");
-  const [email, setEmail] = useState(() =>
-    (searchParams.get("email") ?? "").trim().toLowerCase()
-  );
+  const [email, setEmail] = useState(() => {
+    // ?identifier= is the canonical query field; ?email= stays as a
+    // fallback so old bookmarks and external links keep working.
+    const raw = searchParams.get("identifier") ?? searchParams.get("email") ?? "";
+    return raw.trim();
+  });
   const [subscriptionUrl, setSubscriptionUrl] = useState("");
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<GrantResult>({ kind: "idle" });
@@ -253,9 +263,12 @@ export function AdminGrantClient({ locale }: { locale: string }) {
     if (pending) return;
 
     const trimmedSecret = secret.trim();
-    const normalizedEmail = email.trim().toLowerCase();
+    // Identifier can be email | @username | numeric tg-id. Lower-casing
+    // is only safe for the email shape, but the server normalizes anyway,
+    // so trim is enough on the wire.
+    const normalizedIdentifier = email.trim();
     const normalizedUrl = subscriptionUrl.trim();
-    const localError = validateGrantInput(normalizedEmail, normalizedUrl, copy);
+    const localError = validateGrantInput(normalizedIdentifier, normalizedUrl, copy);
     if (localError) {
       setResult({ kind: "error", message: localError });
       return;
@@ -272,7 +285,7 @@ export function AdminGrantClient({ locale }: { locale: string }) {
           Authorization: `Bearer ${trimmedSecret}`,
         },
         body: JSON.stringify({
-          email: normalizedEmail,
+          identifier: normalizedIdentifier,
           subscriptionUrl: normalizedUrl,
         }),
       });
@@ -368,10 +381,10 @@ export function AdminGrantClient({ locale }: { locale: string }) {
             />
             <AdminInput
               label={copy.emailLabel}
-              type="email"
+              type="text"
               value={email}
               onChange={setEmail}
-              autoComplete="email"
+              autoComplete="off"
               list={emailSuggestions.length > 0 ? EMAIL_SUGGESTIONS_LIST_ID : undefined}
             />
             {emailSuggestions.length > 0 && (
@@ -555,7 +568,7 @@ function SuccessPanel({
         OK
       </div>
       <div className="flex flex-col">
-        <PreviewRow label={copy.previewEmail} value={user.email} />
+        <PreviewRow label={copy.previewEmail} value={displayIdentity(user)} />
         <PreviewRow label={copy.successAccess} value={user.accessStatus} />
         <PreviewRow
           label={copy.successVerified}
@@ -638,14 +651,12 @@ function AdminNote({ index, title, body }: { index: string; title: string; body:
 }
 
 function validateGrantInput(
-  email: string,
+  identifier: string,
   subscriptionUrl: string,
   copy: AdminGrantCopy
 ): string | null {
-  if (!email) return copy.errors.email_required;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
-    return copy.errors.invalid_email;
-  }
+  if (!identifier) return copy.errors.identifier_required;
+  if (identifier.length > 256) return copy.errors.invalid_identifier;
   if (!subscriptionUrl) return copy.errors.subscription_url_required;
   try {
     const url = new URL(subscriptionUrl);

@@ -49,6 +49,15 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+    // Payments still require an email for the Platega receipt and operator
+    // reach-out. Telegram-only users link an email in a follow-up step
+    // before they can buy.
+    if (!user.email) {
+      return NextResponse.json(
+        { ok: false, error: "email_required_for_payment" },
+        { status: 409 }
+      );
+    }
 
     const order = await createPaymentOrder({
       userId: user.id,

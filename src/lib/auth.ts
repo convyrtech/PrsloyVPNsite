@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import type { NextResponse } from "next/server";
 import { randomBytes, scrypt, timingSafeEqual, createHmac } from "crypto";
 import { promisify } from "util";
 import {
@@ -10,22 +11,28 @@ import {
   kvSet,
   KvNotConfiguredError,
 } from "@/lib/kv";
+import { AccessPoolError, consumeInviteCode, getCodeUsage } from "@/lib/access-pool";
 import { isValidEmail } from "@/lib/validation";
 
 const scryptAsync = promisify(scrypt);
 
 export const SESSION_COOKIE = "prsloy_session";
-const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
+export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 const VERIFY_TTL_SECONDS = 60 * 60 * 24;
 
 export type AuthUser = {
   id: string;
-  email: string;
-  passwordHash: string;
+  // Identity invariant: at least one of (email, telegramId) is non-null.
+  // Email is null for users who registered via Telegram and have not
+  // linked an email yet (linking ships in a later step).
+  email: string | null;
+  passwordHash: string | null;
   emailVerified: boolean;
   accessStatus: "pending" | "active" | "blocked";
   vpnSlug: string | null;
   subscriptionUrl: string | null;
+  telegramId: string | null;
+  telegramUsername: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -36,11 +43,13 @@ export type PublicAuthUser = Omit<AuthUser, "passwordHash">;
 // password hash or the raw subscription URL — only whether one exists.
 export type AdminUserSummary = {
   id: string;
-  email: string;
+  email: string | null;
   emailVerified: boolean;
   accessStatus: AuthUser["accessStatus"];
   vpnSlug: string | null;
   hasSubscriptionUrl: boolean;
+  telegramId: string | null;
+  telegramUsername: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -57,6 +66,10 @@ export class AuthError extends Error {
 
 function emailKey(email: string) {
   return `auth:email:${email}`;
+}
+
+function telegramKey(telegramId: string) {
+  return `auth:telegram:${telegramId}`;
 }
 
 function sessionKey(sessionId: string) {
@@ -87,6 +100,8 @@ function publicUser(user: AuthUser): PublicAuthUser {
     accessStatus: user.accessStatus,
     vpnSlug: user.vpnSlug,
     subscriptionUrl: user.subscriptionUrl,
+    telegramId: user.telegramId,
+    telegramUsername: user.telegramUsername,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -100,6 +115,8 @@ function adminUserSummary(user: AuthUser): AdminUserSummary {
     accessStatus: user.accessStatus,
     vpnSlug: user.vpnSlug,
     hasSubscriptionUrl: Boolean(user.subscriptionUrl),
+    telegramId: user.telegramId,
+    telegramUsername: user.telegramUsername,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -188,6 +205,8 @@ export async function registerUser(email: string, password: string) {
     accessStatus: "pending",
     vpnSlug: null,
     subscriptionUrl: null,
+    telegramId: null,
+    telegramUsername: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -234,18 +253,20 @@ export async function deleteUser(userId: string): Promise<AdminUserSummary> {
   const user = await getUserById(id);
   if (!user) throw new AuthError("not_found");
 
-  await Promise.all([
+  const ops: Promise<unknown>[] = [
     kvDel(userKey(user.id)),
-    kvDel(emailKey(user.email)),
     kvSRem(USERS_INDEX_KEY, user.id),
-  ]);
+  ];
+  if (user.email) ops.push(kvDel(emailKey(user.email)));
+  if (user.telegramId) ops.push(kvDel(telegramKey(user.telegramId)));
+  await Promise.all(ops);
 
   return adminUserSummary(user);
 }
 
 export async function loginUser(email: string, password: string) {
   const user = await getUserByEmail(email);
-  if (!user) throw new AuthError("invalid_credentials");
+  if (!user || !user.passwordHash) throw new AuthError("invalid_credentials");
   const ok = await verifyPassword(password, user.passwordHash);
   if (!ok) throw new AuthError("invalid_credentials");
   return publicUser(user);
@@ -302,11 +323,53 @@ export async function createVerificationTokenForEmail(email: string): Promise<{
   return { user: publicUser(user), token };
 }
 
+export async function getUserByTelegramId(
+  telegramId: string
+): Promise<AuthUser | null> {
+  const id = await kvGet(telegramKey(telegramId));
+  return id ? await getUserById(id) : null;
+}
+
+// Identifier may be: an email, "@username" (Telegram), or a numeric
+// Telegram id. Used by /admin/grant so operators can find a user whether
+// they registered via email or Telegram.
+async function resolveUserByIdentifier(raw: string): Promise<AuthUser | null> {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  if (/^\d+$/.test(trimmed)) {
+    return await getUserByTelegramId(trimmed);
+  }
+
+  if (trimmed.startsWith("@")) {
+    const username = trimmed.slice(1).toLowerCase();
+    if (!username) return null;
+    // Telegram usernames are not indexed separately. With invite-only
+    // beta volume an O(N) walk through the users index is acceptable;
+    // a dedicated index can come if /admin gets a real search.
+    const ids = await getIndexedIds({
+      indexKey: USERS_INDEX_KEY,
+      keyPrefix: USER_KEY_PREFIX,
+      syncFlagKey: USERS_INDEX_SYNCED_KEY,
+      excludeKeys: [USERS_INDEX_KEY, USERS_INDEX_SYNCED_KEY],
+    });
+    for (const id of ids) {
+      const candidate = await getUserById(id);
+      if (candidate?.telegramUsername?.toLowerCase() === username) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  return await getUserByEmail(trimmed);
+}
+
 export async function grantAccess(
-  email: string,
+  identifier: string,
   opts: { subscriptionUrl?: string } = {}
 ): Promise<PublicAuthUser> {
-  const user = await getUserByEmail(email);
+  const user = await resolveUserByIdentifier(identifier);
   if (!user) throw new AuthError("not_found");
 
   // Blocking is a deliberate moderation action. A grant must not silently
@@ -328,6 +391,120 @@ export async function grantAccess(
   return publicUser(user);
 }
 
+// First-time Telegram registration consumes an invite code. Returning
+// Telegram users (telegramId already known) just get a session with the
+// username synced from the latest payload.
+//
+// Ordering follows the inverse-rollback pattern from the plan review:
+//   1. NX-reserve auth:telegram:<id>
+//   2. consumeInviteCode (atomic SREM in the pool)
+//   3. saveUser
+// On failure of (2) or (3) we undo (1). The invite code itself, once
+// consumed, stays burned — the used-marker in access:pool already points
+// at this aborted user id, so the operator can audit the orphan.
+export async function loginOrRegisterByTelegram(params: {
+  telegramId: string;
+  telegramUsername: string | null;
+  inviteCode?: string;
+}): Promise<{ user: PublicAuthUser; isNew: boolean }> {
+  const { telegramId, telegramUsername, inviteCode } = params;
+
+  const existing = await getUserByTelegramId(telegramId);
+  if (existing) {
+    if (existing.telegramUsername !== telegramUsername) {
+      existing.telegramUsername = telegramUsername;
+      existing.updatedAt = new Date().toISOString();
+      await saveUser(existing);
+    }
+    return { user: publicUser(existing), isNew: false };
+  }
+
+  if (!inviteCode) throw new AuthError("invite_required");
+
+  const id = randomBytes(16).toString("hex");
+  const now = new Date().toISOString();
+
+  const reserved = await kvSet(telegramKey(telegramId), id, { nx: true });
+  if (!reserved) throw new AuthError("telegram_id_taken");
+
+  let consumed = false;
+  try {
+    try {
+      consumed = await consumeInviteCode(inviteCode, `user:${id}`);
+    } catch (err) {
+      // AccessPoolError("invalid_code") happens on malformed input —
+      // translate so the route surfaces a clean error code to the user.
+      if (err instanceof AccessPoolError && err.code === "invalid_code") {
+        throw new AuthError("invite_invalid");
+      }
+      throw err;
+    }
+    if (!consumed) {
+      // Distinguish "code exists but already burned" from "code never
+      // existed (typo / not in pool)" — the UI shows a different message
+      // for each. The extra read only fires on the error path.
+      const usedBy = await getCodeUsage(inviteCode).catch(() => null);
+      throw new AuthError(usedBy ? "invite_consumed" : "invite_invalid");
+    }
+
+    const user: AuthUser = {
+      id,
+      email: null,
+      passwordHash: null,
+      emailVerified: false,
+      accessStatus: "pending",
+      vpnSlug: null,
+      subscriptionUrl: null,
+      telegramId,
+      telegramUsername,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await saveUser(user);
+
+    try {
+      await kvSAdd(USERS_INDEX_KEY, id);
+    } catch (err) {
+      console.warn("[auth] failed to add Telegram user to index", err);
+    }
+
+    return { user: publicUser(user), isNew: true };
+  } catch (err) {
+    try {
+      await kvDel(telegramKey(telegramId));
+    } catch (cleanupErr) {
+      // Rollback failed: the telegram→user reservation is stuck. Future
+      // NX-reserve calls for this telegram_id will return null and the
+      // user will see "telegram_id_taken" with no real owner. Surface
+      // loudly so an operator can DEL the key manually.
+      console.error(
+        "[auth] failed to roll back telegram reservation — operator must DEL the key",
+        telegramKey(telegramId),
+        cleanupErr
+      );
+    }
+    if (consumed) {
+      console.error(
+        "[auth] saveUser failed after invite consume — invite burned",
+        id,
+        err
+      );
+    }
+    throw err;
+  }
+}
+
+export function setSessionCookie(res: NextResponse, session: string): void {
+  res.cookies.set(SESSION_COOKIE, session, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_TTL_SECONDS,
+  });
+}
+
 export function isAuthSetupError(err: unknown) {
   return getAuthSetupErrorCode(err) !== null;
 }
@@ -336,6 +513,9 @@ export function getAuthSetupErrorCode(err: unknown) {
   if (err instanceof KvNotConfiguredError) return "kv_not_configured";
   if (err instanceof AuthError && err.code === "auth_secret_not_configured") {
     return "auth_secret_not_configured";
+  }
+  if (err instanceof AuthError && err.code === "telegram_not_configured") {
+    return "telegram_not_configured";
   }
   return null;
 }
