@@ -104,3 +104,36 @@ describe("sendBeaconForce", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("operator-path skip", () => {
+  it("does not fire for /<locale>/admin/* under either locale", () => {
+    sendBeacon("/ru/admin/analytics", "");
+    sendBeacon("/en/admin/users", "");
+    sendBeacon("/ru/admin/grant", "?foo=bar");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("does not fire from sendBeaconForce on admin paths either", () => {
+    sendBeaconForce("/ru/admin/analytics", "");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("still fires for non-admin paths between admin visits", () => {
+    sendBeacon("/ru", "");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    sendBeacon("/ru/admin/analytics", "");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // Back to the same non-admin page after an admin visit MUST fire
+    // again — the admin path silently consumed the dedupe slot so the
+    // revisit registers as a fresh pageview.
+    sendBeacon("/ru", "");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not skip paths that merely contain 'admin' as a non-segment", () => {
+    sendBeacon("/ru/blog/admin-tools", "");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});

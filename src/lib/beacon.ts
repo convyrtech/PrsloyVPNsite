@@ -17,12 +17,25 @@ function buildKey(pathname: string, search: string): string {
   return `${pathname}|${search}`;
 }
 
+// Operator pages live under /[locale]/admin/... — counting our own
+// dashboard visits in the funnel pollutes the very numbers we read.
+// Detect via the second URL segment so it works for any locale prefix
+// (and any future locales added without touching this).
+function isOperatorPath(pathname: string): boolean {
+  const segments = pathname.split("/").filter(Boolean);
+  return segments[1] === "admin";
+}
+
 export function sendBeacon(pathname: string, search: string): void {
   if (typeof fetch !== "function") return;
 
   const key = buildKey(pathname, search);
   if (lastFiredKey === key) return;
+  // Update the dedupe slot even when we skip the fire — otherwise a
+  // navigation /ru → /ru/admin → back to /ru would see the same
+  // pre-admin key and dedupe-skip the legitimate revisit.
   lastFiredKey = key;
+  if (isOperatorPath(pathname)) return;
   fireBeacon(pathname, search);
 }
 
@@ -32,6 +45,7 @@ export function sendBeacon(pathname: string, search: string): void {
 export function sendBeaconForce(pathname: string, search: string): void {
   if (typeof fetch !== "function") return;
   lastFiredKey = buildKey(pathname, search);
+  if (isOperatorPath(pathname)) return;
   fireBeacon(pathname, search);
 }
 
