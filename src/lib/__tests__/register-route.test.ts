@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeRedis } from "./fake-redis";
+import { addInviteCodes } from "@/lib/access-pool";
 
 const afterQueue: Array<() => Promise<void> | void> = [];
 vi.mock("next/server", async () => {
@@ -38,6 +39,10 @@ async function importRoute() {
   return await import("@/app/api/auth/register/route");
 }
 
+// Builds a request as-is. Each test pre-seeds its own invite codes via
+// addInviteCodes and passes inviteCode in the body, so the helper stays
+// thin and explicit. Tests that exercise the no-code path (rate-limit,
+// invalid-email) simply omit the field.
 function registerReq(body: Record<string, unknown>): Request {
   return new Request("http://localhost/api/auth/register", {
     method: "POST",
@@ -59,11 +64,13 @@ function registerEvents(): Array<Record<string, unknown>> {
 
 describe("POST /api/auth/register — analytics", () => {
   it("emits register_success with utmSource on successful registration", async () => {
+    await addInviteCodes(["INV-ALICE"]);
     const { POST } = await importRoute();
     const res = await POST(
       registerReq({
         email: "alice@example.com",
         password: "supersecret",
+        inviteCode: "INV-ALICE",
         locale: "ru",
         utmSource: "telegram",
       })
@@ -81,9 +88,14 @@ describe("POST /api/auth/register — analytics", () => {
   });
 
   it("emits register_success without utmSource when absent", async () => {
+    await addInviteCodes(["INV-BOB"]);
     const { POST } = await importRoute();
     await POST(
-      registerReq({ email: "bob@example.com", password: "supersecret" })
+      registerReq({
+        email: "bob@example.com",
+        password: "supersecret",
+        inviteCode: "INV-BOB",
+      })
     );
     await flushAfter();
 
@@ -93,16 +105,25 @@ describe("POST /api/auth/register — analytics", () => {
   });
 
   it("does NOT emit register_success on duplicate email", async () => {
+    await addInviteCodes(["INV-CLAIRE-1", "INV-CLAIRE-2"]);
     const { POST } = await importRoute();
     await POST(
-      registerReq({ email: "claire@example.com", password: "supersecret" })
+      registerReq({
+        email: "claire@example.com",
+        password: "supersecret",
+        inviteCode: "INV-CLAIRE-1",
+      })
     );
     await flushAfter();
 
     expect(registerEvents()).toHaveLength(1);
 
     const res = await POST(
-      registerReq({ email: "claire@example.com", password: "supersecret" })
+      registerReq({
+        email: "claire@example.com",
+        password: "supersecret",
+        inviteCode: "INV-CLAIRE-2",
+      })
     );
     expect(res.status).toBe(409);
     await flushAfter();
@@ -111,9 +132,14 @@ describe("POST /api/auth/register — analytics", () => {
   });
 
   it("does NOT emit register_success on invalid email", async () => {
+    await addInviteCodes(["INV-BAD"]);
     const { POST } = await importRoute();
     const res = await POST(
-      registerReq({ email: "not-an-email", password: "supersecret" })
+      registerReq({
+        email: "not-an-email",
+        password: "supersecret",
+        inviteCode: "INV-BAD",
+      })
     );
     expect(res.status).toBe(400);
     await flushAfter();
@@ -150,11 +176,13 @@ describe("POST /api/auth/register — analytics", () => {
   });
 
   it("sanitizes utmSource via the analytics key sanitizer", async () => {
+    await addInviteCodes(["INV-DOE"]);
     const { POST } = await importRoute();
     await POST(
       registerReq({
         email: "doe@example.com",
         password: "supersecret",
+        inviteCode: "INV-DOE",
         utmSource: "Telegram Ads",
       })
     );

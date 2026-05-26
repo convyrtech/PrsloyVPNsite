@@ -170,7 +170,6 @@ export async function updatePaymentByTransaction(input: {
   const order = await getPaymentOrder(orderId);
   if (!order) throw new PaymentError("order_not_found");
 
-  const previousStatus = order.status;
   const nextStatus = providerStatusToPaymentStatus(input.providerStatus);
   // First-time transition guard. Platega retries the callback for the
   // same transactionId on transient errors, so we use the confirmedAt

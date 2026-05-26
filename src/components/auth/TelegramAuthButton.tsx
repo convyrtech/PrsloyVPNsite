@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { readUtmSource } from "@/lib/client-utm";
 
 export type TelegramButtonCopy = {
@@ -39,12 +39,47 @@ type State =
 const POLL_DELAYS_MS = [1000, 2000, 3000, 5000];
 const POLL_TIMEOUT_MS = 90_000;
 
-export function TelegramAuthButton({ mode, locale, copy }: Props) {
+// Outer wrapper provides the Suspense boundary required by
+// useSearchParams. The inner component reads ?code= so a magic-link
+// from email lands with both the email form AND the Telegram-side
+// invite field prefilled — mirrors the AuthForm pattern.
+export function TelegramAuthButton(props: Props) {
+  return (
+    <Suspense
+      fallback={
+        <TelegramAuthButtonInner {...props} initialInviteCode="" />
+      }
+    >
+      <TelegramAuthButtonWithSearchParams {...props} />
+    </Suspense>
+  );
+}
+
+function TelegramAuthButtonWithSearchParams(props: Props) {
+  const params = useSearchParams();
+  const initialInviteCode = params.get("code")?.trim() ?? "";
+  return (
+    <TelegramAuthButtonInner {...props} initialInviteCode={initialInviteCode} />
+  );
+}
+
+function TelegramAuthButtonInner({
+  mode,
+  locale,
+  copy,
+  initialInviteCode,
+}: Props & { initialInviteCode: string }) {
   const router = useRouter();
   const [state, setState] = useState<State>({ kind: "idle" });
-  const [inviteCode, setInviteCode] = useState("");
+  const [inviteCode, setInviteCode] = useState(initialInviteCode);
   const timerRef = useRef<number | null>(null);
   const aliveRef = useRef(true);
+
+  // Sync field if the URL param changes while the page is mounted
+  // (e.g. user clicks a different magic-link without full reload).
+  useEffect(() => {
+    if (initialInviteCode) setInviteCode(initialInviteCode);
+  }, [initialInviteCode]);
 
   useEffect(() => {
     return () => {
