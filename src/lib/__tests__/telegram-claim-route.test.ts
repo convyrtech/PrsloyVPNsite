@@ -156,6 +156,35 @@ describe("POST /api/auth/telegram/claim — analytics", () => {
     expect(registerEvents()).toHaveLength(0);
   });
 
+  it("does NOT emit register_success when rate-limited (429)", async () => {
+    // tg-claim is 60 / 120s per IP. We send 61 from the same IP from
+    // a path that can't actually register (invalid nonce → 400) so we
+    // don't burn invites in the loop, then assert the 61st is 429
+    // AND that no register_success ever fired (the route never
+    // reached loginOrRegisterByTelegram).
+    function fixedIp(body: Record<string, unknown>): Request {
+      return new Request("http://localhost/api/auth/telegram/claim", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-forwarded-for": "203.0.113.7",
+        },
+        body: JSON.stringify(body),
+      });
+    }
+    const { POST } = await importRoute();
+    for (let i = 0; i < 60; i += 1) {
+      const res = await POST(fixedIp({ nonce: "bad-nonce!@" }));
+      expect(res.status).toBe(400); // invalid_nonce, but rate-limit counted
+    }
+    await flushAfter();
+
+    const res61 = await POST(fixedIp({ nonce: "bad-nonce!@" }));
+    expect(res61.status).toBe(429);
+    await flushAfter();
+    expect(registerEvents()).toHaveLength(0);
+  });
+
   it("sanitizes utmSource via the analytics key sanitizer", async () => {
     await addInviteCodes(["INVITE-SANIT"]);
     const nonce = await setupConfirmedNonce("55555", null);

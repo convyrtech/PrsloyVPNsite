@@ -95,6 +95,39 @@ describe("payments", () => {
     expect(first.order.confirmedAt).toBe(third.order.confirmedAt);
   });
 
+  it("two concurrent CONFIRMED callbacks: exactly one flags confirmedNow", async () => {
+    const order = await createPaymentOrder({
+      userId: "user-race",
+      email: "racer@example.com",
+      period: "1mo",
+      method: "sbp_qr",
+    });
+    await attachPaymentTransaction({
+      orderId: order.id,
+      transactionId: "tx-race",
+      paymentUrl: "https://pay.example/tx-race",
+      providerStatus: "PENDING",
+    });
+
+    // Both calls start before either save lands — same `previousStatus`
+    // read on both. The NX-gate is the source of truth.
+    const [a, b] = await Promise.all([
+      updatePaymentByTransaction({
+        transactionId: "tx-race",
+        providerStatus: "CONFIRMED",
+      }),
+      updatePaymentByTransaction({
+        transactionId: "tx-race",
+        providerStatus: "CONFIRMED",
+      }),
+    ]);
+
+    const winners = [a.confirmedNow, b.confirmedNow].filter(Boolean);
+    expect(winners.length).toBe(1);
+    expect(a.order.status).toBe("confirmed");
+    expect(b.order.status).toBe("confirmed");
+  });
+
   it("does not flag confirmedNow on a pending callback", async () => {
     const order = await createPaymentOrder({
       userId: "user-3",

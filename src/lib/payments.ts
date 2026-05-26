@@ -152,6 +152,14 @@ export type UpdatePaymentResult = {
   confirmedNow: boolean;
 };
 
+// Per-order emit gate for the payment_confirmed analytics event. 7-day
+// TTL is well past any retry window a provider keeps before declaring a
+// transaction dead.
+const EMIT_GATE_TTL_SECONDS = 60 * 60 * 24 * 7;
+function emitGateKey(orderId: string): string {
+  return `payment:emit:${orderId}`;
+}
+
 export async function updatePaymentByTransaction(input: {
   transactionId: string;
   providerStatus: string;
@@ -180,22 +188,32 @@ export async function updatePaymentByTransaction(input: {
   await saveOrder(order);
   await kvSet(userLatestKey(order.userId), order.id);
 
+  // NX-set is the global gate. Two concurrent CONFIRMED callbacks for
+  // the same orderId can both read wasFirstConfirmation=true (the read
+  // happened before either save landed), so the read-side check is the
+  // fast path, not the source of truth. Only one caller wins the SET
+  // NX — analytics emit + capacity increment both fire from that single
+  // winner, so revenue and the paying-user counter each tick exactly
+  // once per real transition no matter how the provider retries.
+  let confirmedNow = false;
   if (wasFirstConfirmation) {
-    // Capacity counter is a derived display value, so a failure here
-    // must not roll back the order. Worst case the counter falls
-    // behind by one — the marketing offset absorbs minor drift, and
-    // an operator can recompute by scanning orders if it matters.
-    try {
-      await incrementPayingCounter();
-    } catch (err) {
-      console.warn("[payments] capacity counter increment failed", err);
+    confirmedNow = await kvSet(emitGateKey(order.id), "1", {
+      nx: true,
+      ex: EMIT_GATE_TTL_SECONDS,
+    });
+    if (confirmedNow) {
+      // Capacity counter is a derived display value, so a failure here
+      // must not roll back the order. Worst case the counter falls
+      // behind by one — the marketing offset absorbs minor drift, and
+      // an operator can recompute by scanning orders if it matters.
+      try {
+        await incrementPayingCounter();
+      } catch (err) {
+        console.warn("[payments] capacity counter increment failed", err);
+      }
     }
   }
-
-  // confirmedNow gates the upstream payment_confirmed analytics emit —
-  // wasFirstConfirmation guarantees one true per real transition.
-  // (Hardened against the concurrent-callback race in a later commit.)
-  return { order, confirmedNow: wasFirstConfirmation };
+  return { order, confirmedNow };
 }
 
 export function providerStatusToPaymentStatus(status: string): PaymentStatus {

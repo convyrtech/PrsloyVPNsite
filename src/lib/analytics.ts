@@ -99,11 +99,22 @@ export function isBotUA(userAgent: string | null | undefined): boolean {
   return isbot(userAgent);
 }
 
+// Counters pivot on Moscow time so the day boundary lines up with the
+// operator's intuition — UTC would leave the first three hours of an
+// MSK day attributed to "yesterday" in the admin view, which is
+// confusing during a launch night. The bucketing is operator-local, the
+// log timestamp stays UTC ISO.
+const COUNTER_TZ = "Europe/Moscow";
+const COUNTER_DATE_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+  timeZone: COUNTER_TZ,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
 export function todayKey(now: Date = new Date()): string {
-  // UTC date — admin dashboards are read in operator timezone but counters
-  // pivot on a single global day boundary, otherwise late-night events
-  // would land in two buckets depending on the reader.
-  return now.toISOString().slice(0, 10);
+  // en-CA gives "YYYY-MM-DD" directly, no manual parts-assembly needed.
+  return COUNTER_DATE_FORMATTER.format(now);
 }
 
 function buildKey(env: AnalyticsEnv, ...parts: string[]): string {
@@ -194,12 +205,13 @@ export async function track(event: AnalyticsEvent): Promise<void> {
         await bumpCounter(env, date, `funnel:${date}:payment:${source}`);
         // Revenue: total across the day AND per-source split so the admin
         // can answer both "how much earned today" and "how much from tg".
-        await bumpRevenue(
-          env,
-          date,
-          `revenue:${date}:_total`,
-          event.amountRub
-        );
+        //
+        // Total uses a distinct `revenue_total` kind segment (no source
+        // suffix) — users cannot produce a kind segment via sanitizeKeyPart,
+        // so a malicious or unlucky utm_source can never collide with the
+        // day-total key (e.g. ?utm_source=_total would otherwise hit the
+        // same cell as the reserved total bucket).
+        await bumpRevenue(env, date, `revenue_total:${date}`, event.amountRub);
         await bumpRevenue(
           env,
           date,

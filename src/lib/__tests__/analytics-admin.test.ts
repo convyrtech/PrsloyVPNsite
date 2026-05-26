@@ -32,7 +32,7 @@ describe("readDailyAggregate", () => {
     });
   });
 
-  it("surfaces revenue total and per-source split, excluding _total from the list", async () => {
+  it("surfaces revenue total and per-source split as separate kinds", async () => {
     await track({ name: "payment_confirmed", orderId: "o1", amountRub: 500, utmSource: "tg" });
     await track({ name: "payment_confirmed", orderId: "o2", amountRub: 2400, utmSource: "tg" });
     await track({ name: "payment_confirmed", orderId: "o3", amountRub: 500 });
@@ -45,8 +45,16 @@ describe("readDailyAggregate", () => {
       { label: "tg", count: 2900 },
       { label: "direct", count: 500 },
     ]);
-    // _total must not appear in the per-source list (would double-count).
-    expect(agg.revenue.find((r) => r.label === "_total")).toBeUndefined();
+  });
+
+  it("counts utm_source=_total as its own per-source row (no collision with total)", async () => {
+    await track({ name: "payment_confirmed", orderId: "ot", amountRub: 700, utmSource: "_total" });
+
+    const date = new Date().toISOString().slice(0, 10);
+    const agg = await readDailyAggregate(date);
+
+    expect(agg.totalRevenueRub).toBe(700);
+    expect(agg.revenue).toEqual([{ label: "_total", count: 700 }]);
   });
 
   it("aggregates pageviews, utm, funnel, and method counters for the day", async () => {

@@ -49,11 +49,19 @@ function parseKey(
   | { kind: "funnel"; step: string; source: string }
   | { kind: "method"; method: string }
   | { kind: "revenue"; source: string }
+  | { kind: "revenue_total" }
   | null {
   const parts = key.split(":");
   // parts: ["analytics", env, kind, date, ...rest]
-  if (parts.length < 5 || parts[0] !== "analytics") return null;
+  if (parts.length < 4 || parts[0] !== "analytics") return null;
   const kind = parts[2];
+
+  // revenue_total has no trailing source segment by design — keeps the
+  // day-total cell out of the user-influenced key space, so a stray
+  // utm_source value cannot collide with it.
+  if (kind === "revenue_total") return { kind: "revenue_total" };
+
+  if (parts.length < 5) return null;
   const rest = parts.slice(4).join(":");
 
   if (kind === "pv") return { kind: "pv", path: rest };
@@ -125,13 +133,10 @@ export async function readDailyAggregate(
         methods.set(parsed.method, count);
         break;
       case "revenue":
-        // `_total` is the cross-source sum and surfaces as totalRevenueRub
-        // — keeping it in the per-source list too would double-count.
-        if (parsed.source === "_total") {
-          totalRevenue = count;
-        } else {
-          revenue.set(parsed.source, count);
-        }
+        revenue.set(parsed.source, count);
+        break;
+      case "revenue_total":
+        totalRevenue = count;
         break;
     }
   });

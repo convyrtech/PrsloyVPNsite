@@ -17,6 +17,17 @@ afterEach(() => {
   delete process.env.VERCEL_ENV;
 });
 
+describe("todayKey", () => {
+  it("buckets on Moscow time, not UTC", async () => {
+    const { todayKey } = await import("@/lib/analytics");
+    // 2026-05-25 21:00 UTC == 2026-05-26 00:00 MSK — first second of the
+    // operator's "next day", but UTC is still on the 25th.
+    expect(todayKey(new Date("2026-05-25T21:00:00.000Z"))).toBe("2026-05-26");
+    // One minute earlier is still 2026-05-25 in Moscow.
+    expect(todayKey(new Date("2026-05-25T20:59:00.000Z"))).toBe("2026-05-25");
+  });
+});
+
 describe("envPrefix", () => {
   it("returns prod for VERCEL_ENV=production", () => {
     process.env.VERCEL_ENV = "production";
@@ -186,9 +197,24 @@ describe("track", () => {
       orderId: "o3",
       amountRub: 500,
     });
-    expect(redis.store.strings.get(`analytics:dev:revenue:${date}:_total`)).toBe("3400");
+    expect(redis.store.strings.get(`analytics:dev:revenue_total:${date}`)).toBe("3400");
     expect(redis.store.strings.get(`analytics:dev:revenue:${date}:tg`)).toBe("2900");
     expect(redis.store.strings.get(`analytics:dev:revenue:${date}:direct`)).toBe("500");
+  });
+
+  it("does NOT let utm_source=_total collide with the day-total bucket", async () => {
+    // The reserved total lives at analytics:env:revenue_total:date (no
+    // source segment), so a user-supplied utm_source of "_total" lands
+    // in a completely different key and shows up as its own per-source
+    // entry instead of corrupting the total.
+    await track({
+      name: "payment_confirmed",
+      orderId: "o-collide",
+      amountRub: 500,
+      utmSource: "_total",
+    });
+    expect(redis.store.strings.get(`analytics:dev:revenue_total:${date}`)).toBe("500");
+    expect(redis.store.strings.get(`analytics:dev:revenue:${date}:_total`)).toBe("500");
   });
 
   it("skips revenue write for zero or negative amounts", async () => {
@@ -197,7 +223,7 @@ describe("track", () => {
       orderId: "o-bad",
       amountRub: 0,
     });
-    expect(redis.store.strings.get(`analytics:dev:revenue:${date}:_total`)).toBeUndefined();
+    expect(redis.store.strings.get(`analytics:dev:revenue_total:${date}`)).toBeUndefined();
     // The funnel counter still bumps because the event itself happened.
     expect(redis.store.strings.get(`analytics:dev:funnel:${date}:payment:direct`)).toBe("1");
   });
