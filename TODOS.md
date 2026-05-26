@@ -1,5 +1,86 @@
 # TODOS
 
+Mirrors open GitHub Issues + ongoing workstreams. Synced with [Project board](https://github.com/users/convyrtech/projects/1).
+
+---
+
+## Active workstreams (P0–P1)
+
+### Rotate TELEGRAM_BOT_TOKEN (Issue [#5](https://github.com/convyrtech/PrsloyVPNsite/issues/5))
+
+**What:** Перевыпустить bot token, обновить env на Vercel (production + preview), пересохранить webhook.
+
+**Why:** Текущий токен светился в чате во время отладки QA. Формально скомпрометирован.
+
+**Context:** @BotFather → `/revoke` → новый token в `vercel env`. Перепроверить webhook setWebhook хитом нового URL. См. body Issue #5.
+
+**Effort:** XS (5 минут руками)
+**Priority:** P0
+**Owner:** convyrtech
+**Depends on:** ничего
+
+---
+
+### Auto-issue Marzneshin keys after payment confirmation (Issue [#4](https://github.com/convyrtech/PrsloyVPNsite/issues/4))
+
+**What:** При `payment_confirmed` (Platega callback) автоматически создавать пользователя в Marzneshin и выдавать `subscription_url` на `/dashboard`.
+
+**Why:** Сейчас оплата → `Подписка active`, но `Ключ` выдаётся вручную через `/admin/grant`. Узкое горлышко >10 платежей/день. Также для скорости user delight (мгновенный VPN после оплаты).
+
+**Context:** Партнёр (mizerovkuzma) делает Marzneshin-side endpoint в `src/server/` (см. CLAUDE.md §10b). Ты делаешь HTTP-интеграцию + KV-storage `subscription_url` + UI на `/dashboard`. Идемпотентность через `confirmedAt` guard. Rollback: если Marzneshin down — платёж не теряется, юзер видит «выдадим в течение часа».
+
+**Effort:** M (HTTP boundary + KV write + UI updates + tests)
+**Priority:** P1
+**Owner:** convyrtech + mizerovkuzma
+**Depends on:** Marzneshin endpoint от partner с auth-схемой
+
+---
+
+### UI/UX админки: возврат с подстраниц (Issue [#3](https://github.com/convyrtech/PrsloyVPNsite/issues/3))
+
+**What:** Невозможность нормально вернуться с `/ru/admin/analytics` на `/admin`. Перепроверить ту же проблему на других страницах админки.
+
+**Why:** Тебе самому неудобно ходить по админке во время фактического использования.
+
+**Context:** Скорее всего нужна breadcrumb-навигация или admin layout с persistent sidebar. Перед фиксом — пройтись по всем `/admin/*` страницам и зафиксировать паттерн.
+
+**Effort:** S
+**Priority:** P1
+**Owner:** convyrtech
+**Depends on:** ничего
+
+---
+
+### Marketing voice audit
+
+**What:** Пройтись по `/`, `/pricing`, `/blog`, `/faq` и убрать всё что звучит «для инвесторов», «элитарно», «по приглашению».
+
+**Why:** CLAUDE.md §11.11 — copy должна быть neutral company artifact. Memory rule [[feedback_marketing_voice]]. После приёма новой роли (теперь и marketing) — это твоя зона.
+
+**Context:** Прошлый аудит был 2026-05-21. Возможно есть новый дрейф после Step 2.
+
+**Effort:** S–M (зависит от сколько уехало)
+**Priority:** P2
+**Owner:** convyrtech
+**Depends on:** ничего
+
+---
+
+### Onboard mizerovkuzma в Claude Code workflow
+
+**What:** Пошаговая инструкция «как запустить Claude Code в этом репо» на русском.
+
+**Why:** Партнёр имеет Claude Code, не умеет им пользоваться. Без онбординга он не запушит первый PR в `src/server/`.
+
+**Context:** Делаем когда первый PR от него — пройдёмся вместе. Не сейчас, преждевременная документация.
+
+**Effort:** S (когда дело дойдёт)
+**Priority:** P2 → P1 когда партнёр готов начать
+**Owner:** convyrtech
+**Depends on:** Партнёр готов начать PR-flow
+
+---
+
 ## Analytics
 
 ### Chart over time в /admin/analytics

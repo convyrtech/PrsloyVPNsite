@@ -1,0 +1,129 @@
+{
+  "outputStyle": "concise",
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": false,
+    "frontend-design@claude-plugins-official": false
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run typecheck)",
+      "Bash(npm run lint)",
+      "Bash(npm test)",
+      "Bash(npm test *)",
+      "Bash(npx vitest run *)",
+      "Bash(curl -sI *)",
+      "Bash(claude mcp list)",
+      "Bash(claude mcp get *)",
+      "Bash(claude plugin list)",
+      "Bash(where node *)",
+      "Bash(where npx *)",
+      "PowerShell(claude mcp *)",
+      "PowerShell(Get-Command *)",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__list_console_messages",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__plugin_context7_context7__query-docs",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__serena__find_symbol",
+      "mcp__serena__find_referencing_symbols",
+      "mcp__serena__find_implementations",
+      "mcp__serena__find_declaration",
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__list_memories",
+      "mcp__serena__read_memory"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash",
+            "args": [".claude/hooks/destructive-block.sh"],
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash",
+            "args": [".claude/hooks/secret-scan.sh"],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash",
+            "args": [".claude/hooks/i18n-parity.sh"],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell",
+            "args": [
+              "-NoProfile",
+              "-ExecutionPolicy", "Bypass",
+              "-File", ".claude/hooks/skill-nudge.ps1"
+            ],
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash",
+            "args": [".claude/hooks/correction-nudge.sh"],
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash",
+            "args": [".claude/hooks/stop-verify.sh"],
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash",
+            "args": [".claude/hooks/precompact-snapshot.sh"],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash",
+            "args": [".claude/hooks/session-resume.sh"],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

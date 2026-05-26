@@ -72,9 +72,8 @@ next-env.d.ts
 /progress.md
 /task_plan.md
 
-# Claude Code local overrides (personal hooks, permissions, plugin opt-outs)
+# Claude Code: per-machine overrides only. Shared hooks + settings travel via repo.
 .claude/settings.local.json
-.claude/hooks/
 
 # throwaway test/audit artifacts (e.g. PageSpeed Insights one-off runs)
 .tmp-*
