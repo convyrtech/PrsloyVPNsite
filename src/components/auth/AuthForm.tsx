@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { isValidEmail } from "@/lib/validation";
 
 type AuthCopy = {
@@ -19,6 +19,11 @@ type AuthCopy = {
   secretNotConfigured: string;
   rateLimited: string;
   generic: string;
+  inviteLabel?: string;
+  invitePlaceholder?: string;
+  inviteRequired?: string;
+  inviteInvalid?: string;
+  inviteConsumed?: string;
 };
 
 type AuthFormProps = {
@@ -27,12 +32,41 @@ type AuthFormProps = {
   copy: AuthCopy;
 };
 
-export function AuthForm({ mode, locale, copy }: AuthFormProps) {
+// Outer wrapper adds the Suspense boundary required by useSearchParams.
+// /register and /login render this; the form interior reads ?code= for
+// the invite-prefill flow coming from the email magic-link.
+export function AuthForm(props: AuthFormProps) {
+  return (
+    <Suspense fallback={<AuthFormInner {...props} initialInviteCode="" />}>
+      <AuthFormWithSearchParams {...props} />
+    </Suspense>
+  );
+}
+
+function AuthFormWithSearchParams(props: AuthFormProps) {
+  const params = useSearchParams();
+  const initialInviteCode = params.get("code")?.trim() ?? "";
+  return <AuthFormInner {...props} initialInviteCode={initialInviteCode} />;
+}
+
+function AuthFormInner({
+  mode,
+  locale,
+  copy,
+  initialInviteCode,
+}: AuthFormProps & { initialInviteCode: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState(initialInviteCode);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+
+  // If user navigates between /login and /register with a magic-link
+  // already in the URL, sync the field state when the param changes.
+  useEffect(() => {
+    if (initialInviteCode) setInviteCode(initialInviteCode);
+  }, [initialInviteCode]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -49,15 +83,26 @@ export function AuthForm({ mode, locale, copy }: AuthFormProps) {
       setError(copy.invalid);
       return;
     }
+    if (mode === "register" && !inviteCode.trim()) {
+      setError(copy.inviteRequired ?? copy.invalid);
+      return;
+    }
 
     setPending(true);
     setError("");
 
     try {
+      const body: Record<string, string> = {
+        email: trimmedEmail,
+        password,
+        locale,
+      };
+      if (mode === "register") body.inviteCode = inviteCode.trim();
+
       const res = await fetch(`/api/auth/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail, password, locale }),
+        body: JSON.stringify(body),
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
 
@@ -65,6 +110,9 @@ export function AuthForm({ mode, locale, copy }: AuthFormProps) {
         if (data.error === "email_exists") setError(copy.emailExists);
         else if (data.error === "invalid_credentials") setError(copy.credentials);
         else if (data.error === "invalid_email" || data.error === "invalid_password") setError(copy.invalid);
+        else if (data.error === "invite_required") setError(copy.inviteRequired ?? copy.generic);
+        else if (data.error === "invite_invalid") setError(copy.inviteInvalid ?? copy.generic);
+        else if (data.error === "invite_consumed") setError(copy.inviteConsumed ?? copy.generic);
         else if (data.error === "kv_not_configured") setError(copy.storageNotConfigured);
         else if (data.error === "auth_secret_not_configured") setError(copy.secretNotConfigured);
         else if (data.error === "auth_not_configured") setError(copy.notConfigured);
@@ -118,6 +166,26 @@ export function AuthForm({ mode, locale, copy }: AuthFormProps) {
                      focus:outline-none focus:border-text-display transition-colors"
         />
       </label>
+
+      {mode === "register" && copy.inviteLabel && (
+        <label className="flex flex-col gap-xs">
+          <span className="font-mono text-label uppercase tracking-[0.12em] text-text-disabled">
+            {copy.inviteLabel}
+          </span>
+          <input
+            type="text"
+            autoComplete="off"
+            spellCheck={false}
+            required
+            placeholder={copy.invitePlaceholder ?? ""}
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value)}
+            className="bg-surface border border-border-visible rounded-full px-lg min-h-[48px]
+                       font-mono text-body-sm text-text-display placeholder:text-text-disabled
+                       focus:outline-none focus:border-text-display transition-colors uppercase"
+          />
+        </label>
+      )}
 
       <button
         type="submit"

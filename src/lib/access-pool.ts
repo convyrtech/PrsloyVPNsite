@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { kvGet, kvSAdd, kvSMembers, kvSet, kvSRem } from "@/lib/kv";
 
 /* Invite-code pool.
@@ -115,4 +116,31 @@ export async function getCodeUsage(code: string): Promise<string | null> {
   const trimmed = typeof code === "string" ? code.trim() : "";
   if (!trimmed || !CODE_PATTERN.test(trimmed)) return null;
   return await kvGet(usedKey(trimmed));
+}
+
+// Alphabet without easily-confused glyphs (no 0/O, no 1/I/L) — codes are
+// read aloud and re-typed, so legibility wins over information density.
+const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
+// Auto-generates a fresh invite code and pushes it into the pool. Format
+// is XXXX-XXXX (8 chars, 31^8 ≈ 10^12 keyspace) — enough entropy to make
+// guessing infeasible during the seed window, while staying short enough
+// to read off a screen. Used by the bot's /invite command.
+//
+// Collision check: SADD returns 0 if the code happens to already exist;
+// we retry up to 5 times before giving up. With 10^12 keyspace and a
+// pool under 10^4, the retry path is theoretical, not practical.
+export async function generateInviteCode(): Promise<string> {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const bytes = randomBytes(8);
+    const chars: string[] = [];
+    for (let i = 0; i < 8; i += 1) {
+      chars.push(CODE_ALPHABET[bytes[i] % CODE_ALPHABET.length]);
+    }
+    const code = `${chars.slice(0, 4).join("")}-${chars.slice(4).join("")}`;
+    if (await kvGet(usedKey(code))) continue; // never reuse a burned code
+    const added = await kvSAdd(POOL_KEY, code);
+    if (added === 1) return code;
+  }
+  throw new AccessPoolError("code_generation_failed");
 }

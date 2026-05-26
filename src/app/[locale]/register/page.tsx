@@ -104,6 +104,11 @@ export default async function RegisterPage({
                   secretNotConfigured: t("secret_not_configured"),
                   rateLimited: t("rate_limited"),
                   generic: t("generic_error"),
+                  inviteLabel: t("invite_label"),
+                  invitePlaceholder: t("invite_placeholder"),
+                  inviteRequired: t("invite_required"),
+                  inviteInvalid: t("invite_invalid"),
+                  inviteConsumed: t("invite_consumed"),
                 }}
               />
 

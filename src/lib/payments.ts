@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto";
 import { kvGet, kvSet, KvNotConfiguredError } from "@/lib/kv";
+import { incrementPayingCounter } from "@/lib/capacity";
 import {
   type Period,
   getPeriodTotalRub,
@@ -145,15 +146,34 @@ export async function updatePaymentByTransaction(input: {
   if (!order) throw new PaymentError("order_not_found");
 
   const nextStatus = providerStatusToPaymentStatus(input.providerStatus);
+  // First-time transition guard. Platega retries the callback for the
+  // same transactionId on transient errors, so we use the confirmedAt
+  // unset → set transition as the idempotency boundary.
+  const wasFirstConfirmation =
+    nextStatus === "confirmed" && !order.confirmedAt;
+
   order.providerStatus = input.providerStatus;
   order.status = nextStatus;
   order.updatedAt = new Date().toISOString();
-  if (nextStatus === "confirmed" && !order.confirmedAt) {
+  if (wasFirstConfirmation) {
     order.confirmedAt = order.updatedAt;
   }
 
   await saveOrder(order);
   await kvSet(userLatestKey(order.userId), order.id);
+
+  if (wasFirstConfirmation) {
+    // Capacity counter is a derived display value, so a failure here
+    // must not roll back the order. Worst case the counter falls
+    // behind by one — the marketing offset absorbs minor drift, and
+    // an operator can recompute by scanning orders if it matters.
+    try {
+      await incrementPayingCounter();
+    } catch (err) {
+      console.warn("[payments] capacity counter increment failed", err);
+    }
+  }
+
   return order;
 }
 

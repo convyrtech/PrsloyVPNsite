@@ -91,6 +91,12 @@ export function installFakeRedis(): FakeRedis {
         if (scanCapped) return ["1", keys];
         return cursor === "0" ? ["0", keys] : ["0", []];
       }
+      case "INCR": {
+        const current = Number(store.strings.get(key) ?? "0");
+        const next = (Number.isFinite(current) ? current : 0) + 1;
+        store.strings.set(key, String(next));
+        return next;
+      }
       case "LPUSH": {
         const list = store.lists.get(key) ?? [];
         list.unshift(String(cmd[2]));
