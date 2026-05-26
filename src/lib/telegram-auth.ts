@@ -109,11 +109,35 @@ export type ParsedStart = {
   telegramUsername: string | null;
 };
 
-// Extracts the `/start <nonce>` payload from a Telegram bot update.
-// Returns null for anything that is not a private-chat /start with a
-// well-formed nonce — callback queries, edited messages, photo posts,
-// /start without an argument, all rejected.
-export function parseStartCommand(update: unknown): ParsedStart | null {
+// Discriminated union of every bot message type the webhook handles.
+// Anything that doesn't match one of these — callback queries, edited
+// messages, photo posts, unknown text — falls through to null and the
+// webhook silently 200s back to Telegram.
+export type ParsedBotMessage =
+  | {
+      kind: "start_with_nonce";
+      updateId: number;
+      nonce: string;
+      telegramId: string;
+      telegramUsername: string | null;
+      chatId: string;
+    }
+  | {
+      kind: "start_plain";
+      updateId: number;
+      telegramId: string;
+      telegramUsername: string | null;
+      chatId: string;
+    }
+  | {
+      kind: "invite_request";
+      updateId: number;
+      telegramId: string;
+      telegramUsername: string | null;
+      chatId: string;
+    };
+
+export function parseBotMessage(update: unknown): ParsedBotMessage | null {
   if (!isObject(update)) return null;
   const updateId =
     typeof update.update_id === "number" ? update.update_id : null;
@@ -122,13 +146,8 @@ export function parseStartCommand(update: unknown): ParsedStart | null {
   const msg = isObject(update.message) ? update.message : null;
   if (!msg) return null;
 
-  const text = typeof msg.text === "string" ? msg.text : "";
-  const match = text.match(/^\/start(?:@\w+)?\s+([A-Za-z0-9_-]+)\s*$/);
-  if (!match) return null;
-
   const from = isObject(msg.from) ? msg.from : null;
   if (!from) return null;
-
   const fromId =
     typeof from.id === "number"
       ? String(from.id)
@@ -137,15 +156,120 @@ export function parseStartCommand(update: unknown): ParsedStart | null {
         : null;
   if (!fromId) return null;
 
+  const chat = isObject(msg.chat) ? msg.chat : null;
+  const chatId =
+    chat && typeof chat.id === "number"
+      ? String(chat.id)
+      : chat && typeof chat.id === "string"
+        ? chat.id
+        : fromId; // private chat: chat.id === from.id
+
   const username =
     typeof from.username === "string" && from.username ? from.username : null;
+  const text = typeof msg.text === "string" ? msg.text.trim() : "";
 
+  const startWithNonce = text.match(
+    /^\/start(?:@\w+)?\s+([A-Za-z0-9_-]+)\s*$/
+  );
+  if (startWithNonce) {
+    return {
+      kind: "start_with_nonce",
+      updateId,
+      nonce: startWithNonce[1],
+      telegramId: fromId,
+      telegramUsername: username,
+      chatId,
+    };
+  }
+
+  if (/^\/start(@\w+)?\s*$/.test(text)) {
+    return {
+      kind: "start_plain",
+      updateId,
+      telegramId: fromId,
+      telegramUsername: username,
+      chatId,
+    };
+  }
+
+  if (/^\/invite(@\w+)?\s*$/.test(text)) {
+    return {
+      kind: "invite_request",
+      updateId,
+      telegramId: fromId,
+      telegramUsername: username,
+      chatId,
+    };
+  }
+
+  return null;
+}
+
+// Backwards-compatible wrapper that only returns nonce-bearing /start.
+// New code paths use parseBotMessage and dispatch on .kind. Keeping
+// this thin shim lets the existing webhook tests and consumers stay
+// untouched.
+export function parseStartCommand(update: unknown): ParsedStart | null {
+  const parsed = parseBotMessage(update);
+  if (parsed?.kind !== "start_with_nonce") return null;
   return {
-    updateId,
-    nonce: match[1],
-    telegramId: fromId,
-    telegramUsername: username,
+    updateId: parsed.updateId,
+    nonce: parsed.nonce,
+    telegramId: parsed.telegramId,
+    telegramUsername: parsed.telegramUsername,
   };
+}
+
+// Bot API base URL, lazily resolved so missing-config errors surface at
+// call time rather than module load. Same pattern as getBotUsername.
+function getBotApiBase(): string {
+  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
+  if (!token) throw new TelegramAuthError("telegram_not_configured");
+  return `https://api.telegram.org/bot${token}`;
+}
+
+// Sends a text message back to a Telegram chat. Used by the webhook to
+// reply to /start (welcome) and /invite (issued code). Network or API
+// failures are non-fatal — we log and return false so the caller can
+// decide whether to retry, but never propagate; we already 200'd the
+// webhook by the time this runs.
+export async function sendTelegramMessage(
+  chatId: string,
+  text: string,
+  opts: {
+    parseMode?: "HTML" | "MarkdownV2";
+    replyMarkup?: Record<string, unknown>;
+  } = {}
+): Promise<boolean> {
+  try {
+    const payload: Record<string, unknown> = {
+      chat_id: chatId,
+      text,
+      disable_web_page_preview: true,
+    };
+    if (opts.parseMode) payload.parse_mode = opts.parseMode;
+    if (opts.replyMarkup) payload.reply_markup = opts.replyMarkup;
+
+    const res = await fetch(`${getBotApiBase()}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      console.warn(
+        "[telegram] sendMessage non-2xx",
+        res.status,
+        detail.slice(0, 200)
+      );
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("[telegram] sendMessage threw", err);
+    return false;
+  }
 }
 
 export async function mintNonce(): Promise<string> {

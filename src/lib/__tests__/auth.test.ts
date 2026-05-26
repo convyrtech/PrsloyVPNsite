@@ -25,6 +25,7 @@ import {
   loginOrRegisterByTelegram,
   loginUser,
   registerUser,
+  registerUserWithInvite,
   verifyEmailToken,
 } from "@/lib/auth";
 import { addInviteCodes, listAvailableCodes } from "@/lib/access-pool";
@@ -58,6 +59,77 @@ describe("registerUser", () => {
     await expect(registerUser("ok@example.com", "short")).rejects.toMatchObject({
       code: "invalid_password",
     });
+  });
+});
+
+describe("registerUserWithInvite", () => {
+  it("creates an account when a valid code is supplied", async () => {
+    await addInviteCodes(["email-invite-1"]);
+    const user = await registerUserWithInvite(
+      "new@example.com",
+      "password123",
+      "email-invite-1"
+    );
+    expect(user.email).toBe("new@example.com");
+    expect(user.accessStatus).toBe("pending");
+    expect(await listAvailableCodes()).not.toContain("email-invite-1");
+  });
+
+  it("rejects when no invite code is supplied", async () => {
+    await expect(
+      registerUserWithInvite("no-code@example.com", "password123", "")
+    ).rejects.toMatchObject({ code: "invite_required" });
+  });
+
+  it("rejects an unknown code with invite_invalid", async () => {
+    await expect(
+      registerUserWithInvite("ghost@example.com", "password123", "never-issued")
+    ).rejects.toMatchObject({ code: "invite_invalid" });
+  });
+
+  it("rejects a previously-consumed code with invite_consumed", async () => {
+    await addInviteCodes(["one-shot-email"]);
+    await registerUserWithInvite(
+      "first@example.com",
+      "password123",
+      "one-shot-email"
+    );
+    await expect(
+      registerUserWithInvite(
+        "second@example.com",
+        "password123",
+        "one-shot-email"
+      )
+    ).rejects.toMatchObject({ code: "invite_consumed" });
+  });
+
+  it("rolls back the email reservation when the code is bad", async () => {
+    await expect(
+      registerUserWithInvite("rollback@example.com", "password123", "bad-code")
+    ).rejects.toMatchObject({ code: "invite_invalid" });
+    // Email is free to register again with a valid code.
+    await addInviteCodes(["rollback-ok"]);
+    const ok = await registerUserWithInvite(
+      "rollback@example.com",
+      "password123",
+      "rollback-ok"
+    );
+    expect(ok.email).toBe("rollback@example.com");
+  });
+
+  it("rejects duplicate email even with a valid code (no double registration)", async () => {
+    await addInviteCodes(["first-code", "second-code"]);
+    await registerUserWithInvite(
+      "dup@example.com",
+      "password123",
+      "first-code"
+    );
+    await expect(
+      registerUserWithInvite("dup@example.com", "password123", "second-code")
+    ).rejects.toMatchObject({ code: "email_exists" });
+    // The second code stays in the pool — duplicate-email check happens
+    // before consume, so the code wasn't burned.
+    expect(await listAvailableCodes()).toContain("second-code");
   });
 });
 

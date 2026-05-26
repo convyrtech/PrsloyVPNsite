@@ -70,6 +70,11 @@ export async function kvDel(key: string): Promise<void> {
   await redisCommand<number>(["DEL", key]);
 }
 
+export async function kvIncr(key: string): Promise<number> {
+  const result = await redisCommand<number>(["INCR", key]);
+  return typeof result === "number" ? result : Number(result ?? 0);
+}
+
 export async function kvSAdd(key: string, member: string): Promise<number> {
   return await redisCommand<number>(["SADD", key, member]);
 }

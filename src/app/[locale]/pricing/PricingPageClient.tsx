@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -8,16 +8,24 @@ import { RevealOnView } from "@/components/ui/RevealOnView";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
 import { PaymentCheckout } from "@/components/payments/PaymentCheckout";
 import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
+import { InviteRequest } from "@/components/access/InviteRequest";
+import { PoolFullPanel } from "@/components/access/PoolFullPanel";
 import {
   type Period,
   PERIODS,
   PRICE_BY_PERIOD,
 } from "@/lib/pricing";
 
-// Placeholder until /api/capacity is wired. Specific (non-round) numbers
-// read as real data and resist 'marketing-urgency' interpretation.
-const CAPACITY_USED = 47;
-const CAPACITY_TOTAL = 100;
+type CapacityState =
+  | { kind: "loading" }
+  | {
+      kind: "ready";
+      display: number;
+      target: number;
+      full: boolean;
+      expansionAtIso: string;
+      vipContactUrl: string;
+    };
 
 export function PricingPageClient({ locale }: { locale: string }) {
   const t = useTranslations("pricing_page");
@@ -25,6 +33,47 @@ export function PricingPageClient({ locale }: { locale: string }) {
 
   const [period, setPeriod] = useState<Period>("1mo");
   const basePrice = PRICE_BY_PERIOD[period];
+  const [capacity, setCapacity] = useState<CapacityState>({ kind: "loading" });
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/access/capacity", { cache: "no-store" });
+        const data = (await res.json().catch(() => ({}))) as {
+          ok?: boolean;
+          display?: number;
+          target?: number;
+          full?: boolean;
+          expansionAtIso?: string;
+          vipContactUrl?: string;
+        };
+        if (!alive) return;
+        if (
+          typeof data.display === "number" &&
+          typeof data.target === "number"
+        ) {
+          setCapacity({
+            kind: "ready",
+            display: data.display,
+            target: data.target,
+            full: Boolean(data.full),
+            expansionAtIso:
+              data.expansionAtIso ??
+              new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+            vipContactUrl: data.vipContactUrl ?? "https://t.me/prsloy",
+          });
+        }
+      } catch {
+        // soft-fail: leaves the band in "loading" skeleton — the page
+        // still loads, payment still works, only the counter glyph is
+        // a placeholder. No need to surface the error to the user.
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // SPEC rows. `featured` lifts opacity to text-display — three USP rows
   // anchor scanning, three generic rows fade to text-secondary.
@@ -65,40 +114,97 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </header>
         </RevealOnView>
 
-        {/* PRICE BLOCK — single column, left-aligned, no card chrome. */}
-        <RevealOnView delay={0.1}>
-          <section className="flex flex-col gap-xl">
-            <PeriodSwitcher
-              value={period}
-              onChange={setPeriod}
-              labels={{
-                "1mo": tShared("period_1m"),
-                "6mo": tShared("period_6m"),
-                "1yr": tShared("period_12m"),
+        {/* PRICE / POOL-FULL — capacity state decides which surface to
+            render. When the counter is full, payment + invite request
+            disappear and the pool-full panel takes over (timer, notify
+            form, VIP escape). */}
+        {capacity.kind === "ready" && capacity.full ? (
+          <RevealOnView delay={0.1}>
+            <PoolFullPanel
+              expansionAtIso={capacity.expansionAtIso}
+              vipContactUrl={capacity.vipContactUrl}
+              copy={{
+                title: t("pool_full_title"),
+                body: t("pool_full_body"),
+                timerLabel: t("pool_full_timer_label"),
+                timerDays: t("pool_full_timer_days"),
+                timerHours: t("pool_full_timer_hours"),
+                timerMinutes: t("pool_full_timer_minutes"),
+                timerExpired: t("pool_full_timer_expired"),
+                formLabel: t("pool_full_form_label"),
+                formPlaceholder: t("pool_full_form_placeholder"),
+                formSubmit: t("pool_full_form_submit"),
+                formSending: t("pool_full_form_sending"),
+                formSent: t("pool_full_form_sent"),
+                formInvalid: t("pool_full_form_invalid"),
+                formGeneric: t("pool_full_form_generic"),
+                vipLabel: t("pool_full_vip_label"),
+                vipCta: t("pool_full_vip_cta"),
               }}
             />
+          </RevealOnView>
+        ) : (
+          <>
+            <RevealOnView delay={0.1}>
+              <section className="flex flex-col gap-xl">
+                <PeriodSwitcher
+                  value={period}
+                  onChange={setPeriod}
+                  labels={{
+                    "1mo": tShared("period_1m"),
+                    "6mo": tShared("period_6m"),
+                    "1yr": tShared("period_12m"),
+                  }}
+                />
 
-            {/* $5 + 'в месяц' caption: instrument readout with unit beside,
-                baseline-aligned. Doto for the digits — the one moment per
-                screen (Nothing section 2.8 #5). */}
-            <div className="flex items-baseline gap-md flex-wrap">
-              <span
-                className="font-display text-text-display leading-[0.85] tabular-nums"
-                style={{
-                  fontSize: "clamp(120px, 22vw, 220px)",
-                  letterSpacing: "0.02em",
+                {/* $5 + 'в месяц' caption: instrument readout with unit beside,
+                    baseline-aligned. Doto for the digits — the one moment per
+                    screen (Nothing section 2.8 #5). */}
+                <div className="flex items-baseline gap-md flex-wrap">
+                  <span
+                    className="font-display text-text-display leading-[0.85] tabular-nums"
+                    style={{
+                      fontSize: "clamp(120px, 22vw, 220px)",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    ${basePrice}
+                  </span>
+                  <span className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary pb-lg">
+                    {t("monthly_unit")}
+                  </span>
+                </div>
+
+                <PaymentCheckout period={period} locale={locale} />
+              </section>
+            </RevealOnView>
+
+            {/* INVITE REQUEST — collapsible "don't have a code?" surface.
+                Two channels: Telegram bot (primary, brand-aligned) and
+                email (fallback when Telegram is unreachable). */}
+            <RevealOnView delay={0.12}>
+              <InviteRequest
+                copy={{
+                  cta: t("invite_cta"),
+                  collapse: t("invite_collapse"),
+                  intro: t("invite_intro"),
+                  channelTg: t("invite_channel_tg"),
+                  channelTgHint: t("invite_channel_tg_hint"),
+                  channelTgButton: t("invite_channel_tg_button"),
+                  channelEmail: t("invite_channel_email"),
+                  channelEmailHint: t("invite_channel_email_hint"),
+                  emailPlaceholder: t("invite_email_placeholder"),
+                  emailSubmit: t("invite_email_submit"),
+                  emailSending: t("invite_email_sending"),
+                  emailSent: t("invite_email_sent"),
+                  emailInvalid: t("invite_email_invalid"),
+                  emailRateLimited: t("invite_email_rate_limited"),
+                  emailGeneric: t("invite_email_generic"),
                 }}
-              >
-                ${basePrice}
-              </span>
-              <span className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary pb-lg">
-                {t("monthly_unit")}
-              </span>
-            </div>
-
-            <PaymentCheckout period={period} locale={locale} />
-          </section>
-        </RevealOnView>
+              />
+            </RevealOnView>
+          </>
+        )}
 
         {/* SPEC block — numbered data-sheet, dividers between rows since the
             items are structurally identical (Nothing section 2.3). */}
@@ -119,14 +225,17 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </section>
         </RevealOnView>
 
-        {/* STATUS band. Real /api/capacity wiring later; the numbers below
-            are a placeholder. */}
+        {/* STATUS band — live capacity counter from /api/access/capacity.
+            Lifetime (monotonic), display absorbs PRICING_COUNTER_OFFSET so
+            the page never reads as "0 sold". */}
         <RevealOnView>
           <section className="flex items-center gap-md font-mono text-label uppercase tracking-[0.16em]">
-            <span className="text-text-disabled">STATUS</span>
+            <span className="text-text-disabled">{t("status_label")}</span>
             <span className="flex-1 h-px bg-border-visible/40" />
             <span className="text-text-display tabular-nums">
-              {CAPACITY_USED}/{CAPACITY_TOTAL} SLOTS ACTIVE
+              {capacity.kind === "ready"
+                ? `${capacity.display}/${capacity.target} ${t("status_taken")}`
+                : `···/··· ${t("status_taken")}`}
             </span>
           </section>
         </RevealOnView>

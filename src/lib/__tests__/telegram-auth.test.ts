@@ -143,6 +143,90 @@ describe("parseStartCommand", () => {
   });
 });
 
+describe("parseBotMessage", () => {
+  function buildUpdate(text: string, from: object | null = { id: 42, username: "alice" }) {
+    return {
+      update_id: 100,
+      message: { text, from, chat: { id: 42, type: "private" } },
+    };
+  }
+
+  it("recognises /start with nonce as start_with_nonce", async () => {
+    const { parseBotMessage } = await import("@/lib/telegram-auth");
+    const parsed = parseBotMessage(buildUpdate("/start abc123-def"));
+    expect(parsed).toMatchObject({
+      kind: "start_with_nonce",
+      nonce: "abc123-def",
+      telegramId: "42",
+      chatId: "42",
+    });
+  });
+
+  it("recognises plain /start as start_plain", async () => {
+    const { parseBotMessage } = await import("@/lib/telegram-auth");
+    const parsed = parseBotMessage(buildUpdate("/start"));
+    expect(parsed).toMatchObject({
+      kind: "start_plain",
+      telegramId: "42",
+      chatId: "42",
+    });
+  });
+
+  it("recognises /start@botname (group chat suffix) without nonce", async () => {
+    const { parseBotMessage } = await import("@/lib/telegram-auth");
+    const parsed = parseBotMessage(buildUpdate("/start@prsloy_dev_bot"));
+    expect(parsed?.kind).toBe("start_plain");
+  });
+
+  it("recognises /invite as invite_request", async () => {
+    const { parseBotMessage } = await import("@/lib/telegram-auth");
+    const parsed = parseBotMessage(buildUpdate("/invite"));
+    expect(parsed).toMatchObject({
+      kind: "invite_request",
+      telegramId: "42",
+      chatId: "42",
+    });
+  });
+
+  it("recognises /invite@botname", async () => {
+    const { parseBotMessage } = await import("@/lib/telegram-auth");
+    const parsed = parseBotMessage(buildUpdate("/invite@prsloy_dev_bot"));
+    expect(parsed?.kind).toBe("invite_request");
+  });
+
+  it("returns null for unknown commands", async () => {
+    const { parseBotMessage } = await import("@/lib/telegram-auth");
+    expect(parseBotMessage(buildUpdate("/help"))).toBeNull();
+    expect(parseBotMessage(buildUpdate("random text"))).toBeNull();
+    expect(parseBotMessage(buildUpdate("/invite garbage"))).toBeNull();
+  });
+
+  it("uses chat.id when distinct from from.id (e.g. group chats)", async () => {
+    const { parseBotMessage } = await import("@/lib/telegram-auth");
+    const update = {
+      update_id: 100,
+      message: {
+        text: "/invite",
+        from: { id: 42, username: "alice" },
+        chat: { id: -100200300, type: "supergroup" },
+      },
+    };
+    const parsed = parseBotMessage(update);
+    expect(parsed?.chatId).toBe("-100200300");
+    expect(parsed?.telegramId).toBe("42");
+  });
+
+  it("falls back to from.id as chatId when chat is missing", async () => {
+    const { parseBotMessage } = await import("@/lib/telegram-auth");
+    const update = {
+      update_id: 100,
+      message: { text: "/invite", from: { id: 42 } },
+    };
+    const parsed = parseBotMessage(update);
+    expect(parsed?.chatId).toBe("42");
+  });
+});
+
 describe("nonce lifecycle", () => {
   it("mint → state is pending → claim returns pending", async () => {
     const nonce = await mintNonce();

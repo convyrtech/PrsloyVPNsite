@@ -157,3 +157,39 @@ describe("getCodeUsage", () => {
     expect(await getCodeUsage("alpha")).toBe("operator:claude");
   });
 });
+
+describe("generateInviteCode", () => {
+  it("produces XXXX-XXXX format from the legible alphabet", async () => {
+    const { generateInviteCode } = await import("@/lib/access-pool");
+    const code = await generateInviteCode();
+    expect(code).toMatch(
+      /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{4}-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{4}$/
+    );
+  });
+
+  it("excludes confusable glyphs (0, O, 1, I, L)", async () => {
+    const { generateInviteCode } = await import("@/lib/access-pool");
+    for (let i = 0; i < 50; i += 1) {
+      const code = await generateInviteCode();
+      expect(code).not.toMatch(/[01OIL]/);
+    }
+  });
+
+  it("adds the code to the pool so it can be consumed", async () => {
+    const { generateInviteCode } = await import("@/lib/access-pool");
+    const code = await generateInviteCode();
+    expect(await listAvailableCodes()).toContain(code);
+    expect(await consumeInviteCode(code, "user:bot-issued")).toBe(true);
+  });
+
+  it("never returns the same code twice in a tight loop", async () => {
+    const { generateInviteCode } = await import("@/lib/access-pool");
+    const seen = new Set<string>();
+    for (let i = 0; i < 100; i += 1) {
+      const code = await generateInviteCode();
+      expect(seen.has(code)).toBe(false);
+      seen.add(code);
+    }
+    expect(seen.size).toBe(100);
+  });
+});
