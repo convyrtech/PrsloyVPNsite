@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { readUtmSource } from "@/lib/client-utm";
 
 export type TelegramButtonCopy = {
   button: string;
@@ -71,12 +72,14 @@ export function TelegramAuthButton({ mode, locale, copy }: Props) {
     }
 
     try {
+      const utmSource = mode === "register" ? readUtmSource() : undefined;
       const res = await fetch("/api/auth/telegram/claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nonce,
           inviteCode: mode === "register" ? inviteCode.trim() : undefined,
+          ...(utmSource ? { utmSource } : {}),
         }),
       });
       const data = (await res.json().catch(() => ({}))) as {

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import {
   AuthError,
   createSession,
@@ -9,6 +9,7 @@ import {
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { isTelegramConfigured, tryClaimNonce } from "@/lib/telegram-auth";
 import { MAX_INVITE_CODE_LENGTH } from "@/lib/access-pool";
+import { sanitizeKeyPart, track } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 
@@ -22,6 +23,7 @@ const NONCE_PATTERN = /^[A-Za-z0-9_-]+$/;
 type ClaimBody = {
   nonce?: unknown;
   inviteCode?: unknown;
+  utmSource?: unknown;
 };
 
 export async function POST(req: Request) {
@@ -73,6 +75,9 @@ export async function POST(req: Request) {
   }
   const inviteCode = rawInvite || undefined;
 
+  const rawUtm = typeof body.utmSource === "string" ? body.utmSource : "";
+  const utmSource = rawUtm ? sanitizeKeyPart(rawUtm) || undefined : undefined;
+
   try {
     const outcome = await tryClaimNonce(nonce);
     if (outcome.status === "pending") {
@@ -97,6 +102,19 @@ export async function POST(req: Request) {
       inviteCode,
     });
     const session = await createSession(user.id);
+
+    // Only true first-time registrations count toward the funnel — a
+    // returning Telegram user opening /login isn't a new conversion.
+    if (isNew) {
+      after(() =>
+        track({
+          name: "register_success",
+          userId: user.id,
+          ...(utmSource ? { utmSource } : {}),
+        })
+      );
+    }
+
     const res = NextResponse.json({ ok: true, user, isNew });
     setSessionCookie(res, session);
     return res;
