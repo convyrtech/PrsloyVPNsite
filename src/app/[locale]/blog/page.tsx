@@ -43,6 +43,71 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
     nextLabel: "NEXT",
     entries: [
       {
+        date: "26 MAY 2026",
+        label: "ANALYTICS",
+        title: "Our own analytics loop",
+        body:
+          "Before turning on advertising, we wired up our own counter. We see visits, traffic sources, the funnel from sign-up to payment, and revenue per source. No third-party SDKs, no tracking cookies — visitors stay first-party. An internal page shows everything live for any date.",
+        items: [
+          "Counters for visits and traffic sources.",
+          "Funnel: register → pay → key issued.",
+          "Daily revenue is counted exactly once even on retry from the payment provider.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "26 MAY 2026",
+        label: "INVITES",
+        title: "Self-serve invite codes and a public slot counter",
+        body:
+          "Beta access is now fully self-serve. The Telegram bot's /invite command hands the visitor a fresh code with a one-click magic link — no operator in the loop. The pricing page shows the honest remaining-slots number for the current round. An email channel is the fallback for people without Telegram.",
+        items: [
+          "Bot /invite: unique code + magic link in seconds.",
+          "Live counter of remaining paying slots on the pricing page.",
+          "Email request as a fallback for visitors without Telegram.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "25 MAY 2026",
+        label: "TELEGRAM SIGN-IN",
+        title: "One-tap sign-in through Telegram",
+        body:
+          "Sign-up and sign-in via the Telegram bot. No passwords, no verification mail — open the deep link, tap Confirm in the bot, you are in the dashboard. Each new visitor spends one invite code; returning users sign in free. Email sign-in stays as a fallback for those without Telegram.",
+        items: [
+          "Secure server-side session right after bot confirmation.",
+          "Invite code is consumed atomically — single-use guaranteed.",
+          "Email and password sign-in remains as an alternative path.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "24 MAY 2026",
+        label: "PRICING + DASHBOARD",
+        title: "Pricing and dashboard pulled into the minimal language",
+        body:
+          "Both pages rebuilt under one aesthetic: a single dominant element per screen, no unnecessary boxes, monospaced data as a standalone visual. Pricing is a single column with the centerpiece price in a pixel face. The dashboard reads access state and the key at first glance — no scrolling, no labels you have to think about.",
+        items: [
+          "Pricing: $5 / 500₽ as the visual centerpiece, other periods compact.",
+          "Dashboard: access state legible without scroll or hint text.",
+          "Subscription status redrawn as a single horizontal strip.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "21 MAY 2026",
+        label: "PAYMENTS",
+        title: "SBP and USDT payments live in production",
+        body:
+          "We connected payment intake: SBP through a bank-app QR code and USDT crypto. Both paths land in the same checkout. The subscription is recorded the moment payment lands — the customer sees the active state immediately. The access key itself is still issued by the operator; automating that hand-off is next.",
+        items: [
+          "SBP QR — one tap in a banking app.",
+          "USDT — a standard crypto checkout.",
+          "Refund terms are published before payment is taken.",
+        ],
+        status: "LIVE",
+      },
+      {
         date: "21 MAY 2026",
         label: "SUPPORT",
         title: "Support and refund rules are now public",
@@ -161,14 +226,14 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
       },
       {
         date: "NEXT",
-        label: "PAID LAUNCH",
-        title: "Next step — taking payments",
+        label: "AUTO KEY DELIVERY",
+        title: "Next step — issue the VPN key automatically at payment",
         body:
-          "Access is granted and the key shows in the dashboard — the technical base for selling is ready. One thing is left: wire up payments so the key is issued automatically right after payment, instead of by hand.",
+          "The single manual step left. After a successful payment the key is still handed out by the operator — we need to wire key generation into the payment confirmation itself. Once that lands, the path from first visit to a working VPN connection closes completely without a human in the loop.",
         items: [
-          "Connect a payment gateway — SBP, cards, crypto.",
-          "Issue the key automatically after a successful payment.",
-          "Open sales once automatic delivery is reliable.",
+          "Subscription URL generated on the VPN backend on demand.",
+          "Trigger on a successful payment confirmation.",
+          "Key delivered to Telegram and email seconds after payment.",
         ],
         status: "NEXT",
       },
@@ -190,6 +255,71 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
     issueLabel: "FIXED",
     nextLabel: "NEXT",
     entries: [
+      {
+        date: "26 МАЯ 2026",
+        label: "АНАЛИТИКА",
+        title: "Свой аналитический контур",
+        body:
+          "Перед запуском рекламы поставили собственный счётчик. Видим визиты, источники трафика, воронку от регистрации до оплаты и выручку по каждому источнику. Без сторонних сервисов и трекинг-куки — посетитель остаётся в первой стороне. Внутренняя страница показывает всё в реальном времени за любую дату.",
+        items: [
+          "Счётчики посещений и источников трафика.",
+          "Воронка: регистрация → оплата → выдача ключа.",
+          "Выручка за день учитывается ровно один раз даже при повторных уведомлениях от платёжки.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "26 МАЯ 2026",
+        label: "ИНВАЙТЫ",
+        title: "Автовыдача инвайтов и публичный счётчик слотов",
+        body:
+          "Доступ в бету теперь полностью самообслуживаемый. Telegram-бот по команде /invite сам выдаёт человеку код доступа со ссылкой-магнитом — оператор не нужен. На странице тарифа честный счётчик: сколько мест осталось в текущем раунде. Альтернативный канал — запрос инвайта по email прямо со страницы тарифа.",
+        items: [
+          "Бот /invite: уникальный код и ссылка-магнит за секунду.",
+          "Публичный счётчик оставшихся мест в реальном времени.",
+          "Запрос по email — fallback для тех, кто без Telegram.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "25 МАЯ 2026",
+        label: "TELEGRAM ВХОД",
+        title: "Вход через Telegram одним тапом",
+        body:
+          "Регистрация и вход через Telegram-бот. Никаких паролей и писем с подтверждением — открыл deep-link, нажал «Подтвердить» в боте, оказался в кабинете. Каждый новый юзер тратит один инвайт-код; возвращающийся входит бесплатно. Вход по почте остаётся как fallback.",
+        items: [
+          "Безопасная серверная сессия после подтверждения в боте.",
+          "Инвайт-код списывается атомарно — повторно использовать нельзя.",
+          "Email и пароль остаются как альтернативный путь.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "24 МАЯ 2026",
+        label: "ТАРИФ + КАБИНЕТ",
+        title: "Тариф и кабинет приведены к минимальному языку",
+        body:
+          "Обе страницы пересобраны под одну эстетику: одна доминанта на экран, никаких лишних коробок, моноширинные данные как самостоятельный визуал. Тариф — единая колонка с центральной ценой пиксельным шрифтом. Кабинет — без карточек и шума, состояние и ключ читаются с первого взгляда.",
+        items: [
+          "Тариф: $5 / 500₽ крупным пиксельным шрифтом, остальные периоды компактно.",
+          "Кабинет: статус доступа считывается без скроллов и подписей.",
+          "Подписочный блок переделан в единую горизонтальную строку.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "21 МАЯ 2026",
+        label: "ОПЛАТА",
+        title: "СБП и USDT в проде",
+        body:
+          "Подключили приём платежей: СБП через QR-код в банковском приложении и USDT-крипта. Оба способа выходят на один и тот же чекаут. Подписка фиксируется в момент успешной оплаты — клиент видит активное состояние сразу. Ключ доступа пока выдаётся оператором; автоматизация выдачи следующая в очереди.",
+        items: [
+          "СБП QR — один тап в банковском приложении.",
+          "USDT — стандартный криптовалютный чекаут.",
+          "Правила возврата опубликованы и доступны до оплаты.",
+        ],
+        status: "LIVE",
+      },
       {
         date: "21 МАЯ 2026",
         label: "ПОДДЕРЖКА",
@@ -309,14 +439,14 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
       },
       {
         date: "ДАЛЬШЕ",
-        label: "ПЛАТНЫЙ ЗАПУСК",
-        title: "Следующий шаг — приём оплаты",
+        label: "АВТОВЫДАЧА КЛЮЧА",
+        title: "Следующий шаг — автовыдача VPN-ключа в момент оплаты",
         body:
-          "Доступ выдаётся, ключ виден в кабинете — техническая база под продажу готова. Осталось одно: подключить приём платежей, чтобы ключ выдавался автоматически сразу после оплаты, а не вручную.",
+          "Единственное звено, которое ещё проходит через оператора. После успешной оплаты ключ доступа сейчас выдаётся вручную — нужно встроить генерацию ключа в момент подтверждения платежа. После этого путь от первого визита до работающего VPN-соединения закрывается полностью без участия человека.",
         items: [
-          "Подключить платёжный шлюз — СБП, карты, криптовалюта.",
-          "Автоматическая выдача ключа после успешной оплаты.",
-          "Открыть продажи, когда автовыдача работает стабильно.",
+          "Генерация подписочной ссылки на VPN-бэкенде по требованию.",
+          "Триггер на успешное подтверждение оплаты.",
+          "Ключ приходит в Telegram и на email через секунды после оплаты.",
         ],
         status: "NEXT",
       },
