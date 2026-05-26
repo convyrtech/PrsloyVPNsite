@@ -97,6 +97,23 @@ export function installFakeRedis(): FakeRedis {
         store.strings.set(key, String(next));
         return next;
       }
+      case "INCRBY": {
+        const current = Number(store.strings.get(key) ?? "0");
+        const next = current + Number(cmd[2]);
+        store.strings.set(key, String(next));
+        return next;
+      }
+      case "MGET":
+        // cmd shape: ["MGET", k1, k2, ...]. Return values in order;
+        // missing keys yield null.
+        return cmd.slice(1).map((k) => store.strings.get(String(k)) ?? null);
+      case "EXPIRE": {
+        // Fake store does not track TTL; mirror Redis return semantics
+        // (1 if the key exists, 0 otherwise) so tests can assert on it.
+        const exists =
+          store.strings.has(key) || store.sets.has(key) || store.lists.has(key);
+        return exists ? 1 : 0;
+      }
       case "LPUSH": {
         const list = store.lists.get(key) ?? [];
         list.unshift(String(cmd[2]));

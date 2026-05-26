@@ -75,6 +75,32 @@ export async function kvIncr(key: string): Promise<number> {
   return typeof result === "number" ? result : Number(result ?? 0);
 }
 
+// Increment by an arbitrary positive amount. Used for revenue counters
+// where each event adds the order's amountRub, not just 1. Redis INCRBY
+// only accepts integers, so we floor the amount.
+export async function kvIncrBy(key: string, amount: number): Promise<number> {
+  const result = await redisCommand<number>(["INCRBY", key, Math.floor(amount)]);
+  return typeof result === "number" ? result : Number(result ?? 0);
+}
+
+// Returns true when the TTL was set, false when the key does not exist.
+// Callers should not treat a false return as an error — analytics counters
+// create-then-expire in two round-trips, and a missing key just means the
+// INCR has not landed yet (race with eviction), which is benign.
+export async function kvExpire(key: string, seconds: number): Promise<boolean> {
+  const result = await redisCommand<number>(["EXPIRE", key, seconds]);
+  return result === 1;
+}
+
+// Returns one entry per requested key, preserving order. Missing keys
+// come back as null. A single round-trip — used by the analytics admin
+// to batch-read hundreds of counters at once.
+export async function kvMGet(keys: string[]): Promise<Array<string | null>> {
+  if (keys.length === 0) return [];
+  const result = await redisCommand<Array<string | null>>(["MGET", ...keys]);
+  return Array.isArray(result) ? result : [];
+}
+
 export async function kvSAdd(key: string, member: string): Promise<number> {
   return await redisCommand<number>(["SADD", key, member]);
 }

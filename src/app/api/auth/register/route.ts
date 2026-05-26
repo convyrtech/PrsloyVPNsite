@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import {
   AuthError,
   createSession,
@@ -10,6 +10,7 @@ import {
 import { buildVerificationEmail } from "@/lib/auth-email";
 import { sendTransactionalEmail } from "@/lib/email";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
+import { sanitizeKeyPart, track } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 
@@ -21,6 +22,7 @@ type RegisterBody = {
   password?: unknown;
   inviteCode?: unknown;
   locale?: unknown;
+  utmSource?: unknown;
 };
 
 function getSiteUrl(req: Request) {
@@ -67,6 +69,8 @@ export async function POST(req: Request) {
   const password = typeof body.password === "string" ? body.password : "";
   const inviteCode = typeof body.inviteCode === "string" ? body.inviteCode : "";
   const locale = typeof body.locale === "string" ? body.locale : "en";
+  const rawUtm = typeof body.utmSource === "string" ? body.utmSource : "";
+  const utmSource = rawUtm ? sanitizeKeyPart(rawUtm) || undefined : undefined;
 
   try {
     const user = await registerUserWithInvite(email, password, inviteCode);
@@ -76,6 +80,14 @@ export async function POST(req: Request) {
     if (!user.email) throw new Error("register: email missing after register");
     const session = await createSession(user.id);
     const emailResult = await sendVerification(req, user.email, user.id, locale);
+
+    after(() =>
+      track({
+        name: "register_success",
+        userId: user.id,
+        ...(utmSource ? { utmSource } : {}),
+      })
+    );
 
     const res = NextResponse.json({
       ok: true,

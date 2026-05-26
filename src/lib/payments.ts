@@ -34,6 +34,13 @@ export type PaymentOrder = {
   createdAt: string;
   updatedAt: string;
   confirmedAt: string | null;
+  // Sanitized utm_source captured at order creation. Threaded into the
+  // payment_confirmed analytics event in the callback so the funnel
+  // can attribute revenue to a traffic source without persisting any
+  // per-user UTM record. Optional because orders serialized before this
+  // field was introduced rehydrate as undefined — readers must use
+  // `order.utmSource ?? null` (or falsy check) and never `=== null`.
+  utmSource?: string | null;
 };
 
 export class PaymentError extends Error {
@@ -89,6 +96,7 @@ export async function createPaymentOrder(input: {
   email: string;
   period: Period;
   method: PaymentMethod;
+  utmSource?: string | null;
 }): Promise<PaymentOrder> {
   const now = new Date().toISOString();
   const order: PaymentOrder = {
@@ -108,6 +116,7 @@ export async function createPaymentOrder(input: {
     createdAt: now,
     updatedAt: now,
     confirmedAt: null,
+    utmSource: input.utmSource ?? null,
   };
 
   await saveOrder(order);
@@ -135,10 +144,26 @@ export async function attachPaymentTransaction(input: {
   return order;
 }
 
+export type UpdatePaymentResult = {
+  order: PaymentOrder;
+  // True only on the transition where status flips into "confirmed" for
+  // the first time. Webhooks retry; emitting payment_confirmed analytics
+  // on every callback would inflate revenue counts 2-3x.
+  confirmedNow: boolean;
+};
+
+// Per-order emit gate for the payment_confirmed analytics event. 7-day
+// TTL is well past any retry window a provider keeps before declaring a
+// transaction dead.
+const EMIT_GATE_TTL_SECONDS = 60 * 60 * 24 * 7;
+function emitGateKey(orderId: string): string {
+  return `payment:emit:${orderId}`;
+}
+
 export async function updatePaymentByTransaction(input: {
   transactionId: string;
   providerStatus: string;
-}): Promise<PaymentOrder> {
+}): Promise<UpdatePaymentResult> {
   const orderId = await kvGet(transactionKey(input.transactionId));
   if (!orderId) throw new PaymentError("transaction_not_found");
 
@@ -162,19 +187,32 @@ export async function updatePaymentByTransaction(input: {
   await saveOrder(order);
   await kvSet(userLatestKey(order.userId), order.id);
 
+  // NX-set is the global gate. Two concurrent CONFIRMED callbacks for
+  // the same orderId can both read wasFirstConfirmation=true (the read
+  // happened before either save landed), so the read-side check is the
+  // fast path, not the source of truth. Only one caller wins the SET
+  // NX — analytics emit + capacity increment both fire from that single
+  // winner, so revenue and the paying-user counter each tick exactly
+  // once per real transition no matter how the provider retries.
+  let confirmedNow = false;
   if (wasFirstConfirmation) {
-    // Capacity counter is a derived display value, so a failure here
-    // must not roll back the order. Worst case the counter falls
-    // behind by one — the marketing offset absorbs minor drift, and
-    // an operator can recompute by scanning orders if it matters.
-    try {
-      await incrementPayingCounter();
-    } catch (err) {
-      console.warn("[payments] capacity counter increment failed", err);
+    confirmedNow = await kvSet(emitGateKey(order.id), "1", {
+      nx: true,
+      ex: EMIT_GATE_TTL_SECONDS,
+    });
+    if (confirmedNow) {
+      // Capacity counter is a derived display value, so a failure here
+      // must not roll back the order. Worst case the counter falls
+      // behind by one — the marketing offset absorbs minor drift, and
+      // an operator can recompute by scanning orders if it matters.
+      try {
+        await incrementPayingCounter();
+      } catch (err) {
+        console.warn("[payments] capacity counter increment failed", err);
+      }
     }
   }
-
-  return order;
+  return { order, confirmedNow };
 }
 
 export function providerStatusToPaymentStatus(status: string): PaymentStatus {

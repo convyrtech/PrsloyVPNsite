@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getAuthSetupErrorCode, getCurrentUser } from "@/lib/auth";
 import {
   attachPaymentTransaction,
@@ -11,6 +11,7 @@ import {
 } from "@/lib/platega";
 import { type Period, PERIODS } from "@/lib/pricing";
 import type { PaymentMethod } from "@/lib/payments";
+import { sanitizeKeyPart, track } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,7 @@ type CreateBody = {
   period?: unknown;
   locale?: unknown;
   method?: unknown;
+  utmSource?: unknown;
 };
 
 const ALLOWED_METHODS: ReadonlySet<PaymentMethod> = new Set(["sbp_qr", "crypto"]);
@@ -59,11 +61,16 @@ export async function POST(req: Request) {
       );
     }
 
+    const rawUtm =
+      typeof body.utmSource === "string" ? body.utmSource : "";
+    const utmSource = rawUtm ? sanitizeKeyPart(rawUtm) || null : null;
+
     const order = await createPaymentOrder({
       userId: user.id,
       email: user.email,
       period: period as Period,
       method: requestedMethod,
+      utmSource,
     });
     const siteUrl = getSiteUrl(req);
     const platega = await createPlategaPayment({
@@ -78,6 +85,15 @@ export async function POST(req: Request) {
       paymentUrl: platega.paymentUrl,
       providerStatus: platega.status,
     });
+
+    after(() =>
+      track({
+        name: "payment_started",
+        orderId: attached.id,
+        method: requestedMethod,
+        ...(utmSource ? { utmSource } : {}),
+      })
+    );
 
     return NextResponse.json({
       ok: true,

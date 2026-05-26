@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { isAdminAuthorized, isAdminConfigured } from "@/lib/admin-auth";
 import { AuthError, getAuthSetupErrorCode, grantAccess } from "@/lib/auth";
+import { track } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 
@@ -91,6 +92,7 @@ export async function POST(req: Request) {
 
   try {
     const user = await grantAccess(identifier, { subscriptionUrl });
+    after(() => track({ name: "key_issued", userId: user.id }));
     return NextResponse.json({ ok: true, user });
   } catch (err) {
     const setupError = getAuthSetupErrorCode(err);

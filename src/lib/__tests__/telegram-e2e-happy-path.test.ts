@@ -1,5 +1,19 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeRedis } from "./fake-redis";
+
+// next/server's after() throws when called outside a Next.js request
+// scope. The claim route uses it to fire analytics fire-and-forget; in
+// tests we just capture the callback so the route's try/catch never sees
+// the underlying "no request context" error.
+vi.mock("next/server", async () => {
+  const actual = await vi.importActual<typeof import("next/server")>("next/server");
+  return {
+    ...actual,
+    after: (cb: () => Promise<void> | void) => {
+      void Promise.resolve(cb()).catch(() => undefined);
+    },
+  };
+});
 
 const redis = installFakeRedis();
 
