@@ -27,12 +27,38 @@ Mirrors open GitHub Issues + ongoing workstreams. Synced with [Project board](ht
 
 **Why:** Сейчас оплата → `Подписка active`, но `Ключ` выдаётся вручную через `/admin/grant`. Узкое горлышко >10 платежей/день. Также для скорости user delight (мгновенный VPN после оплаты).
 
-**Context:** Партнёр (mizerovkuzma) делает Marzneshin-side endpoint в `src/server/` (см. CLAUDE.md §10b). Ты делаешь HTTP-интеграцию + KV-storage `subscription_url` + UI на `/dashboard`. Идемпотентность через `confirmedAt` guard. Rollback: если Marzneshin down — платёж не теряется, юзер видит «выдадим в течение часа».
+**Архитектура (решено 2026-05-27):** PRSLOY НЕ ходит в Marz напрямую — Marz API биндится только на `127.0.0.1` партнёрского сервера, наружу не торчит, Vercel не дотянется. Подключение через **proxy в partner backend** (`/opt/hellcat-app`):
 
-**Effort:** M (HTTP boundary + KV write + UI updates + tests)
+```
+Vercel (PRSLOY) ──POST /external/issue-key (HMAC)──► Partner backend ──► marz.create_user() ──► Marzneshin
+                                                          (готовый код из not_for_all/backend/marz.py)
+```
+
+Партнёр пишет ~30-line endpoint на FastAPI с HMAC-проверкой. PRSLOY пишет `src/server/marzneshin-proxy.ts` — тонкий HTTP-клиент к этому endpoint.
+
+Полная спека: [`prsloy-infra/marzneshin-api-spec.md`](https://github.com/convyrtech/prsloy-infra/blob/main/marzneshin-api-spec.md)
+
+**Context:**
+- Marzneshin: `dawsh/marzneshin:v0.7.4`, 65 endpoints, FastAPI, JWT TTL 8h
+- Готовый Python-клиент уже есть в `convyrtech/not_for_all/backend/marz.py` (token cache 6h, retry 401, race-locks на extend, retry 5xx с jitter) — партнёр оборачивает его в свой endpoint
+- Идемпотентность через `payment_id` как ключ (409 на повтор)
+- Rollback: если Marz down → ставим флаг `provisioning_pending` в order, юзер видит «выдадим в течение часа» вместо ошибки
+
+**Open questions (нужны решения перед production):**
+- Service ID: общий `id=1` (Hellcat Premium) или новый `id=2` (PRSLOY Premium)? Решаем через env `MARZ_SERVICE_IDS`, default `[1]`, флаг к разделению — отдельная задача.
+- Username prefix: `p_<userId>` (12-hex lowercase) — без collision с Hellcat-схемой
+- HMAC shared secret: партнёр генерирует, обе стороны кладут в env
+- Non-sudo admin: партнёр создаёт через `POST /api/admins`, отдаёт login/password для своего env (PRSLOY не получает Marz creds)
+
+**Effort:** M (HTTP boundary + KV write + UI updates + tests). Партнёрский endpoint = S.
 **Priority:** P1
-**Owner:** convyrtech + mizerovkuzma
-**Depends on:** Marzneshin endpoint от partner с auth-схемой
+**Owner:** convyrtech (Vercel side) + mizerovkuzma (partner endpoint)
+**Blocked on:**
+- Партнёр пишет `POST /external/issue-key` в hellcat-app
+- Партнёр генерирует и присылает HMAC shared secret
+- Партнёр создаёт non-sudo admin в Marz для своего backend
+
+**Параллельный workstream партнёра (не блокер для интеграции, но блокер для рабочего VPN):** поднять 7 nodes — сейчас активна только 1 local node, subscription_url отдаёт пустой конфиг до bootstrap'а остальных.
 
 ---
 
