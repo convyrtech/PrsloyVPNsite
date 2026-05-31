@@ -62,7 +62,10 @@ export async function generateMetadata({
     title: t("title"),
     description: t("description"),
     alternates: {
-      canonical: `/${locale}`,
+      // No hard-coded canonical here: a single `/${locale}` was field-merged
+      // onto every sub-page by Next.js, telling search engines that
+      // pricing/faq/blog/legal are duplicates of the homepage. Let each URL
+      // self-canonicalize; keep only the hreflang language alternates.
       languages: {
         en: "/en",
         ru: "/ru",
