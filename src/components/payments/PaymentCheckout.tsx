@@ -128,7 +128,7 @@ export function PaymentCheckout({
         disabled={isLoading}
         className="group inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
                    font-mono text-label uppercase tracking-[0.08em] text-black rounded-full
-                   hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
+                   enabled:hover:opacity-90 enabled:hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
                    transition disabled:opacity-60 disabled:cursor-wait"
       >
         <Bracketed>{loadingMethod === "sbp_qr" ? copy.loadingSbp : `${copy.paySbp} · ${fmtRub(totalRub)} ₽`}</Bracketed>
@@ -139,7 +139,7 @@ export function PaymentCheckout({
         disabled={isLoading}
         className="group inline-flex min-h-[48px] items-center justify-center border border-border-visible px-lg
                    font-mono text-label uppercase tracking-[0.08em] text-text-display rounded-full
-                   hover:border-text-display hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
+                   enabled:hover:border-text-display enabled:hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
                    transition disabled:opacity-60 disabled:cursor-wait"
       >
         <Bracketed>{loadingMethod === "crypto" ? copy.loadingCrypto : `${copy.payCrypto} · $${totalUsd}`}</Bracketed>
