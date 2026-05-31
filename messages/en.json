@@ -1,9 +1,9 @@
 {
   "meta": {
     "title": "PRSLOY — private VPN by invite",
-    "description": "Private VPN with a server chain: own entry in Russia, exit beyond it. Datacenters chosen by reputation, not price. $5/mo, invite only.",
+    "description": "Private access to a fast connection that holds under blocks and at peak hours. Datacenters chosen by reputation, not price. $5/mo, invite only.",
     "ogTitle": "PRSLOY · private VPN by invite",
-    "ogDescription": "Server chain with own entry in Russia. Chosen by reputation, not price. $5/mo, invite only."
+    "ogDescription": "A connection that holds under blocks and load. By reputation, not by price. $5/mo, invite only."
   },
   "hero": {
     "status_label": "CLOSED BETA",
@@ -12,7 +12,7 @@
     "sub_price": "",
     "sub_features": "Our own servers and clean IPs. Tuned to stay fast and not drop.",
     "cta": "REQUEST INVITE",
-    "launch_strip": "CLOSED BETA · BY INVITATION",
+    "launch_strip": "BY INVITATION ONLY",
     "scroll_hint": "SCROLL"
   },
   "header": {
@@ -22,17 +22,10 @@
     "nav_dashboard": "DASHBOARD",
     "status_short": "CLOSED BETA",
     "status_full": "INVITE-ONLY · PRIVATE BETA",
-    "cta_buy": "INVITE",
-    "cta_buy_compact": "INVITE",
+    "cta_buy": "ACCESS",
+    "cta_buy_compact": "ACCESS",
     "menu_open": "MENU",
     "menu_close": "CLOSE"
-  },
-  "bridge": {
-    "label_top": "ESTABLISHING CONNECTION",
-    "progress_label": "HANDSHAKE",
-    "city_list": "MSK · BER · SOF · NYC",
-    "label_bottom": "CONNECTION ESTABLISHED",
-    "scroll_cue": "NETWORK"
   },
   "globe_exit": {
     "scroll_cue": "BEYOND THE NETWORK"
@@ -40,8 +33,8 @@
   "globe": {
     "label": "INFRASTRUCTURE",
     "title_line1": "",
-    "title_line2_strong": "Uncompromising stability.",
-    "subtitle": "We deploy nodes only in tier-1 datacenters (Tier-3) with impeccable reputation. No cheap hosting, no overselling. The result — an autonomous channel resistant to external blocks and peak loads.",
+    "title_line2_strong": "Steady under load.",
+    "subtitle": "Nodes only in datacenters with a proven track record — no budget hosting, no overcrowded channels. So the connection holds through blocks and at peak hours.",
     "metric_routing": "CONNECTION",
     "metric_routing_value": "STEADY",
     "metric_logs": "ACCESS",
@@ -58,10 +51,10 @@
     "cta": "REQUEST INVITE"
   },
   "nothing": {
-    "label": "YOUR CONNECTION · CLOSED BETA",
+    "label": "YOUR CONNECTION · ENCRYPTED",
     "your_isp_sees": "Your ISP sees",
     "nothing_word": "NOTHING",
-    "meta_invisible": "Your own perimeter · Personal gateway · No logs",
+    "meta_invisible": "Encrypted traffic only · No activity logs · Personal gateway",
     "scroll_cue": "ACCESS"
   },
   "pricing": {
@@ -71,7 +64,7 @@
     "period_12m": "1 YR",
     "per_month": "/ MO",
     "everything_included": "One price. No “basic” or “premium” tiers.",
-    "promo_text": "CLOSED BETA · LIMITED CAPACITY",
+    "promo_text": "LIMITED CAPACITY",
     "includes": "INCLUDED",
     "feature_encryption": "Servers",
     "feature_encryption_value": "Own fleet",
@@ -79,7 +72,7 @@
     "feature_devices_value": "Unlimited",
     "feature_speed": "IP addresses",
     "feature_speed_value": "Clean, no captcha",
-    "feature_servers": "Logging",
+    "feature_servers": "Activity logs",
     "feature_servers_value": "None",
     "feature_logs": "Access",
     "feature_logs_value": "Invite-only",
@@ -94,11 +87,11 @@
     "label": "QUESTIONS",
     "see_all": "ALL QUESTIONS",
     "q1": "What does this actually run on?",
-    "a1": "Top-tier servers. Budget hosting gets compromised instantly, lands on global blocklists, and paralyzes the whole network. We invest in clean IP addresses and independent locations. Security is never cheap.",
+    "a1": "On top-tier servers. Cheap hosting lands on blocklists fast and drags the whole network down with it — so we pay for clean addresses and independent locations.",
     "q2": "Why invite-only?",
-    "a2": "To guarantee the speed we promise. We'd rather ensure impeccable uptime for a limited circle than overload the network for quick revenue. Each node's capacity is hard-quoted.",
+    "a2": "To keep the speed we promise. We let people in gradually and keep the number of users per server within limits where the connection doesn't degrade.",
     "q3": "Where's the app?",
-    "a3": "Privacy shouldn't depend on third-party software or a 'single button'. You get a clean configuration file that integrates natively into your OS in 60 seconds. This eliminates the background telemetry collection present in 99% of commercial apps. Our own lightweight client is in development."
+    "a3": "Privacy shouldn't depend on extra software. You get a ready-made config and import it into a trusted client — for example, Happ — in a couple of minutes. There's no app of ours between you and the network, so there's no background data collection."
   },
   "pricing_page": {
     "label": "PRICING",
@@ -106,6 +99,10 @@
     "headline_line2": "",
     "subheadline": "Personal configuration. No extra setup.",
     "monthly_unit": "per month",
+    "total_label": "TOTAL",
+    "guest_flow": "Access is invite-only. Request a code, create a PRSLOY ID, then pay.",
+    "have_account": "ALREADY HAVE A PRSLOY ID?",
+    "login_to_pay": "SIGN IN TO PAY",
     "telegram_label": "Need support?",
     "telegram_link": "Message us on Telegram",
     "refunds_label": "Refunds",
@@ -295,8 +292,8 @@
     "key_not_issued": "NOT ISSUED",
     "status_ready_title": "Access is active",
     "status_ready_body": "Your configuration is ready to use. Copy the personal link below and set up your device using the guide.",
-    "status_pending_title": "Access is being prepared",
-    "status_pending_body": "Waiting for access to be issued. The key and connection buttons will appear here once it is ready.",
+    "status_pending_title": "Access not issued yet",
+    "status_pending_body": "Once your payment is confirmed and access is issued, the key and connection buttons appear here.",
     "status_blocked_title": "Access is limited",
     "status_blocked_body": "Contact support with your account email. We will check the status and tell you what to do next.",
     "vpn_section_label": "Connection",
@@ -352,8 +349,8 @@
     "logout": "LOG OUT"
   },
   "payment_result": {
-    "success_title": "PAYMENT RECEIVED",
-    "success_body": "Your subscription is active. The connection key appears in the card below after manual issue — support already sees your payment.",
+    "success_title": "PAYMENT PROCESSING",
+    "success_body": "We're checking your payment. Once it's confirmed, your subscription activates — the status is shown below. During the closed beta the key is issued manually.",
     "failed_title": "PAYMENT DID NOT GO THROUGH",
     "failed_body": "The payment did not complete and no money was charged. Try again or contact support if something is off.",
     "dismiss": "Dismiss"
@@ -361,10 +358,10 @@
   "auth": {
     "login_label": "PRSLOY ID",
     "login_title": "Sign in",
-    "login_subtitle": "Use the email and password you created on the site. Telegram is no longer required for web access.",
+    "login_subtitle": "Sign in with the email and password you created on the site.",
     "register_label": "PRSLOY ID",
     "register_title": "Create account",
-    "register_subtitle": "Create a site account. We’ll verify the email and attach access here when the invite is issued.",
+    "register_subtitle": "Create your account with your invite code. We’ll verify your email and attach access to this PRSLOY ID.",
     "email": "EMAIL",
     "password": "PASSWORD",
     "email_placeholder": "you@email.com",
@@ -395,6 +392,8 @@
     "invite_required": "Add the invite code we sent you.",
     "invite_invalid": "This invite code is not recognised.",
     "invite_consumed": "This invite has already been used.",
+    "no_code": "NO CODE?",
+    "no_code_link": "REQUEST AN INVITE",
     "tg_expired": "Took too long. Tap the button again to retry.",
     "tg_consumed": "This sign-in link was already used. Tap the button to start over.",
     "tg_not_configured": "Telegram sign-in is not available yet.",
@@ -419,12 +418,12 @@
       {
         "category": "product",
         "q": "Why invite-only and not for everyone?",
-        "a": "To guarantee the speed we promise. We'd rather ensure impeccable uptime for a limited circle than overload the network for quick revenue. Each node's capacity is hard-quoted."
+        "a": "To keep the speed we promise. We let people in gradually and keep the number of users per server within limits where the connection doesn't degrade."
       },
       {
         "category": "product",
         "q": "Where's the app?",
-        "a": "Privacy shouldn't depend on third-party software or a 'single button'. You get a clean configuration file that integrates natively into your OS in 60 seconds. This eliminates the background telemetry collection present in 99% of commercial apps. Our own lightweight client is in development."
+        "a": "Privacy shouldn't depend on extra software. You get a ready-made config and import it into a trusted client — for example, Happ — in a couple of minutes. There's no app of ours between you and the network, so there's no background data collection."
       },
       {
         "category": "tech",
@@ -449,12 +448,12 @@
       {
         "category": "payment",
         "q": "How does payment work now?",
-        "a": "SBP QR checkout is live. During beta, payment activates a subscription in your dashboard; the key is still issued manually after a capacity check."
+        "a": "SBP and USDT checkout are live. During beta, payment activates a subscription in your dashboard; the key is still issued manually after a capacity check."
       },
       {
         "category": "payment",
         "q": "Why show $5/mo?",
-        "a": "It is the beta access reference price so positioning is clear. SBP QR checkout is live; automatic key issuing comes once the API is wired."
+        "a": "It is the beta access reference price so positioning is clear. SBP and USDT checkout are live; automatic key issuing comes once the API is wired."
       },
       {
         "category": "trust",
@@ -474,7 +473,7 @@
     "privacy": {
       "label": "PRIVACY",
       "title": "What we know about you",
-      "updated": "Updated: May 13, 2026",
+      "updated": "Updated: May 31, 2026",
       "intro": "This is not a corporate privacy policy with 40 clauses. Here’s an honest list of what we collect, why, and how long we keep it.",
       "sections": [
         {
@@ -483,11 +482,11 @@
         },
         {
           "h": "WHAT WE DON’T COLLECT",
-          "p": "Activity logs — which sites you visit, what you look up, who you connect to. Payment data (cards, account numbers) — these go directly to the payment gateway. Biometrics, contacts, geolocation. There are no email newsletters or marketing trackers on the site."
+          "p": "Activity logs — which sites you visit, what you look up, who you connect to. Payment data (cards, account numbers) — these go directly to the payment gateway. Biometrics, contacts, geolocation. There are no email newsletters or third-party ad trackers; we count anonymized visit stats on our own side and never tie them to your network activity."
         },
         {
           "h": "PAYMENT",
-          "p": "Payment is processed via SBP QR. The payment gateway handles card data; we only store the order status, amount, period, and the PRSLOY ID it is tied to."
+          "p": "Payment is processed via SBP and USDT. The payment gateway handles card data; we only store the order status, amount, period, and the PRSLOY ID it is tied to."
         },
         {
           "h": "RETENTION",
@@ -512,7 +511,7 @@
     "terms": {
       "label": "TERMS",
       "title": "Rules of use",
-      "updated": "Updated: May 13, 2026",
+      "updated": "Updated: May 31, 2026",
       "intro": "Short rules. This is not an enterprise SLA — these are beta-service terms written so they can actually be read.",
       "sections": [
         {
@@ -533,7 +532,7 @@
         },
         {
           "h": "PAYMENT AND REFUNDS",
-          "p": "SBP QR checkout is live. During private beta the key is still issued manually after payment until the API is wired. If something goes wrong, message support."
+          "p": "SBP and USDT checkout are live. During private beta the key is still issued manually after payment until the API is wired. If something goes wrong, message support."
         },
         {
           "h": "TERMINATION",
@@ -550,7 +549,7 @@
     "refunds": {
       "label": "REFUNDS",
       "title": "Refund and cancellation policy",
-      "updated": "Updated: May 20, 2026",
+      "updated": "Updated: May 31, 2026",
       "intro": "Clear rules for private beta access. If the service does not work for you, contact support and we will handle the request without loops or hidden steps.",
       "sections": [
         {
@@ -587,21 +586,10 @@
     }
   },
   "footer": {
-    "departure_label": "ACCESS STATUS",
-    "departure_sub": "CLOSED BETA",
     "closing_line1": "ACCESS",
     "closing_line2": "BY INVITE.",
     "cta": "REQUEST INVITE",
     "cta_meta": "$5/MO · ISSUED MANUALLY",
-    "command_label": "PANEL",
-    "metric_status": "STATUS",
-    "metric_status_value": "CLOSED BETA",
-    "metric_uptime": "ACCESS",
-    "metric_uptime_value": "INVITE-ONLY",
-    "metric_nodes": "INFRASTRUCTURE",
-    "metric_nodes_value": "BY REPUTATION",
-    "metric_launch": "ENTRY",
-    "metric_launch_value": "OWN SERVERS",
     "nav_pricing": "PRICING",
     "nav_faq": "FAQ",
     "nav_blog": "BLOG",
