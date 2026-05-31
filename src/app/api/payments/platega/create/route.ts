@@ -51,6 +51,15 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+    // Blocked accounts must never reach checkout: the grant step rejects them,
+    // so the money would land but no key would ever be issued. Stop before the
+    // order is created and the provider is charged.
+    if (user.accessStatus === "blocked") {
+      return NextResponse.json(
+        { ok: false, error: "user_blocked" },
+        { status: 403 }
+      );
+    }
     // Payments still require an email for the Platega receipt and operator
     // reach-out. Telegram-only users link an email in a follow-up step
     // before they can buy.

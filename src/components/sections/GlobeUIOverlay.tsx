@@ -4,6 +4,7 @@ import { motion, useTransform, type MotionValue } from "motion/react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { RevealText } from "@/components/animations/RevealText";
+import { Bracketed } from "@/components/ui/Bracketed";
 
 /**
  * UI overlay that appears AFTER the globe materializes.
@@ -28,8 +29,11 @@ export function GlobeUIOverlay({
 
   return (
     <>
-      {/* TOP-LEFT — label + title + subtitle */}
-      <div className="absolute top-[clamp(112px,16vh,156px)] left-lg md:top-[clamp(132px,17vh,188px)] md:left-2xl">
+      {/* TOP — label + title. On mobile the metrics sit in a row beneath the
+          title and the long subtitle is dropped (it overlaps the globe on a
+          narrow screen). Desktop keeps the asymmetric top-left / top-right split. */}
+      <div className="absolute top-[clamp(92px,14vh,156px)] left-lg right-lg
+                      md:top-[clamp(132px,17vh,188px)] md:left-2xl md:right-auto">
         <motion.p
           className="font-mono text-label uppercase text-text-disabled tracking-[0.08em] mb-md"
           style={{ opacity: labelOp }}
@@ -48,18 +52,29 @@ export function GlobeUIOverlay({
             <RevealText text={t("title_line2_strong")} progress={titleProgress} />
           </span>
         </h2>
+
+        {/* MOBILE metrics — clean row under the title (desktop uses top-right). */}
+        <motion.div
+          className="md:hidden mt-lg grid grid-cols-3 gap-md"
+          style={{ opacity: metricsOp }}
+        >
+          <Metric label={t("metric_routing")} value={t("metric_routing_value")} />
+          <Metric label={t("metric_logs")} value={t("metric_logs_value")} />
+          <Metric label={t("metric_status")} value={t("metric_status_value")} />
+        </motion.div>
+
         <motion.p
-          className="font-body text-body-sm text-text-secondary mt-md max-w-xs leading-relaxed"
+          className="hidden md:block font-body text-body-sm text-text-secondary mt-md max-w-xs leading-relaxed"
           style={{ opacity: subOp }}
         >
           {t("subtitle")}
         </motion.p>
       </div>
 
-      {/* TOP-RIGHT — honest metrics */}
+      {/* TOP-RIGHT metrics — desktop only */}
       <motion.div
-        className="absolute top-[clamp(96px,14vh,144px)] right-lg md:top-[clamp(112px,14vh,160px)] md:right-2xl
-                   grid grid-cols-3 gap-lg text-right"
+        className="hidden md:grid absolute top-[clamp(112px,14vh,160px)] right-2xl
+                   grid-cols-3 gap-lg text-right"
         style={{ opacity: metricsOp }}
       >
         <Metric label={t("metric_routing")} value={t("metric_routing_value")} />
@@ -74,12 +89,12 @@ export function GlobeUIOverlay({
       >
         <Link
           href="/pricing"
-          className="inline-block bg-text-display text-black font-mono text-body-sm
+          className="group inline-block bg-text-display text-black font-mono text-body-sm
                      uppercase tracking-[0.08em] px-xl py-md rounded-full
-                     hover:opacity-90 active:scale-[0.98]
+                     hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
                      transition duration-150 ease-out-nothing"
         >
-          [ {t("cta")} ]
+          <Bracketed>{t("cta")}</Bracketed>
         </Link>
       </motion.div>
 

@@ -7,11 +7,12 @@ import {
   useSpring,
   useTransform,
   useMotionValueEvent,
+  useReducedMotion,
 } from "motion/react";
 import { useTranslations } from "next-intl";
 import { TextErosion } from "./TextErosion";
 
-const CIPHER_CHARS = "▓░█▒%@#&XΨΔΣΩ$01";
+const CIPHER_CHARS = "▓░█▒%@#&XΨΔΣΩ$01ЖФЦЭЯГ";
 
 /**
  * NothingStage — second cinematic act after Globe.
@@ -104,6 +105,7 @@ export function NothingStage() {
   );
 
   // ── Cipher mode (DOM text mutation) ──
+  const prefersReduced = useReducedMotion();
   const [cipherText, setCipherText] = useState(targetWord);
   const cipherActive = useRef(false);
 
@@ -113,7 +115,7 @@ export function NothingStage() {
 
   useEffect(() => {
     const id = setInterval(() => {
-      if (cipherActive.current) {
+      if (cipherActive.current && !prefersReduced) {
         let out = "";
         for (let i = 0; i < targetWord.length; i++) {
           const lockChance = 0.18;
@@ -128,7 +130,7 @@ export function NothingStage() {
       }
     }, 70);
     return () => clearInterval(id);
-  }, [targetWord]);
+  }, [targetWord, prefersReduced]);
 
   return (
     <section
@@ -141,7 +143,7 @@ export function NothingStage() {
       // clear while trimming the gap.
       style={{ height: "320vh", marginTop: "-60vh" }}
     >
-      <div className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black flex items-center justify-center">
+      <div className="sticky top-0 left-0 right-0 h-[100svh] overflow-hidden bg-black flex items-center justify-center">
         {/* TOP LABEL */}
         <motion.div
           className="absolute top-[18vh] left-1/2 -translate-x-1/2

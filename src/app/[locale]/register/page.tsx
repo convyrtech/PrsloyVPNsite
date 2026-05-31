@@ -63,6 +63,18 @@ export default async function RegisterPage({
                 </Link>
               </div>
             </RevealOnView>
+
+            <RevealOnView delay={0.16}>
+              <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
+                <span className="text-text-disabled">{t("no_code")}</span>
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80"
+                >
+                  {t("no_code_link")}
+                </Link>
+              </div>
+            </RevealOnView>
           </div>
 
           {/* FORM SIDE */}
@@ -74,7 +86,7 @@ export default async function RegisterPage({
                   <span className="text-text-display">CREATE</span>
                 </div>
                 <div className="grid grid-cols-3 gap-sm">
-                  {["EMAIL", "VERIFY", "QUEUE"].map((item, index) => (
+                  {["EMAIL", "VERIFY", "ACCESS"].map((item, index) => (
                     <div key={item} className="border border-border-visible bg-black p-sm">
                       <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-disabled">
                         {String(index + 1).padStart(2, "0")}

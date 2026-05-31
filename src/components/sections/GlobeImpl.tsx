@@ -459,13 +459,17 @@ export function GlobeImpl({ chrome = true }: { chrome?: boolean }) {
       window.addEventListener("resize", onResize);
 
       // ───── Animation loop ─────
+      const reduce =
+        typeof window !== "undefined" &&
+        !!window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       let lastTime = performance.now();
       function animate() {
         const now = performance.now();
         const dt = Math.min(0.05, (now - lastTime) / 1000);
         lastTime = now;
 
-        if (!isDragging) {
+        if (!isDragging && !reduce) {
           if (Math.abs(velocityY) > 0.0005) {
             globe.rotation.y += velocityY;
             velocityY *= 0.94;
@@ -477,7 +481,7 @@ export function GlobeImpl({ chrome = true }: { chrome?: boolean }) {
           }
         }
 
-        for (const fn of animatables) fn(dt);
+        if (!reduce) for (const fn of animatables) fn(dt);
 
         // Hover detection (skip on touch since it's redundant)
         if (ptr.active && !isDragging && container) {
@@ -567,27 +571,14 @@ export function GlobeImpl({ chrome = true }: { chrome?: boolean }) {
         <div
           className="absolute z-30 pointer-events-none px-md py-sm rounded-md
                      bg-surface border border-border-visible
-                     font-mono text-label uppercase tracking-[0.06em] text-text-primary
-                     min-w-[160px]"
+                     font-mono text-label uppercase tracking-[0.06em] text-text-display"
           style={{
             left: hover.x,
             top: hover.y,
             transform: "translate(-50%, calc(-100% - 16px))",
           }}
         >
-          <div className="text-text-display text-[12px] mb-2">{hover.name}</div>
-          <div className="flex justify-between gap-md text-text-secondary">
-            <span>LATENCY</span>
-            <span className="text-text-display">{hover.latencyMs} MS</span>
-          </div>
-          <div className="flex justify-between gap-md text-text-secondary">
-            <span>UPTIME</span>
-            <span className="text-text-display">{hover.uptime.toFixed(1)}%</span>
-          </div>
-          <div className="flex justify-between gap-md text-text-secondary">
-            <span>STATUS</span>
-            <span className="text-success">ONLINE</span>
-          </div>
+          {hover.name}
         </div>
       )}
 

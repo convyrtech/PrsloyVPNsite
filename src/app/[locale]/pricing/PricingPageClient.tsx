@@ -14,6 +14,7 @@ import {
   type Period,
   PERIODS,
   PRICE_BY_PERIOD,
+  getPeriodTotalUsd,
 } from "@/lib/pricing";
 
 type CapacityState =
@@ -33,7 +34,10 @@ export function PricingPageClient({ locale }: { locale: string }) {
 
   const [period, setPeriod] = useState<Period>("1mo");
   const basePrice = PRICE_BY_PERIOD[period];
+  const totalUsd = getPeriodTotalUsd(period);
+  const savePct = Math.round((1 - PRICE_BY_PERIOD[period] / PRICE_BY_PERIOD["1mo"]) * 100);
   const [capacity, setCapacity] = useState<CapacityState>({ kind: "loading" });
+  const [authed, setAuthed] = useState<boolean | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -68,6 +72,29 @@ export function PricingPageClient({ locale }: { locale: string }) {
         // soft-fail: leaves the band in "loading" skeleton — the page
         // still loads, payment still works, only the counter glyph is
         // a placeholder. No need to surface the error to the user.
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Is the visitor signed in? A guest cannot pay (checkout needs an account,
+  // which needs an invite), so a guest leads with the invite request instead
+  // of dead pay buttons. Falsy (loading/guest) shows the guest path by default.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        const data = (await res.json().catch(() => ({}))) as {
+          ok?: boolean;
+          user?: unknown | null;
+        };
+        if (!alive) return;
+        setAuthed(Boolean(data.user));
+      } catch {
+        if (alive) setAuthed(false);
       }
     })();
     return () => {
@@ -160,48 +187,69 @@ export function PricingPageClient({ locale }: { locale: string }) {
                 {/* $5 + 'в месяц' caption: instrument readout with unit beside,
                     baseline-aligned. Doto for the digits — the one moment per
                     screen (Nothing section 2.8 #5). */}
-                <div className="flex items-baseline gap-md flex-wrap">
-                  <span
-                    className="font-display text-text-display leading-[0.85] tabular-nums"
-                    style={{
-                      fontSize: "clamp(120px, 22vw, 220px)",
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    ${basePrice}
-                  </span>
-                  <span className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary pb-lg">
-                    {t("monthly_unit")}
-                  </span>
+                <div className="flex flex-col gap-sm">
+                  <div className="flex items-baseline gap-md flex-wrap">
+                    <span
+                      className="font-display text-text-display leading-[0.85] tabular-nums"
+                      style={{
+                        fontSize: "clamp(120px, 22vw, 220px)",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
+                      ${basePrice}
+                    </span>
+                    <span className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary pb-lg">
+                      {t("monthly_unit")}
+                    </span>
+                  </div>
+                  {period !== "1mo" && (
+                    <p className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary">
+                      {t("total_label")} ${totalUsd}
+                      <span className="text-accent"> · −{savePct}%</span>
+                    </p>
+                  )}
                 </div>
 
-                <PaymentCheckout period={period} locale={locale} />
+                {/* Guest → lead with the invite request (no dead pay buttons,
+                    since checkout requires an account). Signed-in → pay. */}
+                {authed ? (
+                  <PaymentCheckout period={period} locale={locale} />
+                ) : (
+                  <div className="flex flex-col gap-md">
+                    <p className="font-mono text-label uppercase tracking-[0.08em] text-text-secondary leading-[1.6]">
+                      {t("guest_flow")}
+                    </p>
+                    <InviteRequest
+                      copy={{
+                        cta: t("invite_cta"),
+                        collapse: t("invite_collapse"),
+                        intro: t("invite_intro"),
+                        channelTg: t("invite_channel_tg"),
+                        channelTgHint: t("invite_channel_tg_hint"),
+                        channelTgButton: t("invite_channel_tg_button"),
+                        channelEmail: t("invite_channel_email"),
+                        channelEmailHint: t("invite_channel_email_hint"),
+                        emailPlaceholder: t("invite_email_placeholder"),
+                        emailSubmit: t("invite_email_submit"),
+                        emailSending: t("invite_email_sending"),
+                        emailSent: t("invite_email_sent"),
+                        emailInvalid: t("invite_email_invalid"),
+                        emailRateLimited: t("invite_email_rate_limited"),
+                        emailGeneric: t("invite_email_generic"),
+                      }}
+                    />
+                    <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
+                      <span className="text-text-disabled">{t("have_account")}</span>
+                      <Link
+                        href="/login"
+                        className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80 transition-opacity"
+                      >
+                        {t("login_to_pay")} →
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </section>
-            </RevealOnView>
-
-            {/* INVITE REQUEST — collapsible "don't have a code?" surface.
-                Two channels: Telegram bot (primary, brand-aligned) and
-                email (fallback when Telegram is unreachable). */}
-            <RevealOnView delay={0.12}>
-              <InviteRequest
-                copy={{
-                  cta: t("invite_cta"),
-                  collapse: t("invite_collapse"),
-                  intro: t("invite_intro"),
-                  channelTg: t("invite_channel_tg"),
-                  channelTgHint: t("invite_channel_tg_hint"),
-                  channelTgButton: t("invite_channel_tg_button"),
-                  channelEmail: t("invite_channel_email"),
-                  channelEmailHint: t("invite_channel_email_hint"),
-                  emailPlaceholder: t("invite_email_placeholder"),
-                  emailSubmit: t("invite_email_submit"),
-                  emailSending: t("invite_email_sending"),
-                  emailSent: t("invite_email_sent"),
-                  emailInvalid: t("invite_email_invalid"),
-                  emailRateLimited: t("invite_email_rate_limited"),
-                  emailGeneric: t("invite_email_generic"),
-                }}
-              />
             </RevealOnView>
           </>
         )}

@@ -10,6 +10,7 @@ import {
 } from "motion/react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
+import { Bracketed } from "@/components/ui/Bracketed";
 import { FeatureCell } from "@/components/pricing/FeatureCell";
 import { DividerLabel } from "@/components/ui/DividerLabel";
 import {
@@ -123,7 +124,7 @@ export function PricingStage() {
         marginTop: "-40vh",
       }}
     >
-      <div className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black flex items-center justify-center
+      <div className="sticky top-0 left-0 right-0 h-[100svh] overflow-hidden bg-black flex items-start justify-center sm:items-center
                       pt-[clamp(48px,7vh,112px)] pb-[clamp(24px,5vh,72px)]">
         <div className="relative w-full max-w-3xl px-lg flex flex-col items-center text-center">
           {/* ── IGNITION PIXEL — single bright dot that explodes into $ ── */}
@@ -140,7 +141,7 @@ export function PricingStage() {
 
           {/* ── TOP LABEL ── */}
           <motion.p
-            className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled mb-xl sm:mb-2xl"
+            className="font-mono text-label uppercase tracking-[0.16em] text-text-disabled mb-lg sm:mb-2xl"
             style={{ opacity: labelOpacity, y: labelY }}
           >
             {t("label")}
@@ -148,7 +149,7 @@ export function PricingStage() {
 
           {/* ── PERIOD SEGMENTED CONTROL ── */}
           <motion.div
-            className="mb-xl sm:mb-2xl pointer-events-auto"
+            className="mb-lg sm:mb-2xl pointer-events-auto"
             style={{ opacity: periodOpacity, y: periodY }}
           >
             <PeriodControl value={period} onChange={setPeriod} />
@@ -170,7 +171,7 @@ export function PricingStage() {
             <div
               className="font-body font-bold text-text-display leading-[0.85] tabular-nums
                          flex items-baseline"
-              style={{ fontSize: "clamp(76px, 18vw, 240px)", letterSpacing: "0" }}
+              style={{ fontSize: "clamp(64px, 17vw, 240px)", letterSpacing: "0" }}
             >
               <span>$</span>
               <span>{basePrice}</span>
@@ -195,9 +196,10 @@ export function PricingStage() {
             </motion.div>
           </motion.div>
 
-          {/* ── BETA ACCESS NOTE ── */}
+          {/* ── BETA ACCESS NOTE — hidden on mobile (the promo line above already
+               carries "ограниченная ёмкость"; the full note lives on /pricing) ── */}
           <motion.div
-            className="flex flex-col items-center gap-sm sm:gap-md mb-xl sm:mb-2xl pointer-events-auto"
+            className="hidden sm:flex flex-col items-center gap-sm sm:gap-md mb-lg sm:mb-2xl pointer-events-auto"
             style={{ opacity: cryptoOpacity, y: cryptoY }}
           >
             <motion.div
@@ -215,7 +217,7 @@ export function PricingStage() {
 
           {/* ── FEATURE GRID ── */}
           <motion.div
-            className="grid grid-cols-3 gap-x-lg gap-y-md sm:gap-x-2xl sm:gap-y-lg mb-xl sm:mb-2xl text-left"
+            className="grid grid-cols-3 gap-x-lg gap-y-md sm:gap-x-2xl sm:gap-y-lg mb-lg sm:mb-2xl text-left"
             style={{ opacity: featuresOpacity, y: featuresY }}
           >
             <FeatureCell label={t("feature_encryption")} value={t("feature_encryption_value")} />
@@ -249,13 +251,13 @@ export function PricingStage() {
             >
               <Link
                 href="/pricing"
-                className="block bg-text-display text-black font-mono uppercase tracking-[0.08em]
+                className="group block bg-text-display text-black font-mono uppercase tracking-[0.08em]
                            px-[56px] py-[20px] rounded-full
-                           hover:opacity-95 active:scale-[0.98]
+                           hover:opacity-95 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
                            transition duration-150 ease-out-nothing"
                 style={{ fontSize: "16px" }}
               >
-                [ {t("cta")} ]
+                <Bracketed>{t("cta")}</Bracketed>
               </Link>
             </motion.div>
             <p className="mt-sm sm:mt-md font-mono text-label uppercase tracking-[0.12em] text-text-disabled">

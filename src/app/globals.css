@@ -51,10 +51,12 @@ body {
   /* Future light mode tokens */
 }
 
-/* Selection styling — match the brand */
+/* Selection styling — the brand's one red. A white background here vanishes
+   white .font-display text (its -webkit-text-fill-color keeps the fill white),
+   so the giant $5 disappears on select; red keeps white text legible. */
 ::selection {
-  background: var(--color-text-display);
-  color: var(--color-black);
+  background: var(--color-accent);
+  color: var(--color-text-display);
 }
 
 /* Focus outline — accessible, monochrome */

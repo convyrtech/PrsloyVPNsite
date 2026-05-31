@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Link } from "@/i18n/routing";
-import type { Period } from "@/lib/pricing";
+import { Bracketed } from "@/components/ui/Bracketed";
+import { type Period, getPeriodTotalRub, getPeriodTotalUsd } from "@/lib/pricing";
 import type { PaymentMethod } from "@/lib/payments";
 import { readUtmSource } from "@/lib/client-utm";
 
@@ -51,6 +52,11 @@ const COPY: Record<"ru" | "en", Copy> = {
   },
 };
 
+// Group thousands with a space: 3240 -> "3 240".
+function fmtRub(n: number): string {
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
 export function PaymentCheckout({
   period,
   locale,
@@ -59,6 +65,8 @@ export function PaymentCheckout({
   locale: string;
 }) {
   const copy = locale === "en" ? COPY.en : COPY.ru;
+  const totalRub = getPeriodTotalRub(period);
+  const totalUsd = getPeriodTotalUsd(period);
   const [state, setState] = useState<CheckoutState>({ kind: "idle" });
   const [error, setError] = useState("");
   const [needsAuth, setNeedsAuth] = useState(false);
@@ -118,23 +126,23 @@ export function PaymentCheckout({
         type="button"
         onClick={() => startPayment("sbp_qr")}
         disabled={isLoading}
-        className="inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
+        className="group inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
                    font-mono text-label uppercase tracking-[0.08em] text-black rounded-full
-                   hover:opacity-90 active:scale-[0.98] transition disabled:opacity-60
-                   disabled:cursor-wait"
+                   hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
+                   transition disabled:opacity-60 disabled:cursor-wait"
       >
-        [ {loadingMethod === "sbp_qr" ? copy.loadingSbp : copy.paySbp} ]
+        <Bracketed>{loadingMethod === "sbp_qr" ? copy.loadingSbp : `${copy.paySbp} · ${fmtRub(totalRub)} ₽`}</Bracketed>
       </button>
       <button
         type="button"
         onClick={() => startPayment("crypto")}
         disabled={isLoading}
-        className="inline-flex min-h-[48px] items-center justify-center border border-border-visible px-lg
+        className="group inline-flex min-h-[48px] items-center justify-center border border-border-visible px-lg
                    font-mono text-label uppercase tracking-[0.08em] text-text-display rounded-full
-                   hover:border-text-display active:scale-[0.98] transition disabled:opacity-60
-                   disabled:cursor-wait"
+                   hover:border-text-display hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
+                   transition disabled:opacity-60 disabled:cursor-wait"
       >
-        [ {loadingMethod === "crypto" ? copy.loadingCrypto : copy.payCrypto} ]
+        <Bracketed>{loadingMethod === "crypto" ? copy.loadingCrypto : `${copy.payCrypto} · $${totalUsd}`}</Bracketed>
       </button>
 
       {error && (

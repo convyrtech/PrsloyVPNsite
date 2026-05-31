@@ -14,15 +14,13 @@ export async function GET() {
   } catch (err) {
     console.warn("[capacity] read failed", err);
     const fallbackExpansion = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    // Omit display/target on soft-fail so the client guard stays in its
+    // loading skeleton (···/···) instead of rendering a real "0/300 sold",
+    // which would broadcast zero demand on a scarcity-marketed page.
     return NextResponse.json(
       {
         ok: false,
-        paying: 0,
-        target: 300,
-        offset: 0,
-        display: 0,
         full: false,
-        remaining: 300,
         expansionAtIso: fallbackExpansion.toISOString(),
         vipContactUrl: "https://t.me/prsloy",
       },

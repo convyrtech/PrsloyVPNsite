@@ -27,9 +27,13 @@ type Mouse = { x: number; y: number; active: boolean };
 export function HeroParticles({
   text = "PRSLOY",
   exitProgress,
+  onReady,
 }: {
   text?: string;
   exitProgress?: MotionValue<number>;
+  /** Fired once the first sampled frame is about to draw, so a static
+   *  placeholder can cross-fade out. */
+  onReady?: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -37,6 +41,8 @@ export function HeroParticles({
   // re-running the effect.
   const exitRef = useRef(exitProgress);
   exitRef.current = exitProgress;
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -51,6 +57,11 @@ export function HeroParticles({
     const mouse: Mouse = { x: -9999, y: -9999, active: false };
     const startTime = performance.now();
     let rafId = 0;
+    let cancelled = false;
+    const reduce =
+      typeof window !== "undefined" &&
+      !!window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let width = 0;
     let height = 0;
 
@@ -264,6 +275,19 @@ export function HeroParticles({
         sample();
       }
 
+      // Bail if the component unmounted while we awaited fonts/sampling —
+      // otherwise we'd start an rAF loop that nothing cancels.
+      if (cancelled) return;
+      // First real frame is ready — let the static SSR wordmark cross-fade out.
+      onReadyRef.current?.();
+      // Respect reduced motion: draw the assembled wordmark once and stop —
+      // no continuous particle physics for vestibular-sensitive visitors.
+      if (reduce) {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "#FFFFFF";
+        for (const p of particles) ctx.fillRect(p.ox | 0, p.oy | 0, 2, 2);
+        return;
+      }
       rafId = requestAnimationFrame(animate);
     };
     init();
@@ -274,6 +298,7 @@ export function HeroParticles({
     window.addEventListener("resize", onResize);
 
     return () => {
+      cancelled = true;
       cancelAnimationFrame(rafId);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("touchmove", onTouchMove);
