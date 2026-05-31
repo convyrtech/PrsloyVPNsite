@@ -76,6 +76,23 @@ export function PaymentStatusCard({ locale }: { locale: string }) {
 
   useEffect(() => {
     let alive = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let polls = 0;
+    // The Platega callback that flips an order pending -> confirmed is async
+    // and lands seconds after the browser returns to /dashboard. Poll a few
+    // times so the strip auto-advances to "активна" without a manual reload,
+    // then stop once the order reaches a terminal state (or the budget runs out).
+    const MAX_POLLS = 15; // ~60s at 4s
+    const INTERVAL_MS = 4000;
+
+    function scheduleNext(order: PaymentOrder | null) {
+      const awaiting =
+        !!order && (order.status === "pending" || order.status === "created");
+      if (alive && awaiting && polls < MAX_POLLS) {
+        polls += 1;
+        timer = setTimeout(fetchOrder, INTERVAL_MS);
+      }
+    }
 
     async function fetchOrder() {
       try {
@@ -85,27 +102,39 @@ export function PaymentStatusCard({ locale }: { locale: string }) {
           order?: PaymentOrder | null;
         };
         if (!alive) return;
-        setState(
-          res.ok && data.ok
-            ? { kind: "ready", order: data.order ?? null }
-            : { kind: "error" }
-        );
+        if (res.ok && data.ok) {
+          const order = data.order ?? null;
+          setState({ kind: "ready", order });
+          scheduleNext(order);
+        } else {
+          setState((prev) => (prev.kind === "loading" ? { kind: "error" } : prev));
+        }
       } catch {
-        // On refetch we keep whatever data we already have; only the
-        // initial load downgrades to "error".
+        // On refetch we keep whatever data we already have; only the initial
+        // load downgrades to "error". Keep polling within budget so a confirmed
+        // payment still surfaces after a transient network blip.
         if (!alive) return;
         setState((prev) => (prev.kind === "loading" ? { kind: "error" } : prev));
+        if (polls < MAX_POLLS) {
+          polls += 1;
+          timer = setTimeout(fetchOrder, INTERVAL_MS);
+        }
       }
     }
 
     function onVisible() {
-      if (document.visibilityState === "visible") fetchOrder();
+      if (document.visibilityState !== "visible") return;
+      // Returning to the tab restarts a fresh poll budget.
+      if (timer) clearTimeout(timer);
+      polls = 0;
+      fetchOrder();
     }
 
     fetchOrder();
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       alive = false;
+      if (timer) clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
