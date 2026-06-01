@@ -74,6 +74,14 @@ function TelegramAuthButtonInner({
   const [inviteCode, setInviteCode] = useState(initialInviteCode);
   const timerRef = useRef<number | null>(null);
   const aliveRef = useRef(true);
+  // Latest state + poll fn exposed to the visibilitychange listener, which is
+  // registered once but must read the live state and call the freshest closure
+  // (so the invite code typed before opening Telegram is the one that's sent).
+  const stateRef = useRef<State>(state);
+  stateRef.current = state;
+  const pollOnceRef = useRef<
+    (nonce: string, attempt: number, startedAt: number) => Promise<void>
+  >(async () => {});
 
   // Sync field if the URL param changes while the page is mounted
   // (e.g. user clicks a different magic-link without full reload).
@@ -88,6 +96,22 @@ function TelegramAuthButtonInner({
         window.clearTimeout(timerRef.current);
       }
     };
+  }, []);
+
+  // Coming back to this tab after confirming in Telegram (especially on mobile,
+  // where the backgrounded tab's poll timer gets suspended) fires an immediate
+  // check — login completes the moment the user returns, instead of them
+  // assuming nothing happened and trying to sign in again.
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState !== "visible") return;
+      const s = stateRef.current;
+      if (s.kind !== "awaiting") return;
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+      void pollOnceRef.current(s.nonce, 0, s.startedAt);
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, []);
 
   function scheduleNextPoll(nonce: string, attempt: number, startedAt: number) {
@@ -141,6 +165,7 @@ function TelegramAuthButtonInner({
       setState({ kind: "error", message: copy.generic });
     }
   }
+  pollOnceRef.current = pollOnce;
 
   async function onStart() {
     if (state.kind === "awaiting") return;

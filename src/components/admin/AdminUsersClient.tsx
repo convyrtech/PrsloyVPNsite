@@ -39,6 +39,7 @@ type Filter = "all" | "pending" | "active" | "no_key";
 type AdminUsersCopy = {
   navUsers: string;
   navGrant: string;
+  navAnalytics: string;
   title: string;
   subtitle: string;
   secretRequired: string;
@@ -85,6 +86,7 @@ const COPY: Record<"ru" | "en", AdminUsersCopy> = {
   ru: {
     navUsers: "Пользователи",
     navGrant: "Выдать доступ",
+    navAnalytics: "Аналитика",
     title: "Пользователи.",
     subtitle:
       "Список PRSLOY ID и заявки на перевыпуск. Конфиги здесь не показываем: только статус, email и служебные признаки.",
@@ -156,6 +158,7 @@ const COPY: Record<"ru" | "en", AdminUsersCopy> = {
   en: {
     navUsers: "Users",
     navGrant: "Grant access",
+    navAnalytics: "Analytics",
     title: "Operator view.",
     subtitle:
       "A read-only list of PRSLOY accounts plus manual reissue requests. Raw configs are not exposed here.",
@@ -630,6 +633,12 @@ function AdminNav({
         }
       >
         {copy.navGrant}
+      </Link>
+      <Link
+        href="/admin/analytics"
+        className="border-border-visible text-text-secondary hover:border-text-display"
+      >
+        {copy.navAnalytics}
       </Link>
     </nav>
   );
