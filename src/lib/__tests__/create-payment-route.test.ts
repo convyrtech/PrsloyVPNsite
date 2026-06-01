@@ -141,3 +141,34 @@ describe("POST /api/payments/platega/create — analytics", () => {
     expect(redis.store.strings.get(`analytics:dev:method:${date}:crypto`)).toBe("1");
   });
 });
+
+describe("POST /api/payments/platega/create — enforcement guards", () => {
+  it("returns 403 user_blocked and creates no order for a blocked account", async () => {
+    const auth = (await import("@/lib/auth")) as unknown as {
+      getCurrentUser: ReturnType<typeof vi.fn>;
+    };
+    auth.getCurrentUser.mockResolvedValueOnce({ ...STUB_USER, accessStatus: "blocked" });
+
+    const { POST } = await importRoute();
+    const res = await POST(createReq({ period: "1mo", locale: "ru", method: "sbp_qr" }));
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe("user_blocked");
+    await flushAfter();
+    // Money never gets charged and no funnel event fires for a blocked user.
+    expect(paymentStartedEvents()).toHaveLength(0);
+  });
+
+  it("returns 429 once the per-account create limit (10 / 5min) is exceeded", async () => {
+    const { POST } = await importRoute();
+    const statuses: number[] = [];
+    for (let i = 0; i < 11; i += 1) {
+      const res = await POST(createReq({ period: "1mo", locale: "ru", method: "sbp_qr" }));
+      statuses.push(res.status);
+    }
+    await flushAfter();
+    // Same account, same fake-redis window: 10 orders go through, the 11th is
+    // rate-limited. Caps order churn against KV and the real provider.
+    expect(statuses.filter((s) => s === 200)).toHaveLength(10);
+    expect(statuses[10]).toBe(429);
+  });
+});

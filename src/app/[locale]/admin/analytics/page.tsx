@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
 import { AdminAnalyticsClient } from "@/components/admin/AdminAnalyticsClient";
+import { isAdminConfigured } from "@/lib/admin-auth";
 
 export const metadata: Metadata = {
   title: "PRSLOY Admin · Analytics",
@@ -17,5 +19,6 @@ export default async function AdminAnalyticsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  if (!isAdminConfigured()) notFound();
   return <AdminAnalyticsClient locale={locale} />;
 }

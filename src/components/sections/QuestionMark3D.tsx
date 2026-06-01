@@ -22,6 +22,7 @@ export function QuestionMark3D() {
 
     let rafId = 0;
     let cleanup: (() => void) | null = null;
+    let cancelled = false;
 
     (async () => {
       // ── WebGL probe ──
@@ -37,6 +38,8 @@ export function QuestionMark3D() {
         await document.fonts.load(`bold 600px "IBM Plex Sans"`);
         await document.fonts.ready;
       } catch {}
+      // Unmounted while awaiting fonts — don't build a WebGL context nobody frees.
+      if (cancelled) return;
 
       // ── Sample "?" glyph into point cloud ──
       const SAMPLE_W = 600;
@@ -54,9 +57,9 @@ export function QuestionMark3D() {
       const data = oc.getImageData(0, 0, SAMPLE_W, SAMPLE_H).data;
 
       const positions: number[] = [];
-      const STEP = 5;
+      const STEP = 3;
       const SCALE = 0.18; // canvas px → world units
-      const DEPTH = 22;
+      const DEPTH = 12;
       const seedFor = (x: number, y: number) => {
         let s = (x * 73856093) ^ (y * 19349663);
         s = (s ^ 0xa5a5a5a5) >>> 0;
@@ -98,11 +101,11 @@ export function QuestionMark3D() {
       const geo = new THREE.BufferGeometry();
       geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
       const mat = new THREE.PointsMaterial({
-        color: 0xe8e8e8,
-        size: 0.9,
+        color: 0xf2f2f2,
+        size: 1.4,
         sizeAttenuation: true,
         transparent: true,
-        opacity: 0.95,
+        opacity: 1,
         depthWrite: false,
       });
       cloud.add(new THREE.Points(geo, mat));
@@ -157,6 +160,7 @@ export function QuestionMark3D() {
     })();
 
     return () => {
+      cancelled = true;
       cleanup?.();
     };
   }, []);

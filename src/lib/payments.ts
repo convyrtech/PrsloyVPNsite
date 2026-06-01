@@ -69,8 +69,19 @@ function userLatestKey(userId: string) {
   return `${USER_LATEST_KEY_PREFIX}${userId}`;
 }
 
+// An order record holds the buyer email, so it must not live in KV forever.
+// Bound retention to the paid period + 90 days — matching the privacy page's
+// "key record + 90 days" promise instead of indefinite storage. 31-day months
+// keep the window generous so an active long-period subscription is never
+// expired early. The TTL is refreshed on every write (create / attach /
+// confirm), which is fine: the last write for a live order is its confirmation.
+const ORDER_RETENTION_PAD_DAYS = 90;
+const ORDER_RETENTION_MONTHS: Record<Period, number> = { "1mo": 1, "6mo": 6, "1yr": 12 };
+
 async function saveOrder(order: PaymentOrder): Promise<void> {
-  await kvSet(orderKey(order.id), JSON.stringify(order));
+  const months = ORDER_RETENTION_MONTHS[order.period] ?? 1;
+  const ttlSeconds = (months * 31 + ORDER_RETENTION_PAD_DAYS) * 86400;
+  await kvSet(orderKey(order.id), JSON.stringify(order), { ex: ttlSeconds });
 }
 
 export async function getPaymentOrder(orderId: string): Promise<PaymentOrder | null> {

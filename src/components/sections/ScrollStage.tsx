@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useSpring, useTransform } from "motion/react";
+import { motion, useScroll, useSpring, useTransform, useReducedMotion } from "motion/react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { HeroParticles } from "@/components/sections/HeroParticles";
-import { HandshakePanel } from "@/components/sections/HandshakePanel";
 import { GlobeUIOverlay } from "@/components/sections/GlobeUIOverlay";
+import { Bracketed } from "@/components/ui/Bracketed";
 
 const GlobeImpl = dynamic(
   () => import("./GlobeImpl").then((m) => m.GlobeImpl),
@@ -15,32 +15,33 @@ const GlobeImpl = dynamic(
 );
 
 /**
- * Single scroll-driven stage that orchestrates Hero → Handshake → Globe.
+ * Single scroll-driven stage: HERO → GLOBE, cross-dissolving with no black gap.
  *
- * 320vh tall, sticky 100vh inner. Every element is transformed by scroll
- * progress into a continuous cinematic sequence.
+ * The old middle "handshake" act (a fake loading bar) is gone — the globe now
+ * fades in WHILE the particle wordmark is still scattering, so the two overlap
+ * and the screen is never empty for a frame.
  *
  * Phase map (scrollYProgress):
- *   0.00 — 0.15  HERO IDLE        (particles + headline at rest)
- *   0.15 — 0.30  DISASSEMBLY      (wordmark scatters to chaos; headline fades)
- *   0.32 — 0.62  HANDSHAKE        (mechanical loading panel)
- *   0.55 — 0.78  GLOBE EMERGES    (3D scene mounts, scales up)
- *   0.78 — 0.95  GLOBE UI APPEARS (label, metrics, CTA reveal)
- *   0.95 — 1.00  HOLD             (globe fully present, ready for next section)
+ *   0.00 — 0.18  HERO IDLE        (particles + headline at rest)
+ *   0.18 — 0.40  DISASSEMBLY      (wordmark scatters; headline / CTA / strip fade)
+ *   0.28 — 0.58  GLOBE EMERGES    (fades in over the scattering hero — no dead frame)
+ *   0.56 — 0.88  GLOBE UI APPEARS (label, metrics, CTA reveal)
+ *   0.88 — 1.00  HOLD             (globe present, then yields to NothingStage)
  */
 export function ScrollStage() {
   const t = useTranslations("hero");
   const stageRef = useRef<HTMLElement | null>(null);
   const [isTouch, setIsTouch] = useState(false);
   const [shouldMountGlobe, setShouldMountGlobe] = useState(false);
+  const [heroReady, setHeroReady] = useState(false);
 
   const { scrollYProgress: rawProgress } = useScroll({
     target: stageRef,
     offset: ["start start", "end end"],
   });
 
-  // Smooth the scroll progress with a spring — gives inertial feel,
-  // softens jerky wheel input. All useTransform below derive from this.
+  // Smooth the scroll progress with a spring — gives inertial feel, softens
+  // jerky wheel input. All useTransform below derive from this.
   const scrollYProgress = useSpring(rawProgress, {
     stiffness: 190,
     damping: 32,
@@ -55,107 +56,119 @@ export function ScrollStage() {
     );
   }, []);
 
-  // Lazy-mount globe once user is ~halfway through evaporation.
-  // Use rawProgress (not smoothed) so the trigger fires immediately
-  // when user crosses the threshold, even if spring is still catching up.
+  // Safety: fade the static wordmark out even if the particle layer never
+  // signals readiness (no WebGL / slow font), so it can't linger over the hero.
+  useEffect(() => {
+    const id = window.setTimeout(() => setHeroReady(true), 3000);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  // Mount the heavy WebGL globe early (well before it must fade in at 0.28) so
+  // it is fully built by the time the hero starts scattering — no blank frame.
   useEffect(() => {
     const unsub = rawProgress.on("change", (v) => {
-      if (v > 0.18 && !shouldMountGlobe) setShouldMountGlobe(true);
+      if (v > 0.08 && !shouldMountGlobe) setShouldMountGlobe(true);
     });
     return unsub;
   }, [rawProgress, shouldMountGlobe]);
 
-  // ── HERO PARTICLES ──
-  // Exit = the wordmark disassembles back into chaos, mirroring its assembly
-  // on load. The scatter is per-particle (driven inside HeroParticles by this
-  // progress) — no blob-flight transform on the layer, so it never fights the
-  // headline's exit direction.
-  const exitProgress = useTransform(scrollYProgress, [0.15, 0.30], [0, 1], { clamp: true });
+  // ── HERO PARTICLES — wordmark disassembles back into chaos, alpha→0 by 0.40 ──
+  const exitProgress = useTransform(scrollYProgress, [0.16, 0.36], [0, 1], { clamp: true });
 
-  // ── HEADLINE BLOCK ──
-  // Percussive exit: fades in place with a small downward tick — same axis as
-  // the particle dispersion, no opposing horizontal slide.
-  const headlineY = useTransform(scrollYProgress, [0.14, 0.24], [0, 8], { clamp: true });
-  const headlineOpacity = useTransform(rawProgress, [0.14, 0.24], [1, 0], { clamp: true });
+  // In reduced motion the particles draw once and never scatter, so fade the
+  // whole hero layer out on scroll instead — otherwise the static wordmark
+  // would linger over the globe.
+  const reduce = useReducedMotion();
+  const heroLayerOpacity = useTransform(scrollYProgress, [0.16, 0.36], [1, 0], { clamp: true });
 
-  // Sub-text + CTA fade out together with the headline block.
-  const ctaOpacity = useTransform(rawProgress, [0.14, 0.24], [1, 0], { clamp: true });
+  // ── HEADLINE BLOCK — percussive fade with a small downward tick ──
+  const headlineY = useTransform(scrollYProgress, [0.14, 0.27], [0, 8], { clamp: true });
+  const headlineOpacity = useTransform(rawProgress, [0.14, 0.27], [1, 0], { clamp: true });
+  const ctaOpacity = useTransform(rawProgress, [0.14, 0.27], [1, 0], { clamp: true });
 
-  // ── LAUNCH STRIP — visible at load
-  const stripOpacity = useTransform(rawProgress, [0.10, 0.18], [1, 0], { clamp: true });
-
-  // ── HANDSHAKE PANEL — symmetric cross-fade with globe at 0.55→0.65
-  const handshakeOpacity = useTransform(
-    rawProgress,
-    [0.22, 0.32, 0.55, 0.65],
-    [0, 1, 1, 0],
-    { clamp: true }
-  );
-  const handshakeScale = useTransform(scrollYProgress, [0.22, 0.32], [0.92, 1], { clamp: true });
-  const handshakeProgress = useTransform(scrollYProgress, [0.30, 0.56], [0, 1], { clamp: true });
+  // ── LAUNCH STRIP — visible at load ──
+  const stripOpacity = useTransform(rawProgress, [0.08, 0.18], [1, 0], { clamp: true });
 
   // ── GLOBE LAYER ──
-  // Mirror handshake exit envelope (0.55→0.65) so cross-fade is symmetric:
-  // at 0.60, handshake=0.5 AND globe=0.5 — clean cross, no dip.
-  // Hold globe almost to section end (0.97→1.0) so there's no dead-screen
-  // dwelling between sections.
+  // Fades in at 0.28 — while the hero is still scattering (0.18→0.40) — so the
+  // two overlap and the composition is never empty. Holds, then fades by 0.98
+  // as NothingStage rises over it.
   const globeOpacity = useTransform(
     rawProgress,
-    [0.54, 0.66, 0.86, 0.94],
+    [0.26, 0.44, 0.93, 0.99],
     [0, 1, 1, 0],
     { clamp: true }
   );
   const globeScale = useTransform(
     scrollYProgress,
-    [0.54, 0.74, 0.86, 0.94],
-    [0.22, 0.80, 0.80, 0.68],
+    [0.26, 0.50, 0.93, 0.99],
+    [0.28, 0.82, 0.82, 0.72],
     { clamp: true }
   );
-  const globeY = useTransform(
-    scrollYProgress,
-    [0.86, 0.94],
-    ["0%", "-8%"],
+  const globeY = useTransform(scrollYProgress, [0.93, 0.99], ["0%", "-8%"], { clamp: true });
+  const globeRotate = useTransform(scrollYProgress, [0.26, 0.50], [-12, 0], { clamp: true });
+
+  // ── GLOBE OVERLAY UI — revealed once the globe is up; held to section end so
+  //    the user never sees dead screen before NothingStage starts. ──
+  const overlayProgress = useTransform(
+    rawProgress,
+    [0.46, 0.60, 0.92, 0.98],
+    [0, 1, 1, 0],
     { clamp: true }
   );
-  const globeRotate = useTransform(scrollYProgress, [0.54, 0.74], [-12, 0], { clamp: true });
-
-  // ── GLOBE OVERLAY UI ──
-  // Hold overlay until section end so the user doesn't see dead screen before
-  // NothingStage starts.
-  const overlayProgress = useTransform(rawProgress, [0.68, 0.82, 0.86, 0.92], [0, 1, 1, 0], { clamp: true });
-
-  // (removed: stuck-logo was redundant with the shrunken HeroParticles
-  //  during 0.18–0.35; from 0.40+ the screen is occupied by handshake/globe
-  //  so the watermark adds no value.)
 
   return (
     <section
       ref={stageRef}
       className="relative w-full bg-black"
-      // Cap section height so scroll-density (px per scroll-progress unit)
-      // stays in a usable range across viewports. On a 600px-tall mobile
-      // 460vh = 2760px; on a 1440px tall monitor 460vh = 6624px. The clamp
-      // keeps acts feeling consistent on both ends.
-      style={{ height: "clamp(3200px, 460vh, 5400px)" }}
+      // Two acts (hero → globe). 420vh gives the globe a long, satisfying dwell
+      // after it assembles (340vh felt rushed) while the hero→globe cross-fade
+      // keeps it free of dead/black screens. Clamped for tall/short viewports.
+      style={{ height: "clamp(2900px, 420vh, 4800px)" }}
     >
       <div
-        className="sticky top-0 left-0 right-0 h-screen overflow-hidden bg-black
+        className="sticky top-0 left-0 right-0 h-[100svh] overflow-hidden bg-black
                    pt-[clamp(72px,8vh,112px)]"
         style={{ perspective: 1400 }}
       >
         {/* ─────── LAYER 1: HERO PARTICLES ─────── */}
-        <div className="absolute inset-0 z-10">
-          <HeroParticles text="PRSLOY" exitProgress={exitProgress} />
+        <motion.div
+          className="absolute inset-0 z-10"
+          style={{ opacity: reduce ? heroLayerOpacity : 1 }}
+        >
+          <HeroParticles
+            text="PRSLOY"
+            exitProgress={exitProgress}
+            onReady={() => setHeroReady(true)}
+          />
+        </motion.div>
+
+        {/* ─── LAYER 1b: STATIC WORDMARK ───
+            Server-rendered so the very first paint shows a crisp PRSLOY instead
+            of an empty black void while the font + particle canvas resolve. It
+            sits above the (initially empty) canvas and cross-fades out the moment
+            the particle layer draws its first frame. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-[38%] z-[11] flex -translate-y-1/2
+                     justify-center pointer-events-none"
+          style={{
+            opacity: heroReady ? 0 : 1,
+            transition: "opacity 1200ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+          }}
+        >
+          <span
+            className="font-display text-text-display tracking-[0.08em] leading-none select-none"
+            style={{ fontSize: "clamp(72px, 23vw, 270px)" }}
+          >
+            PRSLOY
+          </span>
         </div>
 
         {/* ─────── LAYER 2: HERO HEADLINE + SUB + CTA ─────── */}
-        {/* Composition strategy that holds at every viewport:
-            - Particle PRSLOY lives in the upper third (HeroParticles renders
-              at height*0.38). Always centered horizontally.
-            - Hero text lives in the lower band — bottom-center on mobile
-              (no horizontal real-estate to put it in a corner), bottom-RIGHT
-              on md+ (cinematic Nothing-style positioning).
-            - Different vertical bands = no collision regardless of widths. */}
+        {/* Particle PRSLOY lives in the upper third; hero text in the lower band
+            (bottom-center on mobile, bottom-right on md+) — different vertical
+            bands so they never collide regardless of widths. */}
         <motion.div
           className="absolute z-20 text-center px-lg
                      bottom-[clamp(64px,12vh,128px)] left-0 right-0
@@ -184,18 +197,18 @@ export function ScrollStage() {
           <motion.div style={{ opacity: ctaOpacity }}>
             <Link
               href="/pricing"
-              className="inline-block mt-lg md:mt-xl bg-text-display text-black
+              className="group inline-block mt-lg md:mt-xl bg-text-display text-black
                          font-mono text-body-sm uppercase tracking-[0.08em] whitespace-nowrap
                          px-lg md:px-xl py-md rounded-full pointer-events-auto
-                         hover:opacity-90 active:scale-[0.98]
+                         hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
                          transition duration-150 ease-out-nothing"
             >
-              [ {t("cta")} ]
+              <Bracketed>{t("cta")}</Bracketed>
             </Link>
           </motion.div>
         </motion.div>
 
-        {/* ─────── LAYER 4: LAUNCH STRIP ─────── */}
+        {/* ─────── LAYER 3: LAUNCH STRIP ─────── */}
         <motion.div
           className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none"
           style={{ opacity: stripOpacity }}
@@ -209,19 +222,7 @@ export function ScrollStage() {
           </div>
         </motion.div>
 
-        {/* ─────── LAYER 5: HANDSHAKE PANEL ─────── */}
-        <motion.div
-          className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
-          style={{
-            opacity: handshakeOpacity,
-            scale: handshakeScale,
-            willChange: "transform, opacity",
-          }}
-        >
-          <HandshakePanel progress={handshakeProgress} />
-        </motion.div>
-
-        {/* ─────── LAYER 6: GLOBE 3D ─────── */}
+        {/* ─────── LAYER 4: GLOBE 3D ─────── */}
         {shouldMountGlobe && (
           <motion.div
             className="absolute inset-0 z-[15]"
@@ -240,7 +241,7 @@ export function ScrollStage() {
           </motion.div>
         )}
 
-        {/* ─────── LAYER 7: GLOBE UI OVERLAY ─────── */}
+        {/* ─────── LAYER 5: GLOBE UI OVERLAY ─────── */}
         <GlobeUIOverlay progress={overlayProgress} isTouch={isTouch} />
       </div>
     </section>

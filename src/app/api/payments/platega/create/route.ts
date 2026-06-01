@@ -12,6 +12,7 @@ import {
 import { type Period, PERIODS } from "@/lib/pricing";
 import type { PaymentMethod } from "@/lib/payments";
 import { sanitizeKeyPart, track } from "@/lib/analytics";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -51,6 +52,15 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+    // Blocked accounts must never reach checkout: the grant step rejects them,
+    // so the money would land but no key would ever be issued. Stop before the
+    // order is created and the provider is charged.
+    if (user.accessStatus === "blocked") {
+      return NextResponse.json(
+        { ok: false, error: "user_blocked" },
+        { status: 403 }
+      );
+    }
     // Payments still require an email for the Platega receipt and operator
     // reach-out. Telegram-only users link an email in a follow-up step
     // before they can buy.
@@ -59,6 +69,14 @@ export async function POST(req: Request) {
         { ok: false, error: "email_required_for_payment" },
         { status: 409 }
       );
+    }
+
+    // Each create call registers a real provider transaction, so cap how often
+    // a single account can open one — stops an authed account from spamming KV
+    // and Platega with order churn. Fails open if KV is down.
+    const limit = await rateLimit("payment-create", user.id, 10, 300);
+    if (!limit.ok) {
+      return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
     }
 
     const rawUtm =

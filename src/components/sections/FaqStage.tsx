@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import { motion, useInView } from "motion/react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 
@@ -13,9 +13,14 @@ const QuestionMark3D = dynamic(
 
 /** Odometer-style number cycle: 00 → 99 → settles on target */
 function FaqOdometer({ target, trigger, delay }: { target: string; trigger: boolean; delay: number }) {
+  const reduce = useReducedMotion();
   const [display, setDisplay] = useState("00");
   useEffect(() => {
     if (!trigger) return;
+    if (reduce) {
+      setDisplay(target);
+      return;
+    }
     const startAt = window.setTimeout(() => {
       let frame = 0;
       const totalFrames = 14;
@@ -30,7 +35,7 @@ function FaqOdometer({ target, trigger, delay }: { target: string; trigger: bool
       }, 38);
     }, delay * 1000);
     return () => window.clearTimeout(startAt);
-  }, [trigger, target, delay]);
+  }, [trigger, target, delay, reduce]);
   return <span className="tabular-nums">{display}</span>;
 }
 

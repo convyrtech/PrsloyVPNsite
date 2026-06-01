@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, type Locale } from "@/i18n/routing";
+import { Bracketed } from "@/components/ui/Bracketed";
 
 const SCROLL_THRESHOLD = 80;
 const BAR_H = 64;
@@ -173,7 +174,7 @@ export function Header() {
               PRSLOY
             </div>
             <div
-              className="flex items-center gap-2 mt-1 font-mono text-text-disabled uppercase whitespace-nowrap"
+              className="flex items-center gap-2 mt-1 font-mono text-text-secondary uppercase whitespace-nowrap"
               style={{ fontSize: "10px", letterSpacing: "0.1em" }}
             >
               <span className="relative inline-flex w-[6px] h-[6px] rounded-full pulse-dot" />
@@ -211,59 +212,65 @@ export function Header() {
             </NavLink>
           </nav>
 
-          {/* MOBILE: small PRSLOY brand on left (no notch) */}
+          {/* MOBILE: brand + beta status — always visible so the positioning
+              never disappears on the most common (mobile) viewport */}
           <div
-            className="md:hidden flex items-center"
-            style={{
-              opacity: open ? 1 : 0,
-              pointerEvents: open ? "auto" : "none",
-              transition: `opacity 300ms ${EASE}`,
-            }}
+            className="md:hidden flex flex-col justify-center"
+            style={{ pointerEvents: "auto" }}
           >
             <Link
               href="/"
-              className="inline-flex items-center min-h-[44px] font-display text-text-display tracking-[0.12em] leading-none"
+              className="inline-flex items-center font-display text-text-display tracking-[0.12em] leading-none"
               style={{ fontSize: "18px" }}
             >
               PRSLOY
             </Link>
+            <span
+              className="mt-1 flex items-center gap-1.5 font-mono text-text-secondary uppercase whitespace-nowrap"
+              style={{ fontSize: "9px", letterSpacing: "0.1em" }}
+            >
+              <span className="relative inline-flex w-[5px] h-[5px] rounded-full pulse-dot" />
+              {t("status_short")}
+            </span>
           </div>
 
           {/* CENTER spacer (notch occupies this on desktop) */}
           <div />
 
-          {/* RIGHT NAV (desktop) */}
-          <nav
+          {/* RIGHT (desktop) — nav links fade into the notch on scroll, but the
+              CTA stays pinned + clickable so the primary action never vanishes */}
+          <div
             className="hidden md:flex items-center justify-end gap-lg"
-            style={{
-              justifySelf: "end",
-              opacity: open ? 1 : 0,
-              transform: open ? "translateX(0)" : "translateX(-48px)",
-              pointerEvents: open ? "auto" : "none",
-              transition: `opacity 300ms ${EASE}, transform 420ms ${EASE}`,
-              transitionDelay: open ? "70ms" : "0ms",
-            }}
+            style={{ justifySelf: "end" }}
           >
-            <NavLink href="/blog" current={pathname}>
-              {t("nav_blog")}
-            </NavLink>
-            <NavLink href="/dashboard" current={pathname} tone="muted">
-              {t("nav_dashboard")}
-            </NavLink>
+            <nav
+              className="flex items-center gap-lg"
+              style={{
+                opacity: open ? 1 : 0,
+                transform: open ? "translateX(0)" : "translateX(-48px)",
+                pointerEvents: open ? "auto" : "none",
+                transition: `opacity 300ms ${EASE}, transform 420ms ${EASE}`,
+                transitionDelay: open ? "70ms" : "0ms",
+              }}
+            >
+              <NavLink href="/blog" current={pathname}>
+                {t("nav_blog")}
+              </NavLink>
+              <NavLink href="/dashboard" current={pathname} tone="muted">
+                {t("nav_dashboard")}
+              </NavLink>
+              <LangToggle currentLocale={locale} otherLocale={otherLocale} />
+            </nav>
 
-            <LangToggle currentLocale={locale} otherLocale={otherLocale} />
+            <div style={{ pointerEvents: "auto" }}>
+              <BuyCta label={t("cta_buy")} />
+            </div>
+          </div>
 
-            <BuyCta label={t("cta_buy")} />
-          </nav>
-
-          {/* MOBILE: BUY CTA + burger toggle */}
+          {/* MOBILE: BUY CTA + burger — always reachable, even scrolled */}
           <div
             className="md:hidden flex items-center justify-end gap-md"
-            style={{
-              opacity: open ? 1 : 0,
-              pointerEvents: open ? "auto" : "none",
-              transition: `opacity 300ms ${EASE}`,
-            }}
+            style={{ pointerEvents: "auto" }}
           >
             <BuyCta label={t("cta_buy_compact")} compact />
             <button
@@ -317,6 +324,15 @@ function NavLink({
         ? "text-text-disabled"
         : "text-text-secondary";
 
+  // Hover draws a hairline underline left→right (transform only). Skipped on
+  // the active link, which already carries a solid 2px marker below.
+  const drawUnderline = isActive
+    ? ""
+    : `after:pointer-events-none after:absolute after:left-0 after:-bottom-1 after:h-px
+       after:w-full after:origin-left after:scale-x-0 after:bg-text-display
+       after:transition-transform after:duration-200 after:ease-out-nothing
+       hover:after:scale-x-100`;
+
   return (
     <Link
       href={href as "/pricing"}
@@ -324,6 +340,7 @@ function NavLink({
         relative font-mono text-label uppercase tracking-[0.08em]
         transition duration-150 ease-out-nothing
         hover:text-text-display hover:tracking-[0.12em]
+        ${drawUnderline}
         ${isActive ? "text-text-display" : baseColor}
       `}
     >
@@ -373,15 +390,15 @@ function BuyCta({ label, compact = false }: { label: string; compact?: boolean }
     <Link
       href="/pricing"
       className={`
-        inline-flex items-center justify-center
+        group inline-flex items-center justify-center
         bg-text-display text-black font-mono uppercase tracking-[0.08em]
         rounded-full
-        hover:opacity-90 active:scale-[0.98]
+        hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
         transition duration-150 ease-out-nothing
         ${compact ? "px-md min-h-[44px] text-[10px] whitespace-nowrap" : "px-lg min-h-[44px] text-label"}
       `}
     >
-      [ {label} ]
+      <Bracketed>{label}</Bracketed>
     </Link>
   );
 }

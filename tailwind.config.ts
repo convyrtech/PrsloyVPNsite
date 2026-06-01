@@ -21,6 +21,10 @@ const config: Config = {
         success: "var(--color-success)",
         warning: "var(--color-warning)",
         interactive: "var(--color-interactive)",
+        // Footer / command-panel aliases — referenced in markup but were undefined,
+        // so the departure-board grid + several borders rendered colorless.
+        "border-subtle": "var(--color-border)",
+        "bg-primary": "var(--color-black)",
       },
       fontFamily: {
         display: ["var(--font-display)", "monospace"],

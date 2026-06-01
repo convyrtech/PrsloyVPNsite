@@ -1,7 +1,12 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://prsloy.com";
+// Match layout.tsx getSiteUrl(): `??` lets an empty-string env through and
+// produces host-less URLs; `|| trim()` falls back, and the domain must be the
+// real one (prsloy.online), not prsloy.com.
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://www.prsloy.online"
+).replace(/\/+$/, "");
 
 const STATIC_PAGES = ["", "pricing", "faq", "blog", "privacy", "terms", "refunds"];
 

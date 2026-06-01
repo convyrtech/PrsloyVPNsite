@@ -195,7 +195,7 @@ export function DashboardClient({
         <FloatingHero copy={copy} active={active} blocked={blocked} />
       </RevealOnView>
 
-      {hasKey && user.subscriptionUrl && (
+      {hasKey && user.subscriptionUrl && !blocked && (
         <RevealOnView delay={0.15}>
           <KeyBlock copy={copy} subscriptionUrl={user.subscriptionUrl} />
         </RevealOnView>
@@ -206,7 +206,7 @@ export function DashboardClient({
       </RevealOnView>
 
       <RevealOnView delay={0.2}>
-        <UtilityFooter copy={copy} hasKey={hasKey} locale={locale} />
+        <UtilityFooter copy={copy} hasKey={hasKey && !blocked} locale={locale} />
       </RevealOnView>
     </DashboardShell>
   );
