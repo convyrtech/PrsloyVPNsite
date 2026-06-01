@@ -542,16 +542,18 @@ function StatusDot({ tone }: { tone: "success" | "warning" | "muted" }) {
   );
 }
 
+// Masked form of the subscription URL for the hidden state. The host is the
+// same for every user (not secret) — only the path token is. So show the host
+// and replace the entire token with a fixed run of dots: no last-N leak, and
+// the dots actually stand in for the hidden part instead of looking like
+// decoration glued onto a visible tail.
 function maskAccessUrl(value: string) {
-  const dots = "••••••";
-  const tail = value.length >= 4 ? value.slice(-4) : value;
+  const dots = "•".repeat(16);
   try {
     const url = new URL(value);
-    if (url.origin !== "null") {
-      return `${url.origin}/${dots}${tail}`;
-    }
-    return `${url.protocol}//${dots}${tail}`;
+    const host = url.origin !== "null" ? url.origin : `${url.protocol}//${url.host}`;
+    return `${host}/${dots}`;
   } catch {
-    return `${dots}${tail}`;
+    return dots;
   }
 }

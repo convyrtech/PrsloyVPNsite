@@ -148,25 +148,28 @@ export function AdminAnalyticsClient({ locale }: { locale: string }) {
 }
 
 function NavTabs({ locale }: { locale: string }) {
+  const en = locale === "en";
   return (
-    <nav className="flex gap-md flex-wrap font-mono text-label uppercase tracking-[0.12em]">
+    <nav className="flex flex-wrap gap-sm font-mono text-label uppercase tracking-[0.08em]
+                    [&_a]:inline-flex [&_a]:items-center [&_a]:min-h-[44px] [&_a]:border [&_a]:px-md
+                    [&_a]:transition-colors">
       <Link
         href="/admin/users"
-        className="text-text-secondary hover:text-text-display transition-colors"
+        className="border-border-visible text-text-secondary hover:border-text-display"
       >
-        Пользователи
+        {en ? "Users" : "Пользователи"}
       </Link>
       <Link
         href="/admin/grant"
-        className="text-text-secondary hover:text-text-display transition-colors"
+        className="border-border-visible text-text-secondary hover:border-text-display"
       >
-        Выдать
+        {en ? "Grant" : "Выдать"}
       </Link>
-      <span className="text-text-display" aria-current="page">
-        Аналитика
-      </span>
-      <span className="text-text-disabled font-body normal-case tracking-normal text-body-sm">
-        locale: {locale}
+      <span
+        className="inline-flex items-center min-h-[44px] border border-text-display px-md text-text-display"
+        aria-current="page"
+      >
+        {en ? "Analytics" : "Аналитика"}
       </span>
     </nav>
   );

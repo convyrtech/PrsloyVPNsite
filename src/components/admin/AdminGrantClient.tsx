@@ -30,6 +30,7 @@ type GrantResult =
 type AdminGrantCopy = {
   navUsers: string;
   navGrant: string;
+  navAnalytics: string;
   backToUsers: string;
   title: string;
   subtitle: string;
@@ -68,6 +69,7 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
   ru: {
     navUsers: "Пользователи",
     navGrant: "Выдать доступ",
+    navAnalytics: "Аналитика",
     backToUsers: "К списку пользователей",
     title: "Выдать доступ.",
     subtitle:
@@ -136,6 +138,7 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
   en: {
     navUsers: "Users",
     navGrant: "Grant access",
+    navAnalytics: "Analytics",
     backToUsers: "Back to users",
     title: "Issue access.",
     subtitle:
@@ -498,6 +501,12 @@ function AdminNav({
           }
         >
           {copy.navGrant}
+        </Link>
+        <Link
+          href="/admin/analytics"
+          className="border-border-visible text-text-secondary hover:border-text-display"
+        >
+          {copy.navAnalytics}
         </Link>
       </div>
     </nav>

@@ -385,7 +385,7 @@
     "tg_login_button": "ВОЙТИ ЧЕРЕЗ TELEGRAM",
     "tg_register_button": "ПРОДОЛЖИТЬ ЧЕРЕЗ TELEGRAM",
     "tg_awaiting": "ЖДЁМ ПОДТВЕРЖДЕНИЯ…",
-    "tg_awaiting_hint": "Открой бота в Telegram и нажми «подтвердить». Эту вкладку можно не закрывать.",
+    "tg_awaiting_hint": "Открой бота в Telegram, нажми «Подтвердить» — и вернись на эту вкладку. Войдём автоматически, входить заново не нужно.",
     "tg_reopen": "ОТКРЫТЬ В TELEGRAM",
     "invite_label": "КОД ПРИГЛАШЕНИЯ",
     "invite_placeholder": "Код из приглашения",

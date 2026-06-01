@@ -385,7 +385,7 @@
     "tg_login_button": "SIGN IN WITH TELEGRAM",
     "tg_register_button": "CONTINUE WITH TELEGRAM",
     "tg_awaiting": "WAITING FOR CONFIRMATION…",
-    "tg_awaiting_hint": "Open the bot in Telegram and tap “confirm”. You can leave this tab open.",
+    "tg_awaiting_hint": "Open the bot in Telegram, tap “Confirm” — then come back to this tab. We'll sign you in automatically, no need to log in again.",
     "tg_reopen": "REOPEN IN TELEGRAM",
     "invite_label": "INVITE CODE",
     "invite_placeholder": "Code from your invitation",
