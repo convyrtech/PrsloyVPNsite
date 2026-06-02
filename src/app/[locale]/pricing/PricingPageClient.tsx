@@ -104,7 +104,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
 
   // "ЧТО ВНУТРИ" rows — trimmed to the four differentiators (own servers,
   // clean addresses, no logs, unlimited traffic). The generic rows were
-  // dropped: "Доступ: По инвайтам" is now explained by the WHY block above,
+  // dropped: "Доступ: По приглашениям" is now explained by the WHY block above,
   // and "Поддержка" is covered by the utility nav. `featured` lifts the three
   // strongest to text-display. (Key names predate the copy; values are truth.)
   const specs: Array<{ label: string; value: string; featured: boolean }> = [

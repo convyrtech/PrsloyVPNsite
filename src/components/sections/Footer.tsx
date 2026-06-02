@@ -12,7 +12,7 @@ const FooterCtaLink = motion.create(Link);
  * Footer — a quiet, confident Nothing-style close.
  *
  * Three layers (Nothing §2.1):
- *   PRIMARY    the oversized italic "ДОСТУП ПО ИНВАЙТУ." closing line
+ *   PRIMARY    the oversized italic "ДОСТУП ПО ПРИГЛАШЕНИЮ." closing line
  *   SECONDARY  one white CTA
  *   TERTIARY   utility nav + ghost outline wordmark, pushed to the edges
  *

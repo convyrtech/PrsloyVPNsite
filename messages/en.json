@@ -391,7 +391,7 @@
     "tg_login_button": "SIGN IN WITH TELEGRAM",
     "tg_register_button": "CONTINUE WITH TELEGRAM",
     "tg_awaiting": "WAITING FOR CONFIRMATION…",
-    "tg_awaiting_hint": "Open the bot in Telegram, tap “Confirm” — then come back to this tab. We'll sign you in automatically, no need to log in again.",
+    "tg_awaiting_hint": "Open the bot in Telegram, tap “Confirm” — then come back to this tab. We’ll sign you in automatically, no need to log in again.",
     "tg_reopen": "REOPEN IN TELEGRAM",
     "invite_label": "INVITE CODE",
     "invite_placeholder": "Code from your invitation",
@@ -412,7 +412,7 @@
     "categories": {
       "product": "PRODUCT",
       "tech": "ACCESS",
-      "payment": "INVITE",
+      "payment": "INVITE & PAYMENT",
       "trust": "PRIVACY"
     },
     "items": [
@@ -434,7 +434,7 @@
       {
         "category": "tech",
         "q": "How is the connection set up?",
-        "a": "We do not publish technical schemes publicly. For the user it is simple: account, personal configuration, and a guide after access is issued."
+        "a": "We don’t publish the technical details publicly. For the user it is simple: account, personal configuration, and a guide after access is issued."
       },
       {
         "category": "tech",
@@ -459,7 +459,7 @@
       {
         "category": "payment",
         "q": "Why show $5/mo?",
-        "a": "It is the beta access reference price so positioning is clear. SBP and USDT checkout are live; automatic key issuing comes once the API is wired."
+        "a": "It is the beta access reference price so positioning is clear. SBP and USDT checkout are live; automatic key issuing comes later."
       },
       {
         "category": "trust",
@@ -492,7 +492,7 @@
         },
         {
           "h": "PAYMENT",
-          "p": "Payment is processed via SBP and USDT. The payment gateway handles card data; we only store the order status, amount, period, and the PRSLOY ID it is tied to."
+          "p": "Payment is processed via SBP and USDT. The payment gateway handles payment data; we only store the order status, amount, period, and the PRSLOY ID it is tied to."
         },
         {
           "h": "RETENTION",
@@ -530,7 +530,7 @@
         },
         {
           "h": "WHAT YOU CAN’T USE IT FOR",
-          "p": "Spam and DDoS. Attacks on infrastructure (ours or anyone else’s). Distributing harmful software. Automated data collection above reasonable limits (thousands of requests per second). The operator reserves the right to disable the key without refund in case of abuse — but we’ll ask first, then disable."
+          "p": "Spam and DDoS. Attacks on infrastructure (ours or anyone else’s). Distributing harmful software. Automated data collection above reasonable limits (thousands of requests per second). The operator reserves the right to disable the key without refund in case of abuse (see the refunds policy) — but we’ll ask first, then disable."
         },
         {
           "h": "AVAILABILITY",
@@ -538,7 +538,7 @@
         },
         {
           "h": "PAYMENT AND REFUNDS",
-          "p": "SBP and USDT checkout are live. During private beta the key is still issued manually after payment until the API is wired. If something goes wrong, message support."
+          "p": "SBP and USDT checkout are live. During private beta the key is still issued manually after payment; automated issuing is next up. If something goes wrong, message support."
         },
         {
           "h": "TERMINATION",
@@ -564,10 +564,10 @@
         },
         {
           "h": "WHAT IS REFUNDABLE",
-          "p": "The first purchase from a unique account is eligible for review. Renewals, repeated purchases, upgrades, and extra periods are not automatically refundable because they confirm that the previous access period was accepted."
+          "p": "The first purchase from a unique account is eligible for review. Renewals, repeated purchases, and extra periods are not automatically refundable because they confirm that the previous access period was accepted."
         },
         {
-          "h": "FAIR USE LIMITS",
+          "h": "FAIR USE",
           "p": "A refund can be refused if access was materially consumed, if available traffic accounting shows more than 5 GB of total usage after activation, or if the account was blocked for abuse, spam, attacks, malware, resale, or other violations of the Terms."
         },
         {
