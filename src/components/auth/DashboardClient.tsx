@@ -40,6 +40,7 @@ export type DashboardCopy = Record<
   | "show_key"
   | "hide_key"
   | "setup_link"
+  | "pay_cta"
   | "reissue_body"
   | "reissue_button"
   | "reissue_disabled"
@@ -71,6 +72,31 @@ export function DashboardClient({
   copy: DashboardCopy;
 }) {
   const [state, setState] = useState<State>({ kind: "loading" });
+  const [paidAwaiting, setPaidAwaiting] = useState(false);
+
+  // Does the user already have a confirmed payment whose key isn't issued yet?
+  // If so the next step is "wait for issuance", not "pay" — so the pending hero
+  // must not nudge them back to checkout. Defaults to false (treat as unpaid)
+  // so a freshly registered user gets the pay CTA immediately, no flash-hide.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/payments/me", { cache: "no-store" });
+        const data = (await res.json().catch(() => ({}))) as {
+          order?: { status?: string; confirmedAt?: string | null } | null;
+        };
+        if (!alive) return;
+        const o = data.order;
+        setPaidAwaiting(Boolean(o && (o.status === "confirmed" || o.confirmedAt)));
+      } catch {
+        /* default false → treat as "needs to pay" */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -192,7 +218,7 @@ export function DashboardClient({
       )}
 
       <RevealOnView delay={0.12}>
-        <FloatingHero copy={copy} active={active} blocked={blocked} />
+        <FloatingHero copy={copy} active={active} blocked={blocked} paidAwaiting={paidAwaiting} />
       </RevealOnView>
 
       {hasKey && user.subscriptionUrl && !blocked && (
@@ -250,10 +276,12 @@ function FloatingHero({
   copy,
   active,
   blocked,
+  paidAwaiting,
 }: {
   copy: DashboardCopy;
   active: boolean;
   blocked: boolean;
+  paidAwaiting: boolean;
 }) {
   const title = blocked
     ? copy.status_blocked_title
@@ -266,6 +294,14 @@ function FloatingHero({
       ? copy.status_ready_body
       : copy.status_pending_body;
   const tone = blocked ? "warning" : active ? "success" : "muted";
+  // Primary CTA = the actual next step. Active → set up the key they hold.
+  // Pending & unpaid → go pay (the post-registration nudge that was missing).
+  // Paid-but-awaiting-issue or blocked → support only; the body explains the wait.
+  const primary: "setup" | "pay" | "none" = active
+    ? "setup"
+    : blocked || paidAwaiting
+      ? "none"
+      : "pay";
 
   return (
     <section className="flex flex-col gap-md">
@@ -282,14 +318,26 @@ function FloatingHero({
         {body}
       </p>
       <div className="mt-sm flex flex-col sm:flex-row gap-sm">
-        <Link
-          href="/setup"
-          className="inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
-                     font-mono text-label uppercase tracking-[0.08em] text-black
-                     rounded-full hover:opacity-90 active:scale-[0.98] transition"
-        >
-          [ {copy.setup_link} ]
-        </Link>
+        {primary === "setup" && (
+          <Link
+            href="/setup"
+            className="inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
+                       font-mono text-label uppercase tracking-[0.08em] text-black
+                       rounded-full hover:opacity-90 active:scale-[0.98] transition"
+          >
+            [ {copy.setup_link} ]
+          </Link>
+        )}
+        {primary === "pay" && (
+          <Link
+            href="/pricing"
+            className="inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
+                       font-mono text-label uppercase tracking-[0.08em] text-black
+                       rounded-full hover:opacity-90 active:scale-[0.98] transition"
+          >
+            [ {copy.pay_cta} ]
+          </Link>
+        )}
         <a
           href={TELEGRAM_BOT_URL}
           target="_blank"

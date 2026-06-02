@@ -33,7 +33,6 @@ export function ScrollStage() {
   const stageRef = useRef<HTMLElement | null>(null);
   const [isTouch, setIsTouch] = useState(false);
   const [shouldMountGlobe, setShouldMountGlobe] = useState(false);
-  const [heroReady, setHeroReady] = useState(false);
 
   const { scrollYProgress: rawProgress } = useScroll({
     target: stageRef,
@@ -54,13 +53,6 @@ export function ScrollStage() {
       "ontouchstart" in window ||
         (navigator.maxTouchPoints != null && navigator.maxTouchPoints > 0)
     );
-  }, []);
-
-  // Safety: fade the static wordmark out even if the particle layer never
-  // signals readiness (no WebGL / slow font), so it can't linger over the hero.
-  useEffect(() => {
-    const id = window.setTimeout(() => setHeroReady(true), 3000);
-    return () => window.clearTimeout(id);
   }, []);
 
   // Mount the heavy WebGL globe early (well before it must fade in at 0.28) so
@@ -136,34 +128,8 @@ export function ScrollStage() {
           className="absolute inset-0 z-10"
           style={{ opacity: reduce ? heroLayerOpacity : 1 }}
         >
-          <HeroParticles
-            text="PRSLOY"
-            exitProgress={exitProgress}
-            onReady={() => setHeroReady(true)}
-          />
+          <HeroParticles text="PRSLOY" exitProgress={exitProgress} />
         </motion.div>
-
-        {/* ─── LAYER 1b: STATIC WORDMARK ───
-            Server-rendered so the very first paint shows a crisp PRSLOY instead
-            of an empty black void while the font + particle canvas resolve. It
-            sits above the (initially empty) canvas and cross-fades out the moment
-            the particle layer draws its first frame. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 top-[38%] z-[11] flex -translate-y-1/2
-                     justify-center pointer-events-none"
-          style={{
-            opacity: heroReady ? 0 : 1,
-            transition: "opacity 1200ms cubic-bezier(0.25, 0.1, 0.25, 1)",
-          }}
-        >
-          <span
-            className="font-display text-text-display tracking-[0.08em] leading-none select-none"
-            style={{ fontSize: "clamp(72px, 23vw, 270px)" }}
-          >
-            PRSLOY
-          </span>
-        </div>
 
         {/* ─────── LAYER 2: HERO HEADLINE + SUB + CTA ─────── */}
         {/* Particle PRSLOY lives in the upper third; hero text in the lower band

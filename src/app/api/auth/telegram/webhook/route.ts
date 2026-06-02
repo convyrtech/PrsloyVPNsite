@@ -64,6 +64,12 @@ export async function POST(req: Request) {
         parsed.telegramId,
         parsed.telegramUsername
       );
+      // Without this the bot stays silent after a deep-link sign-in: the
+      // website tab logs the user in via polling, but in Telegram they see
+      // only their own "/start <nonce>" with no reply and assume it hung.
+      await sendTelegramMessage(parsed.chatId, SIGNED_IN_TEXT, {
+        parseMode: "HTML",
+      });
     } else if (parsed.kind === "start_plain") {
       await sendTelegramMessage(parsed.chatId, WELCOME_TEXT, {
         parseMode: "HTML",
@@ -122,6 +128,10 @@ const WELCOME_TEXT = `<b>PRSLOY · ЗАКРЫТАЯ БЕТА</b>
 <code>/invite</code>
 
 Подробнее: prsloy.online`;
+
+const SIGNED_IN_TEXT = `<b>✓ ВХОД ПОДТВЕРЖДЁН</b>
+
+Возвращайся на вкладку PRSLOY в браузере — ты уже внутри, заново входить не нужно.`;
 
 function formatInviteMessage(code: string): string {
   return `<b>ТВОЁ ПРИГЛАШЕНИЕ В PRSLOY</b>

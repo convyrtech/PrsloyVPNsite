@@ -16,12 +16,12 @@ const FooterCtaLink = motion.create(Link);
  *   SECONDARY  one white CTA
  *   TERTIARY   utility nav + ghost outline wordmark, pushed to the edges
  *
- * The only motion — and the only red on the screen — is a single packet of
- * light crossing one hairline: the network's lone sign of life. No fake
- * departure board, no invented latency, no instrument-panel salad.
+ * The only motion — and the only red on the screen — is a single dot pulsing
+ * in place on one hairline: the network's lone heartbeat. No fake departure
+ * board, no invented latency, no instrument-panel salad.
  */
 
-// The one alive signal + the one red (Nothing §2.5): a packet traversing the
+// The one alive signal + the one red (Nothing §2.5): a dot pulsing on the
 // channel. Honours prefers-reduced-motion by resting as a single static dot.
 function SignalLine() {
   const reduce = useReducedMotion();
@@ -30,24 +30,19 @@ function SignalLine() {
       aria-hidden="true"
       className="relative w-full h-10 overflow-hidden"
     >
-      {/* The hairline itself — vertically centred so the travelling packet and
-          its glow have clearance above/below and aren't clipped at the edge. */}
+      {/* The hairline itself — vertically centred so the pulsing dot and its
+          glow have clearance above/below and aren't clipped at the edge. */}
       <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border-visible/25" />
       {reduce ? (
-        <span className="absolute left-1/2 top-1/2 h-[4px] w-[4px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent" />
+        <span className="absolute left-1/2 top-1/2 h-[5px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent" />
       ) : (
         <motion.span
-          className="absolute top-1/2 h-[4px] w-[4px] -translate-y-1/2 rounded-full bg-accent
-                     shadow-[0_0_12px_3px_rgba(215,25,33,0.55)]"
-          initial={{ left: "0%", opacity: 0 }}
-          animate={{ left: ["0%", "100%"], opacity: [0, 1, 1, 0] }}
-          transition={{
-            duration: 6,
-            ease: "linear",
-            repeat: Infinity,
-            repeatType: "loop",
-            times: [0, 0.08, 0.9, 1],
-          }}
+          // Positioned by negative margins (not translate) so motion's scale
+          // transform stays centred instead of fighting a translate utility.
+          className="absolute left-1/2 top-1/2 -ml-[2.5px] -mt-[2.5px] h-[5px] w-[5px] rounded-full bg-accent
+                     shadow-[0_0_10px_2px_rgba(215,25,33,0.5)]"
+          animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.5, 1] }}
+          transition={{ duration: 2.2, ease: "easeInOut", repeat: Infinity }}
         />
       )}
     </div>

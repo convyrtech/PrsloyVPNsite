@@ -27,13 +27,9 @@ type Mouse = { x: number; y: number; active: boolean };
 export function HeroParticles({
   text = "PRSLOY",
   exitProgress,
-  onReady,
 }: {
   text?: string;
   exitProgress?: MotionValue<number>;
-  /** Fired once the first sampled frame is about to draw, so a static
-   *  placeholder can cross-fade out. */
-  onReady?: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -41,8 +37,6 @@ export function HeroParticles({
   // re-running the effect.
   const exitRef = useRef(exitProgress);
   exitRef.current = exitProgress;
-  const onReadyRef = useRef(onReady);
-  onReadyRef.current = onReady;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -278,8 +272,6 @@ export function HeroParticles({
       // Bail if the component unmounted while we awaited fonts/sampling —
       // otherwise we'd start an rAF loop that nothing cancels.
       if (cancelled) return;
-      // First real frame is ready — let the static SSR wordmark cross-fade out.
-      onReadyRef.current?.();
       // Respect reduced motion: draw the assembled wordmark once and stop —
       // no continuous particle physics for vestibular-sensitive visitors.
       if (reduce) {

@@ -102,15 +102,16 @@ export function PricingPageClient({ locale }: { locale: string }) {
     };
   }, []);
 
-  // SPEC rows. `featured` lifts opacity to text-display — three USP rows
-  // anchor scanning, three generic rows fade to text-secondary.
+  // "ЧТО ВНУТРИ" rows — trimmed to the four differentiators (own servers,
+  // clean addresses, no logs, unlimited traffic). The generic rows were
+  // dropped: "Доступ: По инвайтам" is now explained by the WHY block above,
+  // and "Поддержка" is covered by the utility nav. `featured` lifts the three
+  // strongest to text-display. (Key names predate the copy; values are truth.)
   const specs: Array<{ label: string; value: string; featured: boolean }> = [
     { label: tShared("feature_encryption"), value: tShared("feature_encryption_value"), featured: true },
-    { label: tShared("feature_devices"), value: tShared("feature_devices_value"), featured: false },
     { label: tShared("feature_speed"), value: tShared("feature_speed_value"), featured: true },
     { label: tShared("feature_servers"), value: tShared("feature_servers_value"), featured: true },
-    { label: tShared("feature_logs"), value: tShared("feature_logs_value"), featured: false },
-    { label: tShared("feature_support"), value: tShared("feature_support_value"), featured: false },
+    { label: tShared("feature_devices"), value: tShared("feature_devices_value"), featured: false },
   ];
 
   return (
@@ -254,22 +255,35 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </>
         )}
 
-        {/* SPEC block — numbered data-sheet, dividers between rows since the
-            items are structurally identical (Nothing section 2.3). */}
+        {/* WHY INVITE-ONLY — the rationale (deliberate headroom, not scarcity):
+            answers the buyer's unspoken "why am I gated, and how is that in my
+            interest" right at the decision point. Followed by the trimmed
+            data-sheet of what's actually included. */}
         <RevealOnView>
-          <section className="flex flex-col">
-            <SectionDivider label="SPEC" />
-            <ol className="flex flex-col">
-              {specs.map((spec, i) => (
-                <SpecRow
-                  key={spec.label}
-                  num={String(i + 1).padStart(2, "0")}
-                  label={spec.label}
-                  value={spec.value}
-                  featured={spec.featured}
-                />
-              ))}
-            </ol>
+          <section className="flex flex-col gap-2xl">
+            <div className="flex flex-col">
+              <SectionDivider label={t("why_label")} />
+              <div className="flex flex-col gap-md font-body text-body-sm text-text-secondary leading-[1.6] max-w-2xl">
+                <p>{t("why_line1")}</p>
+                <p>{t("why_line2")}</p>
+                <p>{t("why_line3")}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col">
+              <SectionDivider label={t("whats_inside_label")} />
+              <ol className="flex flex-col">
+                {specs.map((spec, i) => (
+                  <SpecRow
+                    key={spec.label}
+                    num={String(i + 1).padStart(2, "0")}
+                    label={spec.label}
+                    value={spec.value}
+                    featured={spec.featured}
+                  />
+                ))}
+              </ol>
+            </div>
           </section>
         </RevealOnView>
 

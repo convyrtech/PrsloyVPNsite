@@ -39,6 +39,7 @@ export default async function DashboardPage({
     "show_key",
     "hide_key",
     "setup_link",
+    "pay_cta",
     "reissue_body",
     "reissue_button",
     "reissue_disabled",
