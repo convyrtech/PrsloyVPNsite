@@ -447,6 +447,17 @@ async function resolveUserByIdentifier(raw: string): Promise<AuthUser | null> {
   return await getUserByEmail(trimmed);
 }
 
+// Public read wrapper around resolveUserByIdentifier for the admin lookup
+// surface: returns the operator-safe shape (no password hash) or null.
+// The admin card needs the subscriptionUrl, so this returns publicUser
+// rather than the redacted AdminUserSummary.
+export async function findUserByIdentifier(
+  identifier: string
+): Promise<PublicAuthUser | null> {
+  const user = await resolveUserByIdentifier(identifier);
+  return user ? publicUser(user) : null;
+}
+
 export async function grantAccess(
   identifier: string,
   opts: { subscriptionUrl?: string } = {}
@@ -492,6 +503,30 @@ export async function grantSubscriptionByUserId(
   user.accessStatus = "active";
   user.vpnSlug = user.vpnSlug ?? randomBytes(8).toString("hex");
   user.subscriptionUrl = trimmed;
+  user.updatedAt = new Date().toISOString();
+  await saveUser(user);
+  return publicUser(user);
+}
+
+// Operator moderation toggle (Phase 1 "Заблокировать"). Block flips
+// accessStatus to "blocked", which hides the Ключ in the user's ЛК — it
+// does NOT kill the Marzneshin config, so a leaked URL still works (true
+// revoke is Phase 2 via the partner). Unblock restores access: a key-holder
+// returns to "active", everyone else to "pending". We don't persist the
+// pre-block status, so reconstructing it from subscriptionUrl is the honest
+// best guess.
+export async function setAccessBlocked(
+  userId: string,
+  blocked: boolean
+): Promise<PublicAuthUser> {
+  const user = await getUserById(userId);
+  if (!user) throw new AuthError("not_found");
+
+  user.accessStatus = blocked
+    ? "blocked"
+    : user.subscriptionUrl
+      ? "active"
+      : "pending";
   user.updatedAt = new Date().toISOString();
   await saveUser(user);
   return publicUser(user);

@@ -17,6 +17,7 @@ import {
   createSession,
   deleteUser,
   destroySession,
+  findUserByIdentifier,
   getCurrentUser,
   getUserByTelegramId,
   grantAccess,
@@ -26,6 +27,7 @@ import {
   loginUser,
   registerUser,
   registerUserWithInvite,
+  setAccessBlocked,
   verifyEmailToken,
 } from "@/lib/auth";
 import { addInviteCodes, listAvailableCodes } from "@/lib/access-pool";
@@ -229,6 +231,49 @@ describe("grantAccess", () => {
     const after = JSON.parse((await kvGet(`auth:user:${user.id}`))!);
     expect(after.accessStatus).toBe("blocked");
     expect(after.subscriptionUrl).toBeNull();
+  });
+});
+
+describe("setAccessBlocked", () => {
+  it("blocks a key-holder and restores them to active on unblock", async () => {
+    const user = await registerUser("blk@example.com", "password123");
+    await grantAccess("blk@example.com", {
+      subscriptionUrl: "https://sub.example.com/k",
+    });
+
+    const blocked = await setAccessBlocked(user.id, true);
+    expect(blocked.accessStatus).toBe("blocked");
+    // The config URL is preserved through a block — the key is only hidden.
+    expect(blocked.subscriptionUrl).toBe("https://sub.example.com/k");
+
+    const unblocked = await setAccessBlocked(user.id, false);
+    expect(unblocked.accessStatus).toBe("active");
+  });
+
+  it("unblock falls back to pending when the user holds no key", async () => {
+    const user = await registerUser("blk2@example.com", "password123");
+    await setAccessBlocked(user.id, true);
+    const unblocked = await setAccessBlocked(user.id, false);
+    expect(unblocked.accessStatus).toBe("pending");
+  });
+
+  it("rejects an unknown account", async () => {
+    await expect(setAccessBlocked("ghost", true)).rejects.toMatchObject({
+      code: "not_found",
+    });
+  });
+});
+
+describe("findUserByIdentifier", () => {
+  it("resolves by email without leaking the password hash", async () => {
+    await registerUser("find@example.com", "password123");
+    const user = await findUserByIdentifier("find@example.com");
+    expect(user?.email).toBe("find@example.com");
+    expect(user).not.toHaveProperty("passwordHash");
+  });
+
+  it("returns null for an unknown identifier", async () => {
+    expect(await findUserByIdentifier("nobody@example.com")).toBeNull();
   });
 });
 

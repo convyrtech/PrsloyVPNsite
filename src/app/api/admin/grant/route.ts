@@ -1,6 +1,7 @@
 import { NextResponse, after } from "next/server";
 import { isAdminAuthorized, isAdminConfigured } from "@/lib/admin-auth";
 import { AuthError, getAuthSetupErrorCode, grantAccess } from "@/lib/auth";
+import { writeAuditEntry } from "@/lib/admin-audit";
 import { track } from "@/lib/analytics";
 
 export const runtime = "nodejs";
@@ -92,6 +93,14 @@ export async function POST(req: Request) {
 
   try {
     const user = await grantAccess(identifier, { subscriptionUrl });
+    // Manual attach is a mutating admin action — audit it like issue/block
+    // (spec §10.2). Best-effort: writeAuditEntry never throws.
+    await writeAuditEntry({
+      action: "manual_grant",
+      targetUserId: user.id,
+      targetEmail: user.email,
+      result: "ok",
+    });
     after(() => track({ name: "key_issued", userId: user.id }));
     return NextResponse.json({ ok: true, user });
   } catch (err) {

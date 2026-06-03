@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeRedis } from "./fake-redis";
 import { registerUser } from "@/lib/auth";
+import { listAuditEntries } from "@/lib/admin-audit";
 
 const afterQueue: Array<() => Promise<void> | void> = [];
 vi.mock("next/server", async () => {
@@ -129,5 +130,41 @@ describe("POST /api/admin/grant — analytics", () => {
     await flushAfter();
 
     expect(keyIssuedEvents()).toHaveLength(0);
+  });
+});
+
+describe("POST /api/admin/grant — audit", () => {
+  it("writes a manual_grant audit row on a successful attach", async () => {
+    const user = await registerUser("audit-grant@example.com", "supersecret");
+    const { POST } = await importRoute();
+
+    const res = await POST(
+      grantReq({
+        email: "audit-grant@example.com",
+        subscriptionUrl: "https://vpn.example/sub/abc",
+      })
+    );
+    expect(res.status).toBe(200);
+
+    const log = await listAuditEntries(10);
+    expect(log[0]).toMatchObject({
+      action: "manual_grant",
+      targetUserId: user.id,
+      targetEmail: "audit-grant@example.com",
+      result: "ok",
+    });
+  });
+
+  it("writes no audit row when the grant fails", async () => {
+    const { POST } = await importRoute();
+
+    const res = await POST(
+      grantReq({
+        email: "ghost@example.com",
+        subscriptionUrl: "https://vpn.example/sub/abc",
+      })
+    );
+    expect(res.status).toBe(404);
+    expect(await listAuditEntries(10)).toHaveLength(0);
   });
 });
