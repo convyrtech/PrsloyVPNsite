@@ -2,9 +2,16 @@ import { NextResponse, after } from "next/server";
 import { isAdminAuthorized, isAdminConfigured } from "@/lib/admin-auth";
 import { AuthError, getAuthSetupErrorCode, grantAccess } from "@/lib/auth";
 import { writeAuditEntry } from "@/lib/admin-audit";
+import { rateLimit } from "@/lib/rate-limit";
 import { track } from "@/lib/analytics";
 
 export const runtime = "nodejs";
+
+// Cap authorized manual attaches (spec §2). Global per-action key — single
+// ADMIN_SECRET, so the cap bounds total throughput regardless of source IP.
+// Fails open.
+const GRANT_LIMIT = 20;
+const GRANT_WINDOW_SECONDS = 60;
 
 type GrantBody = {
   // `identifier` is the canonical field name (email, @username, or
@@ -38,6 +45,14 @@ export async function POST(req: Request) {
   }
   if (!isAdminAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
+  const limited = await rateLimit("admin-grant", "op", GRANT_LIMIT, GRANT_WINDOW_SECONDS);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { ok: false, error: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfter) } }
+    );
   }
 
   let body: GrantBody;

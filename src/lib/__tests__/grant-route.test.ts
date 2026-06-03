@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeRedis } from "./fake-redis";
 import { registerUser } from "@/lib/auth";
 import { listAuditEntries } from "@/lib/admin-audit";
+import { todayKey } from "@/lib/analytics";
 
 const afterQueue: Array<() => Promise<void> | void> = [];
 vi.mock("next/server", async () => {
@@ -55,8 +56,9 @@ function grantReq(body: Record<string, unknown>, opts: { auth?: boolean } = {}):
 }
 
 function keyIssuedEvents(): Array<Record<string, unknown>> {
-  const date = new Date().toISOString().slice(0, 10);
-  const log = redis.store.lists.get(`analytics:dev:log:${date}`) ?? [];
+  // Match the analytics module's MSK day bucket (todayKey), not a UTC slice —
+  // otherwise this read misses the log during the 00:00–03:00 MSK window.
+  const log = redis.store.lists.get(`analytics:dev:log:${todayKey()}`) ?? [];
   return log
     .map((entry) => JSON.parse(entry) as Record<string, unknown>)
     .filter((event) => event.name === "key_issued");
@@ -166,5 +168,19 @@ describe("POST /api/admin/grant — audit", () => {
     );
     expect(res.status).toBe(404);
     expect(await listAuditEntries(10)).toHaveLength(0);
+  });
+});
+
+describe("POST /api/admin/grant — rate limit", () => {
+  it("returns 429 only once the per-action limit is exceeded", async () => {
+    const { POST } = await importRoute();
+    // GRANT_LIMIT = 20 / 60s. The first 20 authed calls pass (400
+    // identifier_required, which still counts); the 21st is the only 429.
+    const statuses: number[] = [];
+    for (let i = 0; i < 21; i += 1) {
+      statuses.push((await POST(grantReq({}))).status);
+    }
+    expect(statuses.slice(0, 20).every((s) => s !== 429)).toBe(true);
+    expect(statuses[20]).toBe(429);
   });
 });

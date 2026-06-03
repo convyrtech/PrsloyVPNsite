@@ -2,10 +2,14 @@ import { NextResponse } from "next/server";
 import { isAdminAuthorized, isAdminConfigured } from "@/lib/admin-auth";
 import { AccessPoolError, addInviteCodes } from "@/lib/access-pool";
 import { KvNotConfiguredError } from "@/lib/kv";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 const MAX_CODES_PER_REQUEST = 1000;
+// Cap invite-code creation per spec §2. Global per-action key; fails open.
+const POOL_ADD_LIMIT = 20;
+const POOL_ADD_WINDOW_SECONDS = 60;
 
 type AddBody = {
   codes?: unknown;
@@ -19,6 +23,14 @@ export async function POST(req: Request) {
   }
   if (!isAdminAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
+  const limited = await rateLimit("admin-pool-add", "op", POOL_ADD_LIMIT, POOL_ADD_WINDOW_SECONDS);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { ok: false, error: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfter) } }
+    );
   }
 
   let body: AddBody;

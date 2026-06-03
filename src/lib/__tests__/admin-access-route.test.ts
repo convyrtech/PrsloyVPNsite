@@ -95,3 +95,28 @@ describe("PATCH /api/admin/access", () => {
     expect(log[0].action).toBe("unblock");
   });
 });
+
+describe("PATCH /api/admin/access — rate limit", () => {
+  it("returns 429 only once the per-action limit is exceeded", async () => {
+    const { PATCH } = await importRoute();
+    // ACCESS_LIMIT = 30 / 60s. The first 30 authed calls pass (400 bad body,
+    // which still counts); the 31st is the only 429.
+    const statuses: number[] = [];
+    for (let i = 0; i < 31; i += 1) {
+      statuses.push((await PATCH(makeReq({}))).status);
+    }
+    expect(statuses.slice(0, 30).every((s) => s !== 429)).toBe(true);
+    expect(statuses[30]).toBe(429);
+  });
+
+  it("does not count unauthorized requests toward the limit", async () => {
+    const { PATCH } = await importRoute();
+    // 40 unauthenticated calls (> ACCESS_LIMIT) all 401, never 429 — the
+    // limiter sits behind auth so a leaked-secret attacker can't lock the
+    // operator out without the secret.
+    for (let i = 0; i < 40; i += 1) {
+      const res = await PATCH(makeReq({ userId: "x", blocked: true }, { auth: false }));
+      expect(res.status).toBe(401);
+    }
+  });
+});

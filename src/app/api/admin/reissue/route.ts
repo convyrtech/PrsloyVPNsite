@@ -6,8 +6,14 @@ import {
   markReissueHandled,
   ReissueError,
 } from "@/lib/reissue";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+// Cap the mutating PATCH (mark-handled) per spec §2. Global per-action key;
+// fails open. GET (list) stays unlimited.
+const REISSUE_LIMIT = 30;
+const REISSUE_WINDOW_SECONDS = 60;
 
 type PatchBody = {
   action?: unknown;
@@ -34,6 +40,14 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
   const blocked = guardAdmin(req);
   if (blocked) return blocked;
+
+  const limited = await rateLimit("admin-reissue", "op", REISSUE_LIMIT, REISSUE_WINDOW_SECONDS);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { ok: false, error: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfter) } }
+    );
+  }
 
   let body: PatchBody;
   try {

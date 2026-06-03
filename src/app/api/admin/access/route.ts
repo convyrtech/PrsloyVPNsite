@@ -2,8 +2,15 @@ import { NextResponse } from "next/server";
 import { isAdminAuthorized, isAdminConfigured } from "@/lib/admin-auth";
 import { AuthError, getAuthSetupErrorCode, setAccessBlocked } from "@/lib/auth";
 import { writeAuditEntry } from "@/lib/admin-audit";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+// Cap authorized block/unblock throughput (spec §2). Global per-action key
+// — single ADMIN_SECRET, so the cap bounds total throughput regardless of
+// source IP. Fails open.
+const ACCESS_LIMIT = 30;
+const ACCESS_WINDOW_SECONDS = 60;
 
 type AccessBody = {
   userId?: unknown;
@@ -19,6 +26,14 @@ export async function PATCH(req: Request) {
   }
   if (!isAdminAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
+  const limited = await rateLimit("admin-access", "op", ACCESS_LIMIT, ACCESS_WINDOW_SECONDS);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { ok: false, error: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfter) } }
+    );
   }
 
   let body: AccessBody;

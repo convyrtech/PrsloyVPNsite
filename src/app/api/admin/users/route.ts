@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthorized, isAdminConfigured } from "@/lib/admin-auth";
 import { AuthError, deleteUser, getAuthSetupErrorCode, listUsers } from "@/lib/auth";
+import { writeAuditEntry } from "@/lib/admin-audit";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+// Account deletion is the highest-impact admin mutation — cap it and audit
+// it (spec §2). Global per-action key; fails open. GET (list) stays
+// unlimited, like /lookup.
+const DELETE_LIMIT = 20;
+const DELETE_WINDOW_SECONDS = 60;
 
 type DeleteBody = {
   userId?: unknown;
@@ -29,6 +37,14 @@ export async function DELETE(req: Request) {
   const blocked = guardAdmin(req);
   if (blocked) return blocked;
 
+  const limited = await rateLimit("admin-users-delete", "op", DELETE_LIMIT, DELETE_WINDOW_SECONDS);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { ok: false, error: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfter) } }
+    );
+  }
+
   let body: DeleteBody;
   try {
     body = (await req.json()) as DeleteBody;
@@ -43,6 +59,12 @@ export async function DELETE(req: Request) {
 
   try {
     const user = await deleteUser(userId);
+    await writeAuditEntry({
+      action: "delete",
+      targetUserId: user.id,
+      targetEmail: user.email,
+      result: "ok",
+    });
     return NextResponse.json({ ok: true, user });
   } catch (err) {
     const setupError = getAuthSetupErrorCode(err);

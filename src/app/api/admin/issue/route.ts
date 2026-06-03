@@ -4,9 +4,16 @@ import { getAuthSetupErrorCode } from "@/lib/auth";
 import { AdminIssueError, performAdminIssue } from "@/lib/admin-issue";
 import { getMarzneshinProxyErrorCode, periodToDays } from "@/lib/marzneshin-proxy";
 import { PERIODS, type Period } from "@/lib/pricing";
+import { rateLimit } from "@/lib/rate-limit";
 import { track } from "@/lib/analytics";
 
 export const runtime = "nodejs";
+
+// Caps authorized issuance (spec §8: comps are free keys). Keyed globally
+// per action, not per IP: there is one ADMIN_SECRET, so a leaked secret
+// used from rotating IPs still lands in one bucket. Fails open.
+const ISSUE_LIMIT = 20;
+const ISSUE_WINDOW_SECONDS = 60;
 
 type IssueBody = {
   email?: unknown;
@@ -33,6 +40,14 @@ export async function POST(req: Request) {
   }
   if (!isAdminAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
+  const limited = await rateLimit("admin-issue", "op", ISSUE_LIMIT, ISSUE_WINDOW_SECONDS);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { ok: false, error: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfter) } }
+    );
   }
 
   let body: IssueBody;

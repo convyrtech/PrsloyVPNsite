@@ -17,7 +17,8 @@ export type AdminAuditAction =
   | "extend"
   | "manual_grant"
   | "block"
-  | "unblock";
+  | "unblock"
+  | "delete";
 
 export type AdminAuditEntry = {
   id: string;
