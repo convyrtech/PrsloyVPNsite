@@ -1,6 +1,13 @@
 import { randomBytes } from "crypto";
 import { kvGet, kvSet, KvNotConfiguredError } from "@/lib/kv";
+import { grantSubscriptionByUserId } from "@/lib/auth";
 import { incrementPayingCounter } from "@/lib/capacity";
+import {
+  isMarzneshinProxyConfigured,
+  issueKey,
+  periodToDays,
+  saveSubscriptionRecord,
+} from "@/lib/marzneshin-proxy";
 import {
   type Period,
   getPeriodTotalRub,
@@ -220,6 +227,43 @@ export async function updatePaymentByTransaction(input: {
         await incrementPayingCounter();
       } catch (err) {
         console.warn("[payments] capacity counter increment failed", err);
+      }
+
+      // Marzneshin auto-issue (Issue #4). Skip silently if the proxy
+      // env is not set (staging / local). Failures don't roll back the
+      // order — user sees the pending state on /dashboard and an
+      // operator can re-issue via the manual /admin/grant path.
+      // Idempotency on partner side is keyed by payment_id (= order.id),
+      // so a late retry through this branch is a no-op for partner.
+      if (isMarzneshinProxyConfigured()) {
+        try {
+          const result = await issueKey({
+            paymentId: order.id,
+            periodDays: periodToDays(order.period),
+            userId: order.userId,
+            email: order.email,
+          });
+          await saveSubscriptionRecord(order.userId, {
+            marzUsername: result.marzUsername,
+            subscriptionUrl: result.subscriptionUrl,
+            issuedAt: new Date().toISOString(),
+            periodDays: periodToDays(order.period),
+            paymentId: order.id,
+            source: "auto-issue",
+          });
+          // Flip AuthUser to active + populate subscriptionUrl so the
+          // dashboard's KeyBlock renders without any further plumbing.
+          // Blocked users are kept in moderation limbo per grantAccess
+          // semantics — payment still confirms (no rollback) but key is
+          // not surfaced until the operator unblocks.
+          await grantSubscriptionByUserId(order.userId, result.subscriptionUrl);
+        } catch (err) {
+          console.warn(
+            "[payments] marzneshin auto-issue failed for order",
+            order.id,
+            err
+          );
+        }
       }
     }
   }

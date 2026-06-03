@@ -473,6 +473,30 @@ export async function grantAccess(
   return publicUser(user);
 }
 
+// Payment-flow variant of grantAccess: looks up the user by internal id
+// (orders carry userId, not the human identifier) and respects the same
+// blocked-account guard. Throws on blocked so the caller in payments.ts
+// can log the anomaly without rolling back the payment.
+export async function grantSubscriptionByUserId(
+  userId: string,
+  subscriptionUrl: string
+): Promise<PublicAuthUser> {
+  const user = await getUserById(userId);
+  if (!user) throw new AuthError("not_found");
+  if (user.accessStatus === "blocked") {
+    throw new AuthError("user_blocked");
+  }
+  const trimmed = subscriptionUrl.trim();
+  if (!trimmed) throw new AuthError("subscription_url_required");
+
+  user.accessStatus = "active";
+  user.vpnSlug = user.vpnSlug ?? randomBytes(8).toString("hex");
+  user.subscriptionUrl = trimmed;
+  user.updatedAt = new Date().toISOString();
+  await saveUser(user);
+  return publicUser(user);
+}
+
 // First-time Telegram registration consumes an invite code. Returning
 // Telegram users (telegramId already known) just get a session with the
 // username synced from the latest payload.
