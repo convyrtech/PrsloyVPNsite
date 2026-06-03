@@ -83,9 +83,6 @@ type AdminGrantCopy = {
   issueTitle: string;
   periodLabel: string;
   periodLabels: Record<Period, string>;
-  customLabel: string;
-  customPlaceholder: string;
-  daysWord: string;
   compLabel: string;
   compHint: string;
   noteLabel: string;
@@ -165,9 +162,6 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
     issueTitle: "Выдать / продлить",
     periodLabel: "Период",
     periodLabels: { "1mo": "1 месяц", "6mo": "6 месяцев", "1yr": "12 месяцев" },
-    customLabel: "Произвольно",
-    customPlaceholder: "напр. 7",
-    daysWord: "дн.",
     compLabel: "Комп — без оплаты",
     compHint: "Бесплатная выдача. Заметка обязательна — попадёт в аудит.",
     noteLabel: "Заметка / причина",
@@ -289,9 +283,6 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
     issueTitle: "Issue / extend",
     periodLabel: "Period",
     periodLabels: { "1mo": "1 month", "6mo": "6 months", "1yr": "12 months" },
-    customLabel: "Custom",
-    customPlaceholder: "e.g. 7",
-    daysWord: "days",
     compLabel: "Comp — no payment",
     compHint: "Free issuance. A note is required — it goes to the audit log.",
     noteLabel: "Note / reason",
@@ -375,7 +366,6 @@ const COPY: Record<"ru" | "en", AdminGrantCopy> = {
 };
 
 const MS_PER_DAY = 86_400_000;
-const MAX_CUSTOM_DAYS = 3650;
 
 export function AdminGrantClient({ locale }: { locale: string }) {
   const copy = getCopy(locale);
@@ -663,10 +653,11 @@ function AccessCard({
   const hasKey = Boolean(user.subscriptionUrl);
   const identity = displayIdentity(user);
 
-  // issue inputs
-  const [mode, setMode] = useState<"preset" | "custom">("preset");
+  // issue inputs. Only the 1/6/12-month presets are offered: the partner's
+  // /external/issue-key rejects non-standard period_days (custom comp days
+  // 400 in prod), so arbitrary-day issuance is withheld until the partner
+  // accepts it. See docs/admin-design.md §10.1.
   const [period, setPeriod] = useState<Period>("1mo");
-  const [customDays, setCustomDays] = useState("");
   const [comp, setComp] = useState(false);
   const [note, setNote] = useState("");
 
@@ -679,22 +670,14 @@ function AccessCard({
   );
   const [flash, setFlash] = useState<Flash | null>(null);
 
-  const customValid =
-    /^\d+$/.test(customDays.trim()) &&
-    Number(customDays) >= 1 &&
-    Number(customDays) <= MAX_CUSTOM_DAYS;
   const compNoteMissing = comp && !note.trim();
-  const periodInvalid = mode === "custom" && !customValid;
   // A blocked account must be unblocked before issuing (spec §8/§10.3). The
   // server enforces this too (409), but the affordance shouldn't invite a
   // guaranteed-fail click.
   const issueLocked = pending !== null || !user.email || isBlocked;
-  const issueDisabled = issueLocked || compNoteMissing || periodInvalid;
+  const issueDisabled = issueLocked || compNoteMissing;
 
-  const periodText =
-    mode === "custom"
-      ? `${customDays.trim()} ${copy.daysWord}`
-      : copy.periodLabels[period];
+  const periodText = copy.periodLabels[period];
 
   async function doIssue() {
     if (issueDisabled || !user.email) return;
@@ -702,13 +685,11 @@ function AccessCard({
     setPending("issue");
     setFlash(null);
     const trimmedNote = note.trim();
-    const body =
-      mode === "custom"
-        ? { email: user.email, days: Number(customDays.trim()), comp }
-        : { email: user.email, period, comp };
     try {
       const { ok, data } = await call("POST", "/api/admin/issue", {
-        ...body,
+        email: user.email,
+        period,
+        comp,
         ...(trimmedNote ? { note: trimmedNote } : {}),
       });
       if (!ok) {
@@ -868,19 +849,9 @@ function AccessCard({
 
             <PeriodPicker
               copy={copy}
-              mode={mode}
               period={period}
-              customDays={customDays}
               disabled={issueLocked}
-              onPreset={(p) => {
-                setMode("preset");
-                setPeriod(p);
-                setCustomDays("");
-              }}
-              onCustom={(v) => {
-                setCustomDays(v);
-                setMode(v.trim() ? "custom" : "preset");
-              }}
+              onPreset={setPeriod}
             />
 
             <label className="flex items-center gap-sm cursor-pointer">
@@ -1022,20 +993,14 @@ function AccessCard({
 
 function PeriodPicker({
   copy,
-  mode,
   period,
-  customDays,
   disabled,
   onPreset,
-  onCustom,
 }: {
   copy: AdminGrantCopy;
-  mode: "preset" | "custom";
   period: Period;
-  customDays: string;
   disabled: boolean;
   onPreset: (p: Period) => void;
-  onCustom: (v: string) => void;
 }) {
   const periods: Period[] = ["1mo", "6mo", "1yr"];
   return (
@@ -1045,7 +1010,7 @@ function PeriodPicker({
       </span>
       <div className="flex flex-wrap gap-sm">
         {periods.map((p) => {
-          const active = mode === "preset" && period === p;
+          const active = period === p;
           return (
             <button
               key={p}
@@ -1066,27 +1031,6 @@ function PeriodPicker({
           );
         })}
       </div>
-      <label className="flex items-center gap-sm">
-        <span className="font-mono text-label uppercase tracking-[0.1em] text-text-disabled">
-          {copy.customLabel}
-        </span>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={customDays}
-          disabled={disabled}
-          placeholder={copy.customPlaceholder}
-          onChange={(e) => onCustom(e.target.value)}
-          className={`w-24 bg-black border rounded-full px-md min-h-[40px]
-                     font-mono text-body-sm text-text-display placeholder:text-text-disabled
-                     focus:outline-none transition-colors disabled:opacity-50 ${
-                       mode === "custom" ? "border-text-display" : "border-border-visible"
-                     }`}
-        />
-        <span className="font-mono text-label uppercase tracking-[0.1em] text-text-disabled">
-          {copy.daysWord}
-        </span>
-      </label>
     </div>
   );
 }
