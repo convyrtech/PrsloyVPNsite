@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeRedis } from "./fake-redis";
+import { todayKey } from "@/lib/analytics";
 
 // Capture all after() callbacks so the test can flush them and then
 // assert on KV state. The real Next runtime delays execution past
@@ -70,7 +71,7 @@ describe("POST /api/track", () => {
     const res = await POST(makeRequest({ body: { name: "pageview", path: "/ru" } }));
     expect(res.status).toBe(204);
     await flushAfter();
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     expect(redis.store.strings.get(`analytics:dev:pv:${date}:/ru`)).toBe("1");
   });
 
@@ -155,7 +156,7 @@ describe("POST /api/track", () => {
     expect(res31.status).toBe(204);
     await flushAfter();
 
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     expect(redis.store.strings.get(`analytics:dev:pv:${date}:/ru/31`)).toBeUndefined();
   });
 
@@ -167,7 +168,7 @@ describe("POST /api/track", () => {
       })
     );
     await flushAfter();
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     expect(redis.store.strings.get(`analytics:dev:utm:${date}:telegram`)).toBe("1");
   });
 

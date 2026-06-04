@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeRedis } from "./fake-redis";
+import { todayKey } from "@/lib/analytics";
 
 const afterQueue: Array<() => Promise<void> | void> = [];
 vi.mock("next/server", async () => {
@@ -62,7 +63,7 @@ function createReq(body: Record<string, unknown>): Request {
 }
 
 function paymentStartedEvents(): Array<Record<string, unknown>> {
-  const date = new Date().toISOString().slice(0, 10);
+  const date = todayKey();
   const log = redis.store.lists.get(`analytics:dev:log:${date}`) ?? [];
   return log
     .map((entry) => JSON.parse(entry) as Record<string, unknown>)
@@ -134,7 +135,7 @@ describe("POST /api/payments/platega/create — analytics", () => {
     );
     await flushAfter();
 
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     expect(
       redis.store.strings.get(`analytics:dev:funnel:${date}:payment_started:instagram`)
     ).toBe("1");

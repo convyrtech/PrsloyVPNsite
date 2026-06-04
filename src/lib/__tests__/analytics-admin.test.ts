@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { installFakeRedis } from "./fake-redis";
-import { track } from "@/lib/analytics";
+import { todayKey, track } from "@/lib/analytics";
 import {
   readDailyAggregate,
   readRecentEvents,
@@ -37,7 +37,7 @@ describe("readDailyAggregate", () => {
     await track({ name: "payment_confirmed", orderId: "o2", amountRub: 2400, utmSource: "tg" });
     await track({ name: "payment_confirmed", orderId: "o3", amountRub: 500 });
 
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     const agg = await readDailyAggregate(date);
 
     expect(agg.totalRevenueRub).toBe(3400);
@@ -50,7 +50,7 @@ describe("readDailyAggregate", () => {
   it("counts utm_source=_total as its own per-source row (no collision with total)", async () => {
     await track({ name: "payment_confirmed", orderId: "ot", amountRub: 700, utmSource: "_total" });
 
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     const agg = await readDailyAggregate(date);
 
     expect(agg.totalRevenueRub).toBe(700);
@@ -67,7 +67,7 @@ describe("readDailyAggregate", () => {
     await track({ name: "payment_started", orderId: "o1", method: "sbp_qr", utmSource: "telegram" });
     await track({ name: "key_issued", userId: "u1" });
 
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     const agg = await readDailyAggregate(date);
 
     expect(agg.totalPageviews).toBe(3);
@@ -118,7 +118,7 @@ describe("readDailyAggregate", () => {
     await track({ name: "pageview", path: "/ru" });
     await track({ name: "pageview", path: "/ru" });
 
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     const prod = await readDailyAggregate(date, "prod");
     const dev = await readDailyAggregate(date, "dev");
 
@@ -127,7 +127,7 @@ describe("readDailyAggregate", () => {
   });
 
   it("ignores corrupt counter values", async () => {
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     // Seed an index key + a bogus counter directly.
     redis.store.strings.set(`analytics:dev:pv:${date}:/bad`, "not-a-number");
     redis.store.sets.set(
@@ -141,7 +141,7 @@ describe("readDailyAggregate", () => {
   });
 
   it("skips keys it cannot parse", async () => {
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     redis.store.strings.set("analytics:dev:weird", "1");
     redis.store.sets.set(
       `analytics:dev:keys:${date}`,
@@ -159,7 +159,7 @@ describe("readRecentEvents", () => {
     await track({ name: "register_success", userId: "u1" });
     await track({ name: "key_issued", userId: "u1" });
 
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     const events = await readRecentEvents(date, 10);
 
     expect(events.length).toBe(3);
@@ -178,7 +178,7 @@ describe("readRecentEvents", () => {
     for (let i = 0; i < 5; i += 1) {
       await track({ name: "pageview", path: `/ru/${i}` });
     }
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     const events = await readRecentEvents(date, 2);
     expect(events.length).toBe(2);
   });

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { installFakeRedis } from "./fake-redis";
-import { track } from "@/lib/analytics";
+import { todayKey, track } from "@/lib/analytics";
 
 const redis = installFakeRedis();
 
@@ -70,7 +70,7 @@ describe("GET /api/admin/analytics", () => {
     await track({ name: "pageview", path: "/ru" });
     await track({ name: "pageview", path: "/ru/pricing" });
 
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     const { GET } = await importRoute();
     const res = await GET(
       makeReq(`/api/admin/analytics?date=${date}&env=dev`)
@@ -100,7 +100,7 @@ describe("GET /api/admin/analytics", () => {
       makeReq("/api/admin/analytics?date=not-a-date&env=dev")
     );
     const data = await res.json();
-    expect(data.aggregate.date).toBe(new Date().toISOString().slice(0, 10));
+    expect(data.aggregate.date).toBe(todayKey());
   });
 
   it("falls back to prod when env param is invalid", async () => {
@@ -116,7 +116,7 @@ describe("GET /api/admin/analytics", () => {
     await track({ name: "pageview", path: "/ru" });
     await track({ name: "register_success", userId: "u1" });
 
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     const { GET } = await importRoute();
     const res = await GET(
       makeReq(`/api/admin/analytics?date=${date}&env=dev&log=1`)
@@ -129,7 +129,7 @@ describe("GET /api/admin/analytics", () => {
 
   it("omits events when log param is not 1", async () => {
     await track({ name: "pageview", path: "/ru" });
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayKey();
     const { GET } = await importRoute();
     const res = await GET(
       makeReq(`/api/admin/analytics?date=${date}&env=dev`)

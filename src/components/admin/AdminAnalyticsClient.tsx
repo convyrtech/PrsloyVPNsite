@@ -36,8 +36,19 @@ type LoadState =
   | { kind: "loaded"; aggregate: Aggregate }
   | { kind: "error"; message: string };
 
+// Match the analytics module's Moscow-day bucket (todayKey in lib/analytics),
+// not a UTC slice — otherwise the default view requests "yesterday" during
+// the 00:00–03:00 MSK window and shows an empty day. Inlined (not imported
+// from lib/analytics) to keep server-only KV code out of the client bundle.
+const MSK_DATE_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/Moscow",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return MSK_DATE_FORMATTER.format(new Date());
 }
 
 export function AdminAnalyticsClient({ locale }: { locale: string }) {

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeRedis } from "./fake-redis";
+import { todayKey } from "@/lib/analytics";
 import { addInviteCodes } from "@/lib/access-pool";
 
 const afterQueue: Array<() => Promise<void> | void> = [];
@@ -55,7 +56,7 @@ function registerReq(body: Record<string, unknown>): Request {
 }
 
 function registerEvents(): Array<Record<string, unknown>> {
-  const date = new Date().toISOString().slice(0, 10);
+  const date = todayKey();
   const log = redis.store.lists.get(`analytics:dev:log:${date}`) ?? [];
   return log
     .map((entry) => JSON.parse(entry) as Record<string, unknown>)
