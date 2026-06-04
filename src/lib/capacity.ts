@@ -1,4 +1,4 @@
-import { kvGet, kvIncr } from "@/lib/kv";
+import { kvDel, kvGet, kvIncr } from "@/lib/kv";
 
 /* Capacity counter.
    ─────────────────
@@ -56,6 +56,13 @@ function getVipContactUrl(): string {
 
 export async function incrementPayingCounter(): Promise<number> {
   return await kvIncr(PAYING_COUNTER_KEY);
+}
+
+// Reset the lifetime paying counter (operator tool — e.g. clearing a test
+// increment). Deleting the key makes getCapacity read 0; the next real
+// confirmation INCRs back to 1.
+export async function resetPayingCounter(): Promise<void> {
+  await kvDel(PAYING_COUNTER_KEY);
 }
 
 export async function getCapacity(): Promise<Capacity> {

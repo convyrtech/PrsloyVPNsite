@@ -21,7 +21,8 @@ export type AdminAuditAction =
   | "delete"
   | "reissue_handled"
   | "codes_added"
-  | "reprocess";
+  | "reprocess"
+  | "capacity_reset";
 
 export type AdminAuditEntry = {
   id: string;
