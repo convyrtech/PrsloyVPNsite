@@ -20,7 +20,8 @@ export type AdminAuditAction =
   | "unblock"
   | "delete"
   | "reissue_handled"
-  | "codes_added";
+  | "codes_added"
+  | "reprocess";
 
 export type AdminAuditEntry = {
   id: string;
