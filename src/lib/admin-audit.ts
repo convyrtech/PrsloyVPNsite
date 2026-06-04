@@ -18,13 +18,17 @@ export type AdminAuditAction =
   | "manual_grant"
   | "block"
   | "unblock"
-  | "delete";
+  | "delete"
+  | "reissue_handled"
+  | "codes_added";
 
 export type AdminAuditEntry = {
   id: string;
   ts: string;
   action: AdminAuditAction;
-  targetUserId: string;
+  // Optional: most actions target one user, but pool-wide actions
+  // (codes_added) have no single target — they carry the count in `detail`.
+  targetUserId?: string;
   targetEmail: string | null;
   periodDays?: number;
   comp?: boolean;

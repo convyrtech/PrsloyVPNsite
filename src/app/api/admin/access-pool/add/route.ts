@@ -3,6 +3,7 @@ import { isAdminAuthorized, isAdminConfigured } from "@/lib/admin-auth";
 import { AccessPoolError, addInviteCodes } from "@/lib/access-pool";
 import { KvNotConfiguredError } from "@/lib/kv";
 import { rateLimit } from "@/lib/rate-limit";
+import { writeAuditEntry } from "@/lib/admin-audit";
 
 export const runtime = "nodejs";
 
@@ -65,6 +66,13 @@ export async function POST(req: Request) {
 
   try {
     const result = await addInviteCodes(codes as string[]);
+    // No single target user — record the counts in `detail` (spec §2).
+    await writeAuditEntry({
+      action: "codes_added",
+      targetEmail: null,
+      result: "ok",
+      detail: `added ${result.added}, skipped ${result.skipped}`,
+    });
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     if (err instanceof KvNotConfiguredError) {

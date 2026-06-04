@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { installFakeRedis } from "./fake-redis";
 import { registerUser } from "@/lib/auth";
 import { listAuditEntries } from "@/lib/admin-audit";
+import { createReissueRequest } from "@/lib/reissue";
 
 // Completes the spec §2 coverage: every mutating admin route is rate-limited.
 // issue/access/grant have their own route specs; this pins the remaining
@@ -77,6 +78,30 @@ describe("PATCH /api/admin/reissue — rate limit", () => {
     expect(statuses.slice(0, 30).every((s) => s !== 429)).toBe(true);
     expect(statuses[30]).toBe(429);
   });
+
+  it("writes a reissue_handled audit row on mark-handled", async () => {
+    const request = await createReissueRequest({
+      userId: "u-reissue",
+      email: "reissue@example.com",
+      vpnSlug: "slug1",
+      subscriptionUrl: "https://sub.example/x",
+      reason: "",
+    });
+    const { PATCH } = await import("@/app/api/admin/reissue/route");
+    const res = await PATCH(
+      authed("PATCH", "http://localhost/api/admin/reissue", {
+        requestId: request.requestId,
+        action: "mark_handled",
+      })
+    );
+    expect(res.status).toBe(200);
+    const log = await listAuditEntries(10);
+    expect(log[0]).toMatchObject({
+      action: "reissue_handled",
+      targetUserId: "u-reissue",
+      result: "ok",
+    });
+  });
 });
 
 describe("POST /api/admin/access-pool/add — rate limit", () => {
@@ -92,5 +117,17 @@ describe("POST /api/admin/access-pool/add — rate limit", () => {
     }
     expect(statuses.slice(0, 20).every((s) => s !== 429)).toBe(true);
     expect(statuses[20]).toBe(429);
+  });
+
+  it("writes a codes_added audit row on a successful add", async () => {
+    const { POST } = await import("@/app/api/admin/access-pool/add/route");
+    const res = await POST(
+      authed("POST", "http://localhost/api/admin/access-pool/add", {
+        codes: ["aud-c1", "aud-c2"],
+      })
+    );
+    expect(res.status).toBe(200);
+    const log = await listAuditEntries(10);
+    expect(log[0]).toMatchObject({ action: "codes_added", result: "ok" });
   });
 });

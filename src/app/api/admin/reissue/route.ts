@@ -7,6 +7,7 @@ import {
   ReissueError,
 } from "@/lib/reissue";
 import { rateLimit } from "@/lib/rate-limit";
+import { writeAuditEntry } from "@/lib/admin-audit";
 
 export const runtime = "nodejs";
 
@@ -67,6 +68,12 @@ export async function PATCH(req: Request) {
 
   try {
     const request = await markReissueHandled(requestId);
+    await writeAuditEntry({
+      action: "reissue_handled",
+      targetUserId: request.userId,
+      targetEmail: request.email,
+      result: "ok",
+    });
     return NextResponse.json({ ok: true, request });
   } catch (err) {
     const setupError = getAuthSetupErrorCode(err);
