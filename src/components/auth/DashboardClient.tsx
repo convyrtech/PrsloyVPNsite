@@ -160,7 +160,7 @@ export function DashboardClient({
   if (!state.user) {
     return (
       <DashboardShell copy={copy}>
-        <div className="min-h-[58vh] sm:min-h-0 flex items-center">
+        <div>
           <RevealOnView delay={0.1}>
             <section className="border border-border-visible rounded-[8px] p-xl sm:p-2xl bg-surface flex flex-col gap-lg">
               <div className="flex items-center gap-sm">

@@ -29,9 +29,9 @@ export default async function LoginPage({
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl flex flex-col">
       <div className="flex-1 w-full max-w-5xl mx-auto px-lg flex items-start lg:items-center">
-        <div className="w-full grid gap-2xl lg:grid-cols-2 lg:gap-4xl lg:items-center">
+        <div className="w-full grid gap-lg sm:gap-2xl lg:grid-cols-2 lg:gap-4xl lg:items-center">
           {/* TEXT SIDE */}
-          <div className="flex flex-col gap-lg">
+          <div className="flex flex-col gap-md sm:gap-lg">
             <RevealOnView y={12}>
               <SectionLabel>{t("login_label")}</SectionLabel>
             </RevealOnView>
