@@ -211,6 +211,18 @@ export function PricingPageClient({ locale }: { locale: string }) {
                   )}
                 </div>
 
+                {/* Scarcity at the decision point — how many of the 300 slots
+                    are taken, right under the price instead of buried below. */}
+                {capacity.kind === "ready" && (
+                  <div className="flex items-center gap-md font-mono text-label uppercase tracking-[0.16em]">
+                    <span className="text-text-disabled">{t("status_label")}</span>
+                    <span className="flex-1 h-px bg-border-visible/40" />
+                    <span className="text-text-display tabular-nums">
+                      {capacity.display}/{capacity.target} {t("status_taken")}
+                    </span>
+                  </div>
+                )}
+
                 {/* Guest → lead with the invite request (no dead pay buttons,
                     since checkout requires an account). Signed-in → pay. */}
                 {authed ? (
@@ -221,6 +233,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
                       {t("guest_flow")}
                     </p>
                     <InviteRequest
+                      defaultOpen
                       copy={{
                         cta: t("invite_cta"),
                         collapse: t("invite_collapse"),
@@ -284,21 +297,6 @@ export function PricingPageClient({ locale }: { locale: string }) {
                 ))}
               </ol>
             </div>
-          </section>
-        </RevealOnView>
-
-        {/* STATUS band — live capacity counter from /api/access/capacity.
-            Lifetime (monotonic), display absorbs PRICING_COUNTER_OFFSET so
-            the page never reads as "0 sold". */}
-        <RevealOnView>
-          <section className="flex items-center gap-md font-mono text-label uppercase tracking-[0.16em]">
-            <span className="text-text-disabled">{t("status_label")}</span>
-            <span className="flex-1 h-px bg-border-visible/40" />
-            <span className="text-text-display tabular-nums">
-              {capacity.kind === "ready"
-                ? `${capacity.display}/${capacity.target} ${t("status_taken")}`
-                : `···/··· ${t("status_taken")}`}
-            </span>
           </section>
         </RevealOnView>
 

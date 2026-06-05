@@ -34,11 +34,13 @@ function isValidEmail(value: string): boolean {
 export function InviteRequest({
   copy,
   botUrl = INVITE_BOT_FALLBACK_URL,
+  defaultOpen = false,
 }: {
   copy: Copy;
   botUrl?: string;
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [email, setEmail] = useState("");
   const [state, setState] = useState<EmailState>({ kind: "idle" });
 
