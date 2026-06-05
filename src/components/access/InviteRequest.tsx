@@ -110,7 +110,7 @@ export function InviteRequest({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="inline-flex items-center min-h-[36px] text-text-disabled
+          className="inline-flex items-center min-h-[44px] text-text-disabled
                      hover:text-text-display transition-colors"
         >
           {copy.collapse} ×
