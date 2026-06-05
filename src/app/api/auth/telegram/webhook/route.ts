@@ -109,7 +109,10 @@ async function handleInviteRequest(
 
   const code = await generateInviteCode();
   const siteUrl = getSiteUrl(req);
-  const registerUrl = `${siteUrl}/register?code=${encodeURIComponent(code)}`;
+  // The bot is Russian-facing; build the localized URL directly so the user
+  // lands on /ru/register (localePrefix is "always" with an EN default, so a
+  // bare /register would redirect a Russian invitee to the English page).
+  const registerUrl = `${siteUrl}/ru/register?code=${encodeURIComponent(code)}`;
 
   await sendTelegramMessage(chatId, formatInviteMessage(code), {
     parseMode: "HTML",
