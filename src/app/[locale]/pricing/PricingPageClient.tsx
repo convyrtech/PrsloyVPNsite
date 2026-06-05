@@ -14,7 +14,8 @@ import {
   type Period,
   PERIODS,
   PRICE_BY_PERIOD,
-  getPeriodTotalUsd,
+  getMonthlyPriceRub,
+  formatPeriodTotal,
 } from "@/lib/pricing";
 
 type CapacityState =
@@ -33,8 +34,6 @@ export function PricingPageClient({ locale }: { locale: string }) {
   const tShared = useTranslations("pricing");
 
   const [period, setPeriod] = useState<Period>("1mo");
-  const basePrice = PRICE_BY_PERIOD[period];
-  const totalUsd = getPeriodTotalUsd(period);
   const savePct = Math.round((1 - PRICE_BY_PERIOD[period] / PRICE_BY_PERIOD["1mo"]) * 100);
   const [capacity, setCapacity] = useState<CapacityState>({ kind: "loading" });
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -189,7 +188,10 @@ export function PricingPageClient({ locale }: { locale: string }) {
                     baseline-aligned. Doto for the digits — the one moment per
                     screen (Nothing section 2.8 #5). */}
                 <div className="flex flex-col gap-sm">
-                  <div className="flex items-baseline gap-md flex-wrap">
+                  <div className="flex items-baseline gap-sm flex-wrap">
+                    {/* Digits in Doto (the one display moment); currency kept out
+                        of Doto — it lacks a ₽ glyph, so ₽ renders in the body
+                        font. EN keeps the dotted "$5". */}
                     <span
                       className="font-display text-text-display leading-[0.85] tabular-nums"
                       style={{
@@ -197,15 +199,23 @@ export function PricingPageClient({ locale }: { locale: string }) {
                         letterSpacing: "0.02em",
                       }}
                     >
-                      ${basePrice}
+                      {locale === "en" ? `$${PRICE_BY_PERIOD[period]}` : getMonthlyPriceRub(period)}
                     </span>
+                    {locale !== "en" && (
+                      <span
+                        className="font-body font-light text-text-display leading-[0.85]"
+                        style={{ fontSize: "clamp(56px, 11vw, 120px)" }}
+                      >
+                        ₽
+                      </span>
+                    )}
                     <span className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary pb-lg">
                       {t("monthly_unit")}
                     </span>
                   </div>
                   {period !== "1mo" && (
                     <p className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary">
-                      {t("total_label")} ${totalUsd}
+                      {t("total_label")} {formatPeriodTotal(period, locale)}
                       <span className="text-accent"> · −{savePct}%</span>
                     </p>
                   )}
