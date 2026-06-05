@@ -264,6 +264,18 @@ export function PricingPageClient({ locale }: { locale: string }) {
                         emailGeneric: t("invite_email_generic"),
                       }}
                     />
+                    {/* Already holding a code (from Telegram or a friend) but
+                        no account yet → register. Sits before the sign-in row,
+                        which is for returning users. */}
+                    <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
+                      <span className="text-text-disabled">{t("have_code")}</span>
+                      <Link
+                        href="/register"
+                        className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80 transition-opacity"
+                      >
+                        {t("register_with_code")} →
+                      </Link>
+                    </div>
                     <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
                       <span className="text-text-disabled">{t("have_account")}</span>
                       <Link
