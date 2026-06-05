@@ -355,6 +355,8 @@
     "logout": "LOG OUT"
   },
   "payment_result": {
+    "confirmed_title": "PAYMENT CONFIRMED",
+    "confirmed_body": "Subscription active — status and key below.",
     "success_title": "PAYMENT PROCESSING",
     "success_body": "We're checking your payment. Once it's confirmed, your subscription activates — the status is shown below. During the closed beta the key is issued manually.",
     "failed_title": "PAYMENT DID NOT GO THROUGH",

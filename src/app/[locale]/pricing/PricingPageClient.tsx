@@ -9,6 +9,8 @@ import { TELEGRAM_BOT_URL } from "@/lib/links";
 import { PaymentCheckout } from "@/components/payments/PaymentCheckout";
 import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
 import { InviteRequest } from "@/components/access/InviteRequest";
+import { AnimatedPrice } from "@/components/pricing/AnimatedPrice";
+import { useRiffle } from "@/components/pricing/useRiffle";
 import { PoolFullPanel } from "@/components/access/PoolFullPanel";
 import {
   type Period,
@@ -189,18 +191,19 @@ export function PricingPageClient({ locale }: { locale: string }) {
                     screen (Nothing section 2.8 #5). */}
                 <div className="flex flex-col gap-sm">
                   <div className="flex items-baseline gap-sm flex-wrap">
-                    {/* Digits in Doto (the one display moment); currency kept out
-                        of Doto — it lacks a ₽ glyph, so ₽ renders in the body
-                        font. EN keeps the dotted "$5". */}
-                    <span
+                    {/* Digits in Doto (the one display moment) — riffle-decode on
+                        period change + slow ambient glow. Currency kept out of
+                        Doto (it lacks a ₽ glyph): ₽ in the body font, EN "$"
+                        as a static prefix inside the digit span. */}
+                    <AnimatedPrice
+                      value={locale === "en" ? PRICE_BY_PERIOD[period] : getMonthlyPriceRub(period)}
+                      prefix={locale === "en" ? "$" : ""}
                       className="font-display text-text-display leading-[0.85] tabular-nums"
                       style={{
                         fontSize: "clamp(96px, 19vw, 200px)",
                         letterSpacing: "0.02em",
                       }}
-                    >
-                      {locale === "en" ? `$${PRICE_BY_PERIOD[period]}` : getMonthlyPriceRub(period)}
-                    </span>
+                    />
                     {locale !== "en" && (
                       <span
                         className="font-body font-light text-text-display leading-[0.85]"
@@ -224,13 +227,12 @@ export function PricingPageClient({ locale }: { locale: string }) {
                 {/* Scarcity at the decision point — how many of the 300 slots
                     are taken, right under the price instead of buried below. */}
                 {capacity.kind === "ready" && (
-                  <div className="flex items-center gap-md font-mono text-label uppercase tracking-[0.16em]">
-                    <span className="text-text-disabled">{t("status_label")}</span>
-                    <span className="flex-1 h-px bg-border-visible/40" />
-                    <span className="text-text-display tabular-nums">
-                      {capacity.display}/{capacity.target} {t("status_taken")}
-                    </span>
-                  </div>
+                  <CapacityCounter
+                    display={capacity.display}
+                    target={capacity.target}
+                    statusLabel={t("status_label")}
+                    takenLabel={t("status_taken")}
+                  />
                 )}
 
                 {/* Guest → lead with the invite request (no dead pay buttons,
@@ -335,6 +337,31 @@ export function PricingPageClient({ locale }: { locale: string }) {
         </RevealOnView>
       </div>
     </main>
+  );
+}
+
+// Scarcity counter — the taken-slots number riffle-decodes in once capacity
+// loads (it has no SSR value, so onMount decode is clean, no flash).
+function CapacityCounter({
+  display,
+  target,
+  statusLabel,
+  takenLabel,
+}: {
+  display: number;
+  target: number;
+  statusLabel: string;
+  takenLabel: string;
+}) {
+  const shown = useRiffle(display, { onMount: true });
+  return (
+    <div className="flex items-center gap-md font-mono text-label uppercase tracking-[0.16em]">
+      <span className="text-text-disabled">{statusLabel}</span>
+      <span className="flex-1 h-px bg-border-visible/40" />
+      <span className="text-text-display tabular-nums">
+        {shown}/{target} {takenLabel}
+      </span>
+    </div>
   );
 }
 
