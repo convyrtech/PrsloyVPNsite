@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/routing";
@@ -66,7 +67,8 @@ export function PaymentResultBanner() {
     };
   }, [outcome, confirmed]);
 
-  if (!outcome || dismissed) return null;
+  const reduce = useReducedMotion();
+  const visible = Boolean(outcome) && !dismissed;
 
   const phase: Phase =
     outcome === "failed" ? "failed" : confirmed ? "confirmed" : "processing";
@@ -99,35 +101,44 @@ export function PaymentResultBanner() {
       : "bg-success animate-pulse";
 
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className={`relative flex items-start gap-md rounded-[8px] border p-lg ${tone}`}
-    >
-      {/* The snake runs only while we are still waiting on the callback. */}
-      {phase === "processing" && <DottedSnakeBorder radius={8} />}
+    <AnimatePresence initial={!reduce}>
+      {visible && (
+        <motion.div
+          key="payment-result"
+          role="status"
+          aria-live="polite"
+          initial={reduce ? { opacity: 0 } : { opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduce ? { opacity: 0 } : { opacity: 0, y: -12 }}
+          transition={{ duration: reduce ? 0.15 : 0.45, ease: [0.25, 0.1, 0.25, 1] }}
+          className={`relative flex items-start gap-md rounded-[8px] border p-lg ${tone}`}
+        >
+          {/* The snake runs only while we are still waiting on the callback. */}
+          {phase === "processing" && <DottedSnakeBorder radius={8} />}
 
-      <span
-        aria-hidden="true"
-        className={`mt-[6px] inline-block h-[8px] w-[8px] rounded-full ${dotTone}`}
-      />
-      <div className="flex flex-1 flex-col gap-xs">
-        <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
-          {title}
-        </span>
-        <p className="font-body text-body-sm text-text-secondary leading-[1.55]">
-          {body}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={() => setDismissed(true)}
-        aria-label={t("dismiss")}
-        className="font-mono text-label uppercase tracking-[0.12em] text-text-display hover:opacity-80
-                   px-sm py-xs"
-      >
-        ✕
-      </button>
-    </div>
+          <span
+            aria-hidden="true"
+            className={`mt-[6px] inline-block h-[8px] w-[8px] rounded-full ${dotTone}`}
+          />
+          <div className="flex flex-1 flex-col gap-xs">
+            <span className="font-mono text-label uppercase tracking-[0.16em] text-text-display">
+              {title}
+            </span>
+            <p className="font-body text-body-sm text-text-secondary leading-[1.55]">
+              {body}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDismissed(true)}
+            aria-label={t("dismiss")}
+            className="font-mono text-label uppercase tracking-[0.12em] text-text-display hover:opacity-80
+                       px-sm py-xs"
+          >
+            ✕
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
