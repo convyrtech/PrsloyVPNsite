@@ -11,7 +11,7 @@
     "headline_line2": "Closed access.",
     "sub_price": "",
     "sub_features": "Our own servers and clean IPs. Tuned to stay fast and not drop.",
-    "cta": "REQUEST INVITE",
+    "cta": "GET ACCESS",
     "launch_strip": "BY INVITATION ONLY",
     "scroll_hint": "SCROLL"
   },
@@ -48,7 +48,7 @@
     "hint_touch": "DRAG TO ROTATE · TAP A POINT",
     "loading": "BUILDING THE GLOBE",
     "fallback": "INFRASTRUCTURE PREVIEW UNAVAILABLE · WEBGL REQUIRED",
-    "cta": "REQUEST INVITE"
+    "cta": "GET ACCESS"
   },
   "nothing": {
     "label": "YOUR CONNECTION · ENCRYPTED",
@@ -78,7 +78,7 @@
     "feature_logs_value": "Invite-only",
     "feature_support": "Support",
     "feature_support_value": "Tech chat",
-    "cta": "REQUEST INVITE",
+    "cta": "GET ACCESS",
     "cta_meta": "ISSUED MANUALLY DURING BETA",
     "guarantee": "Email — for the invite only · No newsletters · Support is a real person",
     "access_note": "Fixed price for a clean, fast channel. Invite-only access; server capacity is limited."
@@ -594,7 +594,7 @@
   "footer": {
     "closing_line1": "ACCESS",
     "closing_line2": "BY INVITE.",
-    "cta": "REQUEST INVITE",
+    "cta": "GET ACCESS",
     "cta_meta": "$5/MO · ISSUED MANUALLY",
     "nav_pricing": "PRICING",
     "nav_faq": "FAQ",

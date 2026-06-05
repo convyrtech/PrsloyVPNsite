@@ -82,9 +82,11 @@ export function GlobeUIOverlay({
         <Metric label={t("metric_status")} value={t("metric_status_value")} />
       </motion.div>
 
-      {/* BOTTOM-RIGHT CTA */}
+      {/* BOTTOM-RIGHT CTA — desktop only. On mobile the hero CTA already sits
+          in this same opening scene, so a second identical pill here just
+          reads as repetition. */}
       <motion.div
-        className="absolute bottom-2xl right-lg md:bottom-3xl md:right-2xl pointer-events-auto"
+        className="hidden md:block absolute bottom-2xl right-lg md:bottom-3xl md:right-2xl pointer-events-auto"
         style={{ opacity: ctaOp, y: ctaY }}
       >
         <Link
