@@ -8,7 +8,7 @@ import {
   useTransform,
   type MotionValue,
 } from "motion/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Bracketed } from "@/components/ui/Bracketed";
 import { FeatureCell } from "@/components/pricing/FeatureCell";
@@ -16,7 +16,7 @@ import { DividerLabel } from "@/components/ui/DividerLabel";
 import {
   type Period,
   PERIODS,
-  PRICE_BY_PERIOD,
+  formatMonthlyPrice,
 } from "@/lib/pricing";
 
 const PERIOD_LABEL_KEYS: Record<Period, string> = {
@@ -44,6 +44,7 @@ const DUST_PARTICLES = createDustParticles();
  */
 export function PricingStage() {
   const t = useTranslations("pricing");
+  const locale = useLocale();
   const stageRef = useRef<HTMLElement | null>(null);
 
   const { scrollYProgress: rawProgress } = useScroll({
@@ -58,8 +59,6 @@ export function PricingStage() {
   });
 
   const [period, setPeriod] = useState<Period>("1mo");
-
-  const basePrice = PRICE_BY_PERIOD[period];
 
   // ── Phase envelopes — paced so the tariff assembles deliberately
   //    instead of dumping every control into view at once. ──
@@ -173,8 +172,7 @@ export function PricingStage() {
                          flex items-baseline"
               style={{ fontSize: "clamp(64px, 17vw, 240px)", letterSpacing: "0" }}
             >
-              <span>$</span>
-              <span>{basePrice}</span>
+              {formatMonthlyPrice(period, locale)}
             </div>
 
             <motion.p

@@ -27,6 +27,26 @@ export function getPeriodTotalRub(period: Period): number {
   return Math.round(getPeriodTotalUsd(period) * RUB_PER_USD);
 }
 
+// Per-month price in rubles — what the SBP charge works out to monthly.
+export function getMonthlyPriceRub(period: Period): number {
+  return Math.round(PRICE_BY_PERIOD[period] * RUB_PER_USD);
+}
+
+// Displayed monthly price by locale. RU audiences pay (and think) in rubles —
+// the SBP charge is already RUB at this rate — so RU shows ₽, EN shows $.
+export function formatMonthlyPrice(period: Period, locale: string): string {
+  return locale === "en"
+    ? `$${PRICE_BY_PERIOD[period]}`
+    : `${getMonthlyPriceRub(period)} ₽`;
+}
+
+// Displayed period total by locale (used on the 6-/12-month "итого" line).
+export function formatPeriodTotal(period: Period, locale: string): string {
+  return locale === "en"
+    ? `$${getPeriodTotalUsd(period)}`
+    : `${getPeriodTotalRub(period)} ₽`;
+}
+
 export type PaymentRate = {
   mult: number;
   precision: number;
