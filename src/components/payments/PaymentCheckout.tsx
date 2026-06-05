@@ -6,6 +6,7 @@ import { Bracketed } from "@/components/ui/Bracketed";
 import { type Period, getPeriodTotalRub, getPeriodTotalUsd } from "@/lib/pricing";
 import type { PaymentMethod } from "@/lib/payments";
 import { readUtmSource } from "@/lib/client-utm";
+import { DottedSnakeBorder } from "@/components/ui/DottedSnakeBorder";
 
 type CheckoutState =
   | { kind: "idle" }
@@ -122,17 +123,32 @@ export function PaymentCheckout({
 
   return (
     <div className="flex flex-col gap-sm">
-      <button
-        type="button"
-        onClick={() => startPayment("sbp_qr")}
-        disabled={isLoading}
-        className="group inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
-                   font-mono text-label uppercase tracking-[0.08em] text-black rounded-full
-                   enabled:hover:opacity-90 enabled:hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
-                   transition disabled:opacity-60 disabled:cursor-wait"
-      >
-        <Bracketed>{loadingMethod === "sbp_qr" ? copy.loadingSbp : `${copy.paySbp} · ${fmtRub(totalRub)} ₽`}</Bracketed>
-      </button>
+      {/* Relative flex wrapper keeps the button full-width while hosting the
+          snake overlay. While the SBP payment is being created, dark dots ride
+          the pill edge — a "working" wave over the white button. */}
+      <div className="relative flex flex-col">
+        <button
+          type="button"
+          onClick={() => startPayment("sbp_qr")}
+          disabled={isLoading}
+          className="group inline-flex min-h-[48px] items-center justify-center bg-text-display px-lg
+                     font-mono text-label uppercase tracking-[0.08em] text-black rounded-full
+                     enabled:hover:opacity-90 enabled:hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
+                     transition disabled:opacity-60 disabled:cursor-wait"
+        >
+          <Bracketed>{loadingMethod === "sbp_qr" ? copy.loadingSbp : `${copy.paySbp} · ${fmtRub(totalRub)} ₽`}</Bracketed>
+        </button>
+        {loadingMethod === "sbp_qr" && (
+          <DottedSnakeBorder
+            radius={24}
+            dotGap={10}
+            dotBase={1}
+            dotPeak={2.6}
+            color="rgba(0,0,0,0.8)"
+            dim="rgba(0,0,0,0.12)"
+          />
+        )}
+      </div>
       <button
         type="button"
         onClick={() => startPayment("crypto")}

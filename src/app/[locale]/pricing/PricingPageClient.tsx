@@ -10,6 +10,7 @@ import { PaymentCheckout } from "@/components/payments/PaymentCheckout";
 import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
 import { InviteRequest } from "@/components/access/InviteRequest";
 import { AnimatedPrice } from "@/components/pricing/AnimatedPrice";
+import { useRiffle } from "@/components/pricing/useRiffle";
 import { PoolFullPanel } from "@/components/access/PoolFullPanel";
 import {
   type Period,
@@ -226,13 +227,12 @@ export function PricingPageClient({ locale }: { locale: string }) {
                 {/* Scarcity at the decision point — how many of the 300 slots
                     are taken, right under the price instead of buried below. */}
                 {capacity.kind === "ready" && (
-                  <div className="flex items-center gap-md font-mono text-label uppercase tracking-[0.16em]">
-                    <span className="text-text-disabled">{t("status_label")}</span>
-                    <span className="flex-1 h-px bg-border-visible/40" />
-                    <span className="text-text-display tabular-nums">
-                      {capacity.display}/{capacity.target} {t("status_taken")}
-                    </span>
-                  </div>
+                  <CapacityCounter
+                    display={capacity.display}
+                    target={capacity.target}
+                    statusLabel={t("status_label")}
+                    takenLabel={t("status_taken")}
+                  />
                 )}
 
                 {/* Guest → lead with the invite request (no dead pay buttons,
@@ -337,6 +337,31 @@ export function PricingPageClient({ locale }: { locale: string }) {
         </RevealOnView>
       </div>
     </main>
+  );
+}
+
+// Scarcity counter — the taken-slots number riffle-decodes in once capacity
+// loads (it has no SSR value, so onMount decode is clean, no flash).
+function CapacityCounter({
+  display,
+  target,
+  statusLabel,
+  takenLabel,
+}: {
+  display: number;
+  target: number;
+  statusLabel: string;
+  takenLabel: string;
+}) {
+  const shown = useRiffle(display, { onMount: true });
+  return (
+    <div className="flex items-center gap-md font-mono text-label uppercase tracking-[0.16em]">
+      <span className="text-text-disabled">{statusLabel}</span>
+      <span className="flex-1 h-px bg-border-visible/40" />
+      <span className="text-text-display tabular-nums">
+        {shown}/{target} {takenLabel}
+      </span>
+    </div>
   );
 }
 
