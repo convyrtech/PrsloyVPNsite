@@ -193,7 +193,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
                     <span
                       className="font-display text-text-display leading-[0.85] tabular-nums"
                       style={{
-                        fontSize: "clamp(120px, 22vw, 220px)",
+                        fontSize: "clamp(96px, 19vw, 200px)",
                         letterSpacing: "0.02em",
                       }}
                     >
