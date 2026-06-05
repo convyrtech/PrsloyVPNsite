@@ -16,8 +16,10 @@ import { DividerLabel } from "@/components/ui/DividerLabel";
 import {
   type Period,
   PERIODS,
-  formatMonthlyPrice,
+  PRICE_BY_PERIOD,
+  getMonthlyPriceRub,
 } from "@/lib/pricing";
+import { AnimatedPrice } from "@/components/pricing/AnimatedPrice";
 
 const PERIOD_LABEL_KEYS: Record<Period, string> = {
   "1mo": "period_1m",
@@ -166,13 +168,23 @@ export function PricingStage() {
               ─── PRICE ───
             </div>
 
-            {/* $ + number — same family, same weight, same size, no italics */}
-            <div
-              className="font-body font-bold text-text-display leading-[0.85] tabular-nums
-                         flex items-baseline"
-              style={{ fontSize: "clamp(64px, 17vw, 240px)", letterSpacing: "0" }}
-            >
-              {formatMonthlyPrice(period, locale)}
+            {/* number + currency — digits riffle-decode on period change with a
+                slow glow; ₽ rendered as a sibling so only the digits scramble. */}
+            <div className="flex items-baseline gap-sm">
+              <AnimatedPrice
+                value={locale === "en" ? PRICE_BY_PERIOD[period] : getMonthlyPriceRub(period)}
+                prefix={locale === "en" ? "$" : ""}
+                className="font-body font-bold text-text-display leading-[0.85] tabular-nums"
+                style={{ fontSize: "clamp(64px, 17vw, 240px)", letterSpacing: "0" }}
+              />
+              {locale !== "en" && (
+                <span
+                  className="font-body font-bold text-text-display leading-[0.85]"
+                  style={{ fontSize: "clamp(40px, 11vw, 150px)" }}
+                >
+                  ₽
+                </span>
+              )}
             </div>
 
             <motion.p
