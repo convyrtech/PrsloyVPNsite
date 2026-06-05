@@ -89,7 +89,9 @@ export function PaymentResultBanner() {
     ? "border-accent/60 bg-accent/[0.06]"
     : phase === "confirmed"
       ? "border-success/60 bg-success/[0.06]"
-      : "border-border-visible bg-surface";
+      : // Processing: the snake dots are the only frame — no solid border, no
+        // filled panel, so the dotted wave reads cleanly against the page.
+        "border-transparent bg-transparent";
   const dotTone = isFailed
     ? "bg-accent"
     : phase === "confirmed"

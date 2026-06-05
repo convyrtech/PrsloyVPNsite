@@ -17,11 +17,11 @@ export function DottedSnakeBorder({
   active = true,
   radius = 8,
   dotGap = 13,
-  dotBase = 1.6,
-  dotPeak = 4,
+  dotBase = 1.1,
+  dotPeak = 3.2,
   speed = 110,
-  color = "rgba(255,255,255,0.92)",
-  dim = "rgba(255,255,255,0.16)",
+  color = "rgba(255,255,255,0.9)",
+  dim = "rgba(255,255,255,0.08)",
 }: {
   active?: boolean;
   /** Corner radius of the border path. */
