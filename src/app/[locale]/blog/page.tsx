@@ -43,6 +43,45 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
     nextLabel: "NEXT",
     entries: [
       {
+        date: "5 JUNE 2026",
+        label: "AUTO KEY DELIVERY",
+        title: "The key now issues itself at payment",
+        body:
+          "The last manual link is closed. The access key used to be handed out by an operator after payment — now it is generated automatically the moment payment is confirmed and appears in the dashboard at once. The path from first visit to a working key is fully closed, with no human in the loop. Verified with a real payment: pay, and the key is there within seconds.",
+        items: [
+          "The key is created on payment confirmation.",
+          "It appears in the dashboard immediately — no waiting on an operator.",
+          "The whole chain was tested with a real production payment.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "5 JUNE 2026",
+        label: "PRICING + FUNNEL",
+        title: "Rubles on the tariff and a sharper path to access",
+        body:
+          "Before turning on ads we walked the whole buyer path and cut the friction. For Russian speakers the price is now in rubles — 450 ₽/mo, exactly what gets charged. The remaining-slots counter sits right under the price, at the point of decision. One clear “get access” call across the site. After payment the status updates itself — you see the moment it is confirmed.",
+        items: [
+          "Price in rubles for Russian speakers — no currency math.",
+          "Slot counter next to the price, not buried at the bottom.",
+          "Payment status refreshes itself, no reload.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "5 JUNE 2026",
+        label: "POLISH",
+        title: "The interface feels more alive",
+        body:
+          "We put a finish on the key screens. The price and the slot counter assemble as they appear; the payment status carries a soft processing indicator that fades on its own once payment is confirmed. Small things — but they add up to the feel of a finished product.",
+        items: [
+          "Price and counter come alive as they appear.",
+          "Payment status has a processing indicator and smooth transitions.",
+          "Fewer abrupt pop-ins, more smoothness.",
+        ],
+        status: "LIVE",
+      },
+      {
         date: "26 MAY 2026",
         label: "ANALYTICS",
         title: "Our own analytics loop",
@@ -226,14 +265,14 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
       },
       {
         date: "NEXT",
-        label: "AUTO KEY DELIVERY",
-        title: "Next step — issue the VPN key automatically at payment",
+        label: "EXPERIENCE AT SCALE",
+        title: "Next — refining the experience for real traffic",
         body:
-          "The single manual step left. After a successful payment the key is still handed out by the operator — we need to wire key generation into the payment confirmation itself. Once that lands, the path from first visit to a working VPN connection closes completely without a human in the loop.",
+          "The main path — from visit to a working key — is closed. Next we keep the focus on the details: speed, smoothness, and clarity at every step. The heavier the ad traffic, the more it matters that everything runs evenly and predictably.",
         items: [
-          "Subscription link generated automatically on payment.",
-          "Trigger on a successful payment confirmation.",
-          "Key delivered to Telegram and email seconds after payment.",
+          "Keep polishing the interface and its transitions.",
+          "Watch speed and stability under load.",
+          "Every step — no guessing, no extra questions.",
         ],
         status: "NEXT",
       },
@@ -255,6 +294,45 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
     issueLabel: "FIXED",
     nextLabel: "NEXT",
     entries: [
+      {
+        date: "5 ИЮНЯ 2026",
+        label: "АВТОВЫДАЧА КЛЮЧА",
+        title: "Ключ выдаётся сам в момент оплаты",
+        body:
+          "Последнее ручное звено закрыто. Раньше после оплаты ключ доступа выдавал оператор — теперь он создаётся автоматически, как только платёж подтверждается, и сразу появляется в кабинете. Путь от первого визита до рабочего ключа замкнут полностью, без участия человека. Проверено настоящей оплатой: оплатил — ключ на месте через секунды.",
+        items: [
+          "Ключ создаётся в момент подтверждения оплаты.",
+          "Появляется в кабинете сразу, без ожидания оператора.",
+          "Вся цепочка проверена настоящим платежом в продакшене.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "5 ИЮНЯ 2026",
+        label: "ТАРИФ + ВОРОНКА",
+        title: "Цена в рублях и отточенный путь к доступу",
+        body:
+          "Перед запуском рекламы прошли весь путь покупателя и убрали трение. Для русскоязычных цена теперь в рублях — 450 ₽/мес, ровно столько и списывается. Счётчик оставшихся мест встал прямо под ценой, в точке решения. По всему сайту — единый призыв «получить доступ». После оплаты статус обновляется сам, видно момент подтверждения.",
+        items: [
+          "Цена в рублях — без пересчёта в голове.",
+          "Счётчик мест у цены, а не спрятан внизу.",
+          "Статус оплаты обновляется сам, без перезагрузки.",
+        ],
+        status: "LIVE",
+      },
+      {
+        date: "5 ИЮНЯ 2026",
+        label: "ПОЛИРОВКА",
+        title: "Интерфейс стал живее",
+        body:
+          "Навели лоск на ключевые экраны. Цена и счётчик мест «собираются» при появлении, у статуса оплаты — мягкий индикатор обработки, который сам гаснет, когда платёж подтверждён. Мелочи, но из них складывается ощущение готового продукта.",
+        items: [
+          "Цена и счётчик оживают при появлении.",
+          "Статус оплаты с индикатором обработки и плавными переходами.",
+          "Меньше резких появлений — больше плавности.",
+        ],
+        status: "LIVE",
+      },
       {
         date: "26 МАЯ 2026",
         label: "АНАЛИТИКА",
@@ -439,14 +517,14 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
       },
       {
         date: "ДАЛЬШЕ",
-        label: "АВТОВЫДАЧА КЛЮЧА",
-        title: "Следующий шаг — автовыдача VPN-ключа в момент оплаты",
+        label: "ОПЫТ ПОД НАГРУЗКОЙ",
+        title: "Дальше — шлифуем опыт под поток клиентов",
         body:
-          "Единственное звено, которое ещё проходит через оператора. После успешной оплаты ключ доступа сейчас выдаётся вручную — нужно встроить генерацию ключа в момент подтверждения платежа. После этого путь от первого визита до работающего VPN-соединения закрывается полностью без участия человека.",
+          "Главный путь — от визита до рабочего ключа — закрыт. Дальше держим фокус на мелочах: скорость, плавность и понятность каждого шага. Чем плотнее поток от рекламы, тем важнее, чтобы всё работало ровно и предсказуемо.",
         items: [
-          "Подписочная ссылка создаётся автоматически в момент оплаты.",
-          "Триггер на успешное подтверждение оплаты.",
-          "Ключ приходит в Telegram и на email через секунды после оплаты.",
+          "Продолжаем полировать интерфейс и переходы.",
+          "Следим за скоростью и стабильностью под нагрузкой.",
+          "Каждый шаг — без догадок и лишних вопросов.",
         ],
         status: "NEXT",
       },
