@@ -9,6 +9,7 @@ import { TELEGRAM_BOT_URL } from "@/lib/links";
 import { PaymentCheckout } from "@/components/payments/PaymentCheckout";
 import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
 import { InviteRequest } from "@/components/access/InviteRequest";
+import { AnimatedPrice } from "@/components/pricing/AnimatedPrice";
 import { PoolFullPanel } from "@/components/access/PoolFullPanel";
 import {
   type Period,
@@ -189,18 +190,19 @@ export function PricingPageClient({ locale }: { locale: string }) {
                     screen (Nothing section 2.8 #5). */}
                 <div className="flex flex-col gap-sm">
                   <div className="flex items-baseline gap-sm flex-wrap">
-                    {/* Digits in Doto (the one display moment); currency kept out
-                        of Doto — it lacks a ₽ glyph, so ₽ renders in the body
-                        font. EN keeps the dotted "$5". */}
-                    <span
+                    {/* Digits in Doto (the one display moment) — riffle-decode on
+                        period change + slow ambient glow. Currency kept out of
+                        Doto (it lacks a ₽ glyph): ₽ in the body font, EN "$"
+                        as a static prefix inside the digit span. */}
+                    <AnimatedPrice
+                      value={locale === "en" ? PRICE_BY_PERIOD[period] : getMonthlyPriceRub(period)}
+                      prefix={locale === "en" ? "$" : ""}
                       className="font-display text-text-display leading-[0.85] tabular-nums"
                       style={{
                         fontSize: "clamp(96px, 19vw, 200px)",
                         letterSpacing: "0.02em",
                       }}
-                    >
-                      {locale === "en" ? `$${PRICE_BY_PERIOD[period]}` : getMonthlyPriceRub(period)}
-                    </span>
+                    />
                     {locale !== "en" && (
                       <span
                         className="font-body font-light text-text-display leading-[0.85]"
