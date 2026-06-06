@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -8,6 +9,16 @@ import { TELEGRAM_BOT_URL } from "@/lib/links";
 type FaqItem = { category: string; q: string; a: string };
 
 const CATEGORY_ORDER = ["product", "tech", "payment", "trust"] as const;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "faq_page" });
+  return { title: `PRSLOY · ${t("title")}`, description: t("subtitle") };
+}
 
 export default async function FaqPage({
   params,
