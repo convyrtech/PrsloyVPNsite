@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isValidEmail } from "@/lib/validation";
 import { readUtmSource } from "@/lib/client-utm";
+import { getForcedError } from "@/lib/dev-state";
 
 type AuthCopy = {
   email: string;
@@ -68,6 +69,27 @@ function AuthFormInner({
   useEffect(() => {
     if (initialInviteCode) setInviteCode(initialInviteCode);
   }, [initialInviteCode]);
+
+  // Dev-only: ?__error=<code> renders any error message for a visual check
+  // without a backend round-trip. Inert in production (getForcedError → null).
+  useEffect(() => {
+    const fe = getForcedError();
+    if (!fe) return;
+    const map: Record<string, string | undefined> = {
+      email_exists: copy.emailExists,
+      invalid_credentials: copy.credentials,
+      invalid_email: copy.invalid,
+      invalid_password: copy.invalid,
+      invite_required: copy.inviteRequired,
+      invite_invalid: copy.inviteInvalid,
+      invite_consumed: copy.inviteConsumed,
+      kv_not_configured: copy.storageNotConfigured,
+      auth_secret_not_configured: copy.secretNotConfigured,
+      auth_not_configured: copy.notConfigured,
+      rate_limited: copy.rateLimited,
+    };
+    setError(map[fe] ?? copy.generic);
+  }, [copy]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

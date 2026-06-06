@@ -8,6 +8,7 @@ import { RevealOnView } from "@/components/ui/RevealOnView";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
 import type { PublicAuthUser } from "@/lib/auth";
 import { displayIdentity } from "@/lib/identity";
+import { getForcedState } from "@/lib/dev-state";
 import { PaymentStatusCard } from "@/components/payments/PaymentStatusCard";
 import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
 
@@ -30,6 +31,8 @@ export type DashboardCopy = Record<
   | "status_ready_body"
   | "status_pending_title"
   | "status_pending_body"
+  | "status_paid_awaiting_title"
+  | "status_paid_awaiting_body"
   | "status_blocked_title"
   | "status_blocked_body"
   | "key_ready_body"
@@ -64,6 +67,44 @@ type State =
 
 type ReissueState = "idle" | "sending" | "sent" | "error";
 
+// Dev-only: map ?__state=<name> to a fixture so KV/auth-gated dashboard branches
+// can be eyeballed on the dev server. Inert in production (getForcedState → null).
+function forcedDashboard(
+  forced: string
+): { state: State; paidAwaiting: boolean } | null {
+  const base = {
+    id: "dev",
+    email: "dev@prsloy.local",
+    emailVerified: true,
+    subscriptionUrl: null,
+    accessStatus: "pending",
+  } as unknown as PublicAuthUser;
+  switch (forced) {
+    case "not_configured":
+      return { state: { kind: "not_configured" }, paidAwaiting: false };
+    case "guest":
+      return { state: { kind: "ready", user: null }, paidAwaiting: false };
+    case "active":
+      return {
+        state: {
+          kind: "ready",
+          user: { ...base, subscriptionUrl: "https://cloudasset-dl.com/dev-token", accessStatus: "active" },
+        },
+        paidAwaiting: false,
+      };
+    case "blocked":
+      return { state: { kind: "ready", user: { ...base, accessStatus: "blocked" } }, paidAwaiting: false };
+    case "unverified":
+      return { state: { kind: "ready", user: { ...base, emailVerified: false } }, paidAwaiting: false };
+    case "paid-awaiting":
+      return { state: { kind: "ready", user: { ...base } }, paidAwaiting: true };
+    case "pending":
+      return { state: { kind: "ready", user: { ...base } }, paidAwaiting: false };
+    default:
+      return null;
+  }
+}
+
 export function DashboardClient({
   locale,
   copy,
@@ -80,6 +121,14 @@ export function DashboardClient({
   // so a freshly registered user gets the pay CTA immediately, no flash-hide.
   useEffect(() => {
     let alive = true;
+    const forced = getForcedState();
+    if (forced) {
+      const f = forcedDashboard(forced);
+      if (f) {
+        setPaidAwaiting(f.paidAwaiting);
+        return;
+      }
+    }
     (async () => {
       try {
         const res = await fetch("/api/payments/me", { cache: "no-store" });
@@ -100,6 +149,15 @@ export function DashboardClient({
 
   useEffect(() => {
     let alive = true;
+
+    const forced = getForcedState();
+    if (forced) {
+      const f = forcedDashboard(forced);
+      if (f) {
+        setState(f.state);
+        return;
+      }
+    }
 
     async function fetchMe() {
       try {
@@ -152,7 +210,17 @@ export function DashboardClient({
   if (state.kind === "not_configured") {
     return (
       <DashboardShell copy={copy}>
-        <StatusPanel tone="warning" title={copy.setup_title} body={copy.setup_body} />
+        <StatusPanel tone="warning" title={copy.setup_title} body={copy.setup_body}>
+          <a
+            href={TELEGRAM_BOT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center min-h-[44px] font-mono text-label uppercase tracking-[0.08em]
+                       text-text-display hover:opacity-80 transition-opacity whitespace-nowrap"
+          >
+            {copy.support_link} {"→"}
+          </a>
+        </StatusPanel>
       </DashboardShell>
     );
   }
@@ -287,12 +355,16 @@ function FloatingHero({
     ? copy.status_blocked_title
     : active
       ? copy.status_ready_title
-      : copy.status_pending_title;
+      : paidAwaiting
+        ? copy.status_paid_awaiting_title
+        : copy.status_pending_title;
   const body = blocked
     ? copy.status_blocked_body
     : active
       ? copy.status_ready_body
-      : copy.status_pending_body;
+      : paidAwaiting
+        ? copy.status_paid_awaiting_body
+        : copy.status_pending_body;
   const tone = blocked ? "warning" : active ? "success" : "muted";
   // Primary CTA = the actual next step. Active → set up the key they hold.
   // Pending & unpaid → go pay (the post-registration nudge that was missing).

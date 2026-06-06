@@ -11,6 +11,7 @@ import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
 import { InviteRequest } from "@/components/access/InviteRequest";
 import { AnimatedPrice } from "@/components/pricing/AnimatedPrice";
 import { useRiffle } from "@/components/pricing/useRiffle";
+import { getForcedState } from "@/lib/dev-state";
 import { PoolFullPanel } from "@/components/access/PoolFullPanel";
 import {
   type Period,
@@ -42,6 +43,21 @@ export function PricingPageClient({ locale }: { locale: string }) {
 
   useEffect(() => {
     let alive = true;
+    // Dev-only: force the capacity surface for a visual check (inert in prod).
+    const forced = getForcedState();
+    if (forced === "pool-full" || forced === "capacity-ready" || forced === "authed") {
+      const full = forced === "pool-full";
+      setCapacity({
+        kind: "ready",
+        display: full ? 300 : 248,
+        target: 300,
+        full,
+        expansionAtIso: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        vipContactUrl: "https://t.me/prsloy",
+      });
+      return;
+    }
+    if (forced === "capacity-loading") return; // hold the skeleton
     (async () => {
       try {
         const res = await fetch("/api/access/capacity", { cache: "no-store" });
@@ -85,6 +101,12 @@ export function PricingPageClient({ locale }: { locale: string }) {
   // of dead pay buttons. Falsy (loading/guest) shows the guest path by default.
   useEffect(() => {
     let alive = true;
+    // Dev-only: ?__state=authed shows the signed-in checkout instead of the guest path.
+    const forced = getForcedState();
+    if (forced === "authed") {
+      setAuthed(true);
+      return;
+    }
     (async () => {
       try {
         const res = await fetch("/api/auth/me", { cache: "no-store" });

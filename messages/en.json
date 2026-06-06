@@ -301,6 +301,8 @@
     "status_ready_body": "Your configuration is ready to use. Copy the personal link below and set up your device using the guide.",
     "status_pending_title": "Access not issued yet",
     "status_pending_body": "Once your payment is confirmed and access is issued, the key and connection buttons appear here.",
+    "status_paid_awaiting_title": "Payment received",
+    "status_paid_awaiting_body": "Setting up your access. Your key and connection buttons appear here automatically once it's issued — usually quickly.",
     "status_blocked_title": "Access is limited",
     "status_blocked_body": "Contact support with your account email. We will check the status and tell you what to do next.",
     "vpn_section_label": "Connection",
@@ -358,7 +360,7 @@
   },
   "payment_result": {
     "confirmed_title": "PAYMENT CONFIRMED",
-    "confirmed_body": "Subscription active — status and key below.",
+    "confirmed_body": "Subscription active. Status is below — your key appears once access is issued.",
     "success_title": "PAYMENT PROCESSING",
     "success_body": "We're checking your payment. Once it's confirmed, your subscription activates — the status is shown below. During the closed beta the key is issued manually.",
     "failed_title": "PAYMENT DID NOT GO THROUGH",
