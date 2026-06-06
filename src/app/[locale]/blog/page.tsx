@@ -661,9 +661,11 @@ export default async function BlogPage({
               </p>
               <Link
                 href="/pricing"
-                className="inline-flex items-center justify-center min-h-[44px]
-                           font-mono text-label uppercase tracking-[0.08em]
-                           text-text-display hover:opacity-80 transition-opacity"
+                className="group inline-flex items-center justify-center
+                           bg-text-display text-black rounded-full px-lg min-h-[48px]
+                           font-mono text-label uppercase tracking-[0.08em] whitespace-nowrap
+                           hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
+                           transition duration-150 ease-out-nothing"
               >
                 {copy.cta} →
               </Link>
