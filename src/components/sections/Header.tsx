@@ -383,7 +383,10 @@ function LangToggle({
 }
 
 /* ─────────────────────────────────────────────
-   Buy CTA — primary white pill
+   Buy CTA — tier-2 outline (persistent access entry).
+   Demoted from a white pill so it never becomes a second tier-1 next to a
+   page's own in-body primary (checkout, sign-in, hero CTA …). The white pill
+   is reserved for each page's one real "moment".
    ───────────────────────────────────────────── */
 function BuyCta({ label, compact = false }: { label: string; compact?: boolean }) {
   return (
@@ -391,9 +394,9 @@ function BuyCta({ label, compact = false }: { label: string; compact?: boolean }
       href="/pricing"
       className={`
         group inline-flex items-center justify-center
-        bg-text-display text-black font-mono uppercase tracking-[0.08em]
+        border border-border-visible text-text-display font-mono uppercase tracking-[0.08em]
         rounded-full
-        hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
+        hover:border-text-display hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]
         transition duration-150 ease-out-nothing
         ${compact ? "px-md min-h-[44px] text-[10px] whitespace-nowrap" : "px-lg min-h-[44px] text-label"}
       `}

@@ -132,8 +132,8 @@ export function PaymentResultBanner() {
             type="button"
             onClick={() => setDismissed(true)}
             aria-label={t("dismiss")}
-            className="font-mono text-label uppercase tracking-[0.12em] text-text-display hover:opacity-80
-                       px-sm py-xs"
+            className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] -mr-sm
+                       font-mono text-label uppercase tracking-[0.12em] text-text-display hover:opacity-80"
           >
             ✕
           </button>

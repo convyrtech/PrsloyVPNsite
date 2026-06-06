@@ -235,13 +235,15 @@ function TelegramAuthButtonInner({
         </label>
       )}
 
+      {/* Tier-2 outline: email submit owns the single white pill in the form;
+          Telegram is the alternative path, not a competing primary. */}
       <button
         type="button"
         onClick={onStart}
         disabled={state.kind === "awaiting"}
-        className="bg-text-display text-black font-mono uppercase tracking-[0.08em]
+        className="border border-border-visible text-text-display font-mono uppercase tracking-[0.08em]
                    px-xl min-h-[48px] inline-flex items-center justify-center rounded-full text-label
-                   hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:cursor-wait
+                   hover:border-text-display active:scale-[0.98] disabled:opacity-60 disabled:cursor-wait
                    transition duration-150 ease-out-nothing"
       >
         [ {buttonLabel} ]
