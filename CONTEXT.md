@@ -23,7 +23,7 @@ The public `/blog` page. Public-facing build log; reads as a neutral company art
 _Avoid_: Arsenal (dead internal label), "investor blog".
 
 **Waitlist**:
-Email capture for visitors who aren't ready to register a PRSLOY ID. Endpoint `POST /api/waitlist`. Distinct from a PRSLOY ID — a Waitlist entry is just an email; a PRSLOY ID is a real account.
+Email capture for visitors who aren't ready to register a PRSLOY ID. (The dedicated `POST /api/waitlist` endpoint was removed as unused/unthrottled; `POST /api/access/notify-when-open` covers pool-full interest.) Distinct from a PRSLOY ID — a Waitlist entry is just an email; a PRSLOY ID is a real account.
 
 ### Billing
 
