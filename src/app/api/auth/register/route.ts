@@ -49,7 +49,8 @@ export async function POST(req: Request) {
     "register",
     getClientIp(req),
     REGISTER_LIMIT,
-    REGISTER_WINDOW_SECONDS
+    REGISTER_WINDOW_SECONDS,
+    { failClosed: true }
   );
   if (!limit.ok) {
     return NextResponse.json(

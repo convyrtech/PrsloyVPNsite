@@ -47,4 +47,16 @@ describe("rateLimit", () => {
     expect(result.ok).toBe(true);
     warn.mockRestore();
   });
+
+  it("fails CLOSED on a KV error when failClosed is set (auth-critical buckets)", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    redis.setFailing(true);
+    const result = await rateLimit("tg-claim", "ip-1", 1, 60, { failClosed: true });
+    expect(result.ok).toBe(false);
+    // Denied, but with a SHORT advisory retry — not the full window — so a
+    // transient KV blip doesn't lock the user out for the whole period.
+    expect(result.retryAfter).toBeGreaterThan(0);
+    expect(result.retryAfter).toBeLessThan(60);
+    warn.mockRestore();
+  });
 });

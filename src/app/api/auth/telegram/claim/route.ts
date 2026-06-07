@@ -38,7 +38,8 @@ export async function POST(req: Request) {
     "tg-claim",
     getClientIp(req),
     CLAIM_LIMIT,
-    CLAIM_WINDOW_SECONDS
+    CLAIM_WINDOW_SECONDS,
+    { failClosed: true }
   );
   if (!limit.ok) {
     return NextResponse.json(

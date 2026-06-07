@@ -19,7 +19,9 @@ type LoginBody = {
 };
 
 export async function POST(req: Request) {
-  const limit = await rateLimit("login", getClientIp(req), LOGIN_LIMIT, LOGIN_WINDOW_SECONDS);
+  const limit = await rateLimit("login", getClientIp(req), LOGIN_LIMIT, LOGIN_WINDOW_SECONDS, {
+    failClosed: true,
+  });
   if (!limit.ok) {
     return NextResponse.json(
       { ok: false, error: "rate_limited" },

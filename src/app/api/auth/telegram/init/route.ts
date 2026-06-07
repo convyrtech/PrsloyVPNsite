@@ -28,7 +28,8 @@ export async function POST(req: Request) {
     "tg-init",
     getClientIp(req),
     INIT_LIMIT,
-    INIT_WINDOW_SECONDS
+    INIT_WINDOW_SECONDS,
+    { failClosed: true }
   );
   if (!limit.ok) {
     return NextResponse.json(
