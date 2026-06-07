@@ -25,15 +25,17 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-          // Force HTTPS on the (www) origin the user lands on, closing the
-          // first-load SSL-strip window for ad clicks on hostile networks.
-          // The apex→www redirect strips response headers, so this only sticks
-          // on the final origin — which is where the user ends up. `preload`
-          // is intentionally omitted (it needs an hstspreload.org submission +
-          // a permanent all-subdomains-HTTPS commitment — a manual decision).
+          // Force HTTPS for 2 years, closing the first-load SSL-strip window
+          // for ad clicks on hostile networks. `includeSubDomains` is omitted
+          // on purpose: this header is served from the apex too (the apex→www
+          // redirect does NOT strip it), so the directive would pin every
+          // *.prsloy.online subdomain to HTTPS for 2 years — an irreversible,
+          // browser-cached commitment — and we have not confirmed every
+          // subdomain is HTTPS-only. `preload` is likewise omitted (it needs an
+          // hstspreload.org submission plus that same all-subdomains pledge).
           {
             key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains",
+            value: "max-age=63072000",
           },
         ],
       },
