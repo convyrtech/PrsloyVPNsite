@@ -21,11 +21,30 @@ Mirrors open GitHub Issues + ongoing workstreams. Synced with [Project board](ht
 
 ---
 
+### Rotate ADMIN_SECRET (Issue [#21](https://github.com/convyrtech/PrsloyVPNsite/issues/21))
+
+**What:** Перевыпустить `ADMIN_SECRET`, обновить env на Vercel (production + preview), передеплоить, проверить вход в админку.
+
+**Why:** Единый секрет, закрывающий весь админ-surface — `/api/admin/grant`, `/issue`, `/reprocess`, `/users`, `/lookup`, `/access`, `/access-pool/*` (проверка per-request в `src/lib/admin-auth.ts`). Старое значение светилось в чате → скомпрометировано. Утечка = кто угодно может выдавать ключи Marzneshin, грантить доступ, читать записи юзеров.
+
+**Context:** `openssl rand -hex 32` → `vercel env` (prod+preview) → `vercel --prod`. In-app сессии нет (сверка per-request), хватает обновления env + редеплоя. Проверка: новый секрет → 200, старый → 401. **Отдельно от #5** (`TELEGRAM_BOT_TOKEN`) — другой секрет, тот же класс «утёк в чате».
+
+**Effort:** XS (5 минут руками)
+**Priority:** P0
+**Owner:** convyrtech
+**Depends on:** ничего
+
+---
+
 ### Auto-issue Marzneshin keys after payment confirmation (Issue [#4](https://github.com/convyrtech/PrsloyVPNsite/issues/4))
 
-**What:** При `payment_confirmed` (Platega callback) автоматически создавать пользователя в Marzneshin и выдавать `subscription_url` на `/dashboard`.
+**Status (2026-06-04): ✅ выдача зашита и проверена в проде.** На `payment_confirmed` (Platega callback) `src/lib/payments.ts:238` вызывает `issueKey()` → сохраняет `subscription_url` → переводит юзера в active на `/dashboard`. Шипнуто в `71cb457` (2026-06-03), проверено в проде 2026-06-04 через `POST /api/admin/reprocess {email}` (`confirmedNow:true`, `source` flipped `manual-grant`→`auto-issue`, paying-counter 0→1). Идемпотентность по `payment_id`, падение не откатывает заказ.
 
-**Why:** Сейчас оплата → `Подписка active`, но `Ключ` выдаётся вручную через `/admin/grant`. Узкое горлышко >10 платежей/день. Также для скорости user delight (мгновенный VPN после оплаты).
+**Исходная задача (выполнена):** при `payment_confirmed` автоматически создавать пользователя в Marzneshin и выдавать `subscription_url` на `/dashboard` вместо ручного `/admin/grant`. Узкое горлышко >10 платежей/день снято.
+
+**Остаётся открытым — инфра партнёра, не код сайта:**
+- **Bootstrap нод:** активна 1 local node — `subscription_url` может отдавать пустой/частичный конфиг, пока партнёр не поднимет остальные. До этого ключ выдан, но VPN не обязательно работает end-to-end.
+- **Custom-days:** партнёрский `/external/issue-key` 400-ит на нестандартных `period_days` — работают только 30/180/365. Платный путь не задет (реальные продукты = стандартные периоды); бьёт только админскую «произвольно N дней» карту.
 
 **Архитектура (решено 2026-05-27):** PRSLOY НЕ ходит в Marz напрямую — Marz API биндится только на `127.0.0.1` партнёрского сервера, наружу не торчит, Vercel не дотянется. Подключение через **proxy в partner backend** (`/opt/hellcat-app`):
 
@@ -34,7 +53,7 @@ Vercel (PRSLOY) ──POST /external/issue-key (HMAC)──► Partner backend �
                                                           (готовый код из not_for_all/backend/marz.py)
 ```
 
-Партнёр пишет ~30-line endpoint на FastAPI с HMAC-проверкой. PRSLOY пишет `src/server/marzneshin-proxy.ts` — тонкий HTTP-клиент к этому endpoint.
+Партнёр написал ~30-line endpoint на FastAPI с HMAC-проверкой. PRSLOY-клиент = `src/lib/marzneshin-proxy.ts` (зашит в `src/lib/`, НЕ в `src/server/`) — тонкий HTTP-клиент к этому endpoint.
 
 Полная спека: [`prsloy-infra/marzneshin-api-spec.md`](https://github.com/convyrtech/prsloy-infra/blob/main/marzneshin-api-spec.md)
 
@@ -50,15 +69,16 @@ Vercel (PRSLOY) ──POST /external/issue-key (HMAC)──► Partner backend �
 - HMAC shared secret: партнёр генерирует, обе стороны кладут в env
 - Non-sudo admin: партнёр создаёт через `POST /api/admins`, отдаёт login/password для своего env (PRSLOY не получает Marz creds)
 
-**Effort:** M (HTTP boundary + KV write + UI updates + tests). Партнёрский endpoint = S.
-**Priority:** P1
-**Owner:** convyrtech (Vercel side) + mizerovkuzma (partner endpoint)
-**Blocked on:**
-- Партнёр пишет `POST /external/issue-key` в hellcat-app
-- Партнёр генерирует и присылает HMAC shared secret
-- Партнёр создаёт non-sudo admin в Marz для своего backend
+**Effort:** Vercel-side ✅ done. Остаток = партнёрский bootstrap нод (вне этого репо).
+**Priority:** P1 (код done; держим открытым до рабочего end-to-end VPN после поднятия нод)
+**Owner:** convyrtech (Vercel side ✅) + mizerovkuzma (ноды)
+**Done (доказано работающей auto-issue в проде 2026-06-04):**
+- ✅ Партнёр написал `POST /external/issue-key` в hellcat-app
+- ✅ HMAC shared secret сгенерирован, лежит в env обеих сторон
+- ✅ non-sudo admin в Marz создан
+- ✅ PRSLOY-клиент `src/lib/marzneshin-proxy.ts` + проводка в `src/lib/payments.ts`
 
-**Параллельный workstream партнёра (не блокер для интеграции, но блокер для рабочего VPN):** поднять 7 nodes — сейчас активна только 1 local node, subscription_url отдаёт пустой конфиг до bootstrap'а остальных.
+**Остаётся (блокер рабочего VPN, НЕ блокер выдачи):** партнёр поднимает остальные nodes — сейчас активна 1 local node, `subscription_url` отдаёт пустой/частичный конфиг до bootstrap'а.
 
 ---
 

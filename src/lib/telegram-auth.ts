@@ -23,6 +23,12 @@ const NONCE_PATTERN = /^[A-Za-z0-9_-]+$/;
 // production. The code refuses to consider Telegram "configured" below
 // this minimum so a stub like "test" cannot stand in for a real secret.
 const MIN_WEBHOOK_SECRET_LENGTH = 22;
+// Inline-button callback_data prefixes for the explicit login confirmation
+// step. Kept short to stay under Telegram's 64-byte callback_data limit
+// (prefix + 32-hex nonce). Shared by the parser and the webhook builder so
+// they never drift.
+export const CONFIRM_PREFIX = "tgauth:confirm:";
+export const DENY_PREFIX = "tgauth:deny:";
 
 export type NonceState =
   | { status: "pending"; createdAt: string }
@@ -135,6 +141,24 @@ export type ParsedBotMessage =
       telegramId: string;
       telegramUsername: string | null;
       chatId: string;
+    }
+  | {
+      kind: "confirm_login";
+      updateId: number;
+      nonce: string;
+      telegramId: string;
+      telegramUsername: string | null;
+      chatId: string;
+      callbackQueryId: string;
+    }
+  | {
+      kind: "deny_login";
+      updateId: number;
+      nonce: string;
+      telegramId: string;
+      telegramUsername: string | null;
+      chatId: string;
+      callbackQueryId: string;
     };
 
 export function parseBotMessage(update: unknown): ParsedBotMessage | null {
@@ -142,6 +166,11 @@ export function parseBotMessage(update: unknown): ParsedBotMessage | null {
   const updateId =
     typeof update.update_id === "number" ? update.update_id : null;
   if (updateId === null) return null;
+
+  // Inline-button presses arrive as callback_query updates, not messages.
+  // They carry the explicit login confirm/deny decision.
+  const callback = isObject(update.callback_query) ? update.callback_query : null;
+  if (callback) return parseCallbackQuery(updateId, callback);
 
   const msg = isObject(update.message) ? update.message : null;
   if (!msg) return null;
@@ -203,6 +232,54 @@ export function parseBotMessage(update: unknown): ParsedBotMessage | null {
   }
 
   return null;
+}
+
+function parseCallbackQuery(
+  updateId: number,
+  callback: Record<string, unknown>
+): ParsedBotMessage | null {
+  const id = typeof callback.id === "string" ? callback.id : null;
+  if (!id) return null;
+
+  const from = isObject(callback.from) ? callback.from : null;
+  if (!from) return null;
+  const fromId =
+    typeof from.id === "number"
+      ? String(from.id)
+      : typeof from.id === "string"
+        ? from.id
+        : null;
+  if (!fromId) return null;
+
+  const username =
+    typeof from.username === "string" && from.username ? from.username : null;
+
+  const message = isObject(callback.message) ? callback.message : null;
+  const chat = message && isObject(message.chat) ? message.chat : null;
+  const chatId =
+    chat && typeof chat.id === "number"
+      ? String(chat.id)
+      : chat && typeof chat.id === "string"
+        ? chat.id
+        : fromId;
+
+  const data = typeof callback.data === "string" ? callback.data : "";
+  const isConfirm = data.startsWith(CONFIRM_PREFIX);
+  const isDeny = data.startsWith(DENY_PREFIX);
+  if (!isConfirm && !isDeny) return null;
+
+  const nonce = data.slice((isConfirm ? CONFIRM_PREFIX : DENY_PREFIX).length);
+  if (!NONCE_PATTERN.test(nonce)) return null;
+
+  return {
+    kind: isConfirm ? "confirm_login" : "deny_login",
+    updateId,
+    nonce,
+    telegramId: fromId,
+    telegramUsername: username,
+    chatId,
+    callbackQueryId: id,
+  };
 }
 
 // Backwards-compatible wrapper that only returns nonce-bearing /start.
@@ -268,6 +345,36 @@ export async function sendTelegramMessage(
     return true;
   } catch (err) {
     console.warn("[telegram] sendMessage threw", err);
+    return false;
+  }
+}
+
+// Acknowledges an inline-button press. Telegram shows the user a brief
+// toast (the optional text) and stops the button's loading spinner. Like
+// sendTelegramMessage, failures are non-fatal — we've already 200'd the
+// webhook by the time this runs.
+export async function sendTelegramAnswerCallback(
+  callbackQueryId: string,
+  text?: string
+): Promise<boolean> {
+  try {
+    const payload: Record<string, unknown> = {
+      callback_query_id: callbackQueryId,
+    };
+    if (text) payload.text = text;
+    const res = await fetch(`${getBotApiBase()}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      console.warn("[telegram] answerCallbackQuery non-2xx", res.status);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("[telegram] answerCallbackQuery threw", err);
     return false;
   }
 }

@@ -39,7 +39,6 @@ API:
 | `GET /api/access/capacity` · `POST /api/access/notify-when-open` | Public slot counter + pool-full waitlist |
 | `POST /api/track` | First-party pageview beacon |
 | `POST /api/admin/grant` · `/api/admin/access-pool/add` · `/api/admin/users` · `/api/admin/reissue` · `GET /api/admin/analytics` | Admin endpoints (Bearer ADMIN_SECRET) |
-| `POST /api/waitlist` | Pre-launch email capture (legacy) |
 
 ## Local dev
 
@@ -73,7 +72,7 @@ Telegram bot (auth + notifications):
 - `TELEGRAM_BOT_TOKEN` — from BotFather.
 - `TELEGRAM_BOT_USERNAME` — without the `@`.
 - `TELEGRAM_WEBHOOK_SECRET` — opaque ≥ 32-char random; passed to `setWebhook` as `secret_token` and required on every update.
-- `TELEGRAM_NOTIFY_CHAT_ID` (optional) — waitlist signups forwarded here.
+- `TELEGRAM_NOTIFY_CHAT_ID` (optional) — currently unused (was the `/api/waitlist` signup forwarder, now removed).
 
 Site:
 
