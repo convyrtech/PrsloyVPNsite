@@ -192,16 +192,20 @@ export async function track(event: AnalyticsEvent): Promise<void> {
   try {
     switch (event.name) {
       case "pageview": {
-        // Emergency kill-switch. Pageviews are ~all of the analytics KV load
-        // (two counters + the log line per hit); a single ad spike can exhaust
-        // an Upstash quota and start failing auth/payment writes. Set
-        // ANALYTICS_DISABLED=1 in env to shed pageview writes WITHOUT a deploy.
-        // `return` (not `break`) so the pageview's appendLog is shed too; the
-        // low-volume conversion/revenue events below are unaffected.
+        // Emergency kill-switch. The per-path counter + the per-hit log line
+        // are ~all of the analytics KV load; a single ad spike can exhaust an
+        // Upstash quota and start failing auth/payment writes. Set
+        // ANALYTICS_DISABLED=1 in env to shed those heavy writes WITHOUT a deploy.
+        //
+        // The single per-source visit counter is bumped FIRST and kept even when
+        // disabled: it is the denominator for cost-per-click and per-source
+        // conversion — exactly the number you cannot lose during the spike that
+        // makes you flip the switch. One cheap INCR survives; the unbounded
+        // per-path counter and the per-hit log (shed by the `return`) do not.
+        await bumpCounter(env, date, `utm:${date}:${source}`);
         if (pageviewWritesDisabled()) return;
         const path = sanitizeKeyPart(event.path) || "_";
         await bumpCounter(env, date, `pv:${date}:${path}`);
-        await bumpCounter(env, date, `utm:${date}:${source}`);
         break;
       }
       case "register_success":

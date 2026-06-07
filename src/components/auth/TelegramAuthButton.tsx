@@ -228,7 +228,7 @@ function TelegramAuthButtonInner({
             onChange={(e) => setInviteCode(e.target.value)}
             disabled={state.kind === "awaiting"}
             className="bg-surface border border-border-visible rounded-full px-lg min-h-[48px]
-                       font-mono text-body-sm text-text-display placeholder:text-text-disabled
+                       font-mono text-body text-text-display placeholder:text-text-disabled
                        focus:outline-none focus:border-text-display transition-colors
                        disabled:opacity-60"
           />
