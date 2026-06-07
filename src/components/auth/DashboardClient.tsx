@@ -11,6 +11,7 @@ import { displayIdentity } from "@/lib/identity";
 import { getForcedState } from "@/lib/dev-state";
 import { PaymentStatusCard } from "@/components/payments/PaymentStatusCard";
 import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
+import { resolveMeState, type DashboardState as State } from "@/lib/dashboard-state";
 
 export type DashboardCopy = Record<
   | "label"
@@ -59,11 +60,6 @@ export type DashboardCopy = Record<
   | "logout",
   string
 >;
-
-type State =
-  | { kind: "loading" }
-  | { kind: "not_configured" }
-  | { kind: "ready"; user: PublicAuthUser | null };
 
 type ReissueState = "idle" | "sending" | "sent" | "error";
 
@@ -168,21 +164,15 @@ export function DashboardClient({
           error?: string;
         };
         if (!alive) return;
-        if (
-          data.error === "auth_not_configured" ||
-          data.error === "kv_not_configured" ||
-          data.error === "auth_secret_not_configured"
-        ) {
-          setState({ kind: "not_configured" });
-        } else {
-          setState({ kind: "ready", user: data.user ?? null });
-        }
+        // A non-ok backend response (KV unavailable, 5xx) must NOT show the
+        // guest sign-in screen to a possibly logged-in user — see resolveMeState.
+        setState((prev) => resolveMeState(prev, res.ok, data));
       } catch {
-        // On refetch we keep whatever data we already have; only the
-        // initial load downgrades to "no user" so the login UI appears.
+        // Network error — same policy: keep prior data on a refetch; on the
+        // initial load show the "temporarily unavailable" panel, not guest.
         if (!alive) return;
         setState((prev) =>
-          prev.kind === "loading" ? { kind: "ready", user: null } : prev
+          prev.kind === "loading" ? { kind: "not_configured" } : prev
         );
       }
     }
