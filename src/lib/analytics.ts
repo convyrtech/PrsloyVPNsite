@@ -177,6 +177,13 @@ function utmSourceOf(event: AnalyticsEvent): string {
   return "direct";
 }
 
+// Emergency lever to shed the high-volume pageview KV writes without a deploy
+// (see the pageview case in track). Off by default.
+function pageviewWritesDisabled(): boolean {
+  const v = process.env.ANALYTICS_DISABLED;
+  return v === "1" || v === "true";
+}
+
 export async function track(event: AnalyticsEvent): Promise<void> {
   const env = envPrefix();
   const date = todayKey();
@@ -185,6 +192,13 @@ export async function track(event: AnalyticsEvent): Promise<void> {
   try {
     switch (event.name) {
       case "pageview": {
+        // Emergency kill-switch. Pageviews are ~all of the analytics KV load
+        // (two counters + the log line per hit); a single ad spike can exhaust
+        // an Upstash quota and start failing auth/payment writes. Set
+        // ANALYTICS_DISABLED=1 in env to shed pageview writes WITHOUT a deploy.
+        // `return` (not `break`) so the pageview's appendLog is shed too; the
+        // low-volume conversion/revenue events below are unaffected.
+        if (pageviewWritesDisabled()) return;
         const path = sanitizeKeyPart(event.path) || "_";
         await bumpCounter(env, date, `pv:${date}:${path}`);
         await bumpCounter(env, date, `utm:${date}:${source}`);
