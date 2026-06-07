@@ -225,6 +225,64 @@ describe("parseBotMessage", () => {
     const parsed = parseBotMessage(update);
     expect(parsed?.chatId).toBe("42");
   });
+
+  it("parses a confirm callback_query as confirm_login", async () => {
+    const { parseBotMessage } = await import("@/lib/telegram-auth");
+    const parsed = parseBotMessage({
+      update_id: 200,
+      callback_query: {
+        id: "cbq-9",
+        from: { id: 42, username: "alice" },
+        message: { chat: { id: 42 } },
+        data: "tgauth:confirm:abc123-def",
+      },
+    });
+    expect(parsed).toMatchObject({
+      kind: "confirm_login",
+      nonce: "abc123-def",
+      telegramId: "42",
+      chatId: "42",
+      callbackQueryId: "cbq-9",
+    });
+  });
+
+  it("parses a deny callback_query as deny_login", async () => {
+    const { parseBotMessage } = await import("@/lib/telegram-auth");
+    const parsed = parseBotMessage({
+      update_id: 201,
+      callback_query: {
+        id: "cbq-10",
+        from: { id: 42 },
+        message: { chat: { id: 42 } },
+        data: "tgauth:deny:abc123",
+      },
+    });
+    expect(parsed?.kind).toBe("deny_login");
+  });
+
+  it("returns null for a callback_query with unrecognised data", async () => {
+    const { parseBotMessage } = await import("@/lib/telegram-auth");
+    expect(
+      parseBotMessage({
+        update_id: 202,
+        callback_query: { id: "x", from: { id: 42 }, data: "other:thing" },
+      })
+    ).toBeNull();
+  });
+
+  it("returns null for a confirm callback with a malformed nonce", async () => {
+    const { parseBotMessage } = await import("@/lib/telegram-auth");
+    expect(
+      parseBotMessage({
+        update_id: 203,
+        callback_query: {
+          id: "x",
+          from: { id: 42 },
+          data: "tgauth:confirm:has space",
+        },
+      })
+    ).toBeNull();
+  });
 });
 
 describe("nonce lifecycle", () => {

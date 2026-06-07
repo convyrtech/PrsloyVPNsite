@@ -126,6 +126,27 @@ describe("Telegram auth e2e happy path", () => {
     );
     expect(webhookRes.status).toBe(200);
 
+    // 3b. The bot replied with confirm/deny buttons; /start does NOT auto-
+    //     confirm. The user presses "Подтвердить вход" → callback_query.
+    const confirmRes = await webhook.POST(
+      makeRequest("http://local.test/api/auth/telegram/webhook", {
+        headers: {
+          "x-telegram-bot-api-secret-token": WEBHOOK_SECRET,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          update_id: 1002,
+          callback_query: {
+            id: "cbq-1",
+            from: { id: 42424242, username: "smoke_tester" },
+            message: { chat: { id: 42424242, type: "private" } },
+            data: `tgauth:confirm:${initBody.nonce}`,
+          },
+        }),
+      })
+    );
+    expect(confirmRes.status).toBe(200);
+
     // 4. Browser polls /claim with the nonce + the same code the user
     //    entered in the invite field on /register.
     const claimRes = await claim.POST(
@@ -211,6 +232,24 @@ describe("Telegram auth e2e happy path", () => {
         }),
       })
     );
+    // Explicit confirm (the /start above only sent buttons).
+    await webhook.POST(
+      makeRequest("http://local.test/", {
+        headers: {
+          "x-telegram-bot-api-secret-token": WEBHOOK_SECRET,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          update_id: 2011,
+          callback_query: {
+            id: "cbq-2011",
+            from: { id: 12345, username: "returning_user" },
+            message: { chat: { id: 12345 } },
+            data: `tgauth:confirm:${noneOne}`,
+          },
+        }),
+      })
+    );
     const firstClaim = await claim.POST(
       makeRequest("http://local.test/", {
         headers: { "Content-Type": "application/json" },
@@ -233,6 +272,24 @@ describe("Telegram auth e2e happy path", () => {
           message: {
             from: { id: 12345, username: "returning_user" },
             text: `/start ${noneTwo}`,
+          },
+        }),
+      })
+    );
+    // Explicit confirm for the second login.
+    await webhook.POST(
+      makeRequest("http://local.test/", {
+        headers: {
+          "x-telegram-bot-api-secret-token": WEBHOOK_SECRET,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          update_id: 2012,
+          callback_query: {
+            id: "cbq-2012",
+            from: { id: 12345, username: "returning_user" },
+            message: { chat: { id: 12345 } },
+            data: `tgauth:confirm:${noneTwo}`,
           },
         }),
       })
@@ -304,5 +361,126 @@ describe("Telegram auth e2e happy path", () => {
       })
     );
     expect(claimRes.status).toBe(202);
+  });
+
+  it("security: a relayed /start does NOT confirm — only an explicit confirm callback does", async () => {
+    const init = await import("@/app/api/auth/telegram/init/route");
+    const webhook = await import("@/app/api/auth/telegram/webhook/route");
+    const claim = await import("@/app/api/auth/telegram/claim/route");
+
+    // Attacker initiates /init (holds the nonce). Then phishes a victim into
+    // tapping the relayed deep link — that fires /start as the VICTIM.
+    const initRes = await init.POST(makeRequest("http://local.test/"));
+    const nonce = (await initRes.json() as { nonce: string }).nonce;
+
+    await webhook.POST(
+      makeRequest("http://local.test/", {
+        headers: {
+          "x-telegram-bot-api-secret-token": WEBHOOK_SECRET,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          update_id: 4001,
+          message: {
+            from: { id: 777, username: "victim" },
+            text: `/start ${nonce}`,
+          },
+        }),
+      })
+    );
+
+    // The attacker polls /claim — it must STAY pending, because /start only
+    // sent buttons and nobody pressed "confirm". This is the relay defense.
+    const afterStart = await claim.POST(
+      makeRequest("http://local.test/", {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nonce, inviteCode: "whatever" }),
+      })
+    );
+    expect(afterStart.status).toBe(202);
+
+    // Victim presses "Это не я" (deny) — nonce still never confirmed.
+    await webhook.POST(
+      makeRequest("http://local.test/", {
+        headers: {
+          "x-telegram-bot-api-secret-token": WEBHOOK_SECRET,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          update_id: 4002,
+          callback_query: {
+            id: "cbq-4002",
+            from: { id: 777, username: "victim" },
+            message: { chat: { id: 777 } },
+            data: `tgauth:deny:${nonce}`,
+          },
+        }),
+      })
+    );
+    const afterDeny = await claim.POST(
+      makeRequest("http://local.test/", {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nonce, inviteCode: "whatever" }),
+      })
+    );
+    expect(afterDeny.status).toBe(202);
+  });
+
+  it("webhook /start emits the confirm/deny inline keyboard (does not auto-confirm)", async () => {
+    const init = await import("@/app/api/auth/telegram/init/route");
+    const webhook = await import("@/app/api/auth/telegram/webhook/route");
+
+    const initRes = await init.POST(makeRequest("http://local.test/"));
+    const nonce = (await initRes.json() as { nonce: string }).nonce;
+
+    // Capture outbound Telegram API calls so we can assert the /start reply
+    // carries the confirm/deny buttons — the producer side of the contract
+    // whose consumer side (parseCallbackQuery) is unit-tested separately.
+    const calls: Array<{ url: string; body: Record<string, unknown> | null }> = [];
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async (input: RequestInfo | URL, opts?: RequestInit) => {
+        calls.push({
+          url: String(input),
+          body:
+            typeof opts?.body === "string"
+              ? (JSON.parse(opts.body) as Record<string, unknown>)
+              : null,
+        });
+        return new Response("{}", { status: 200 });
+      });
+
+    try {
+      await webhook.POST(
+        makeRequest("http://local.test/", {
+          headers: {
+            "x-telegram-bot-api-secret-token": WEBHOOK_SECRET,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            update_id: 5001,
+            message: {
+              from: { id: 888, username: "tapper" },
+              text: `/start ${nonce}`,
+            },
+          }),
+        })
+      );
+    } finally {
+      fetchSpy.mockRestore();
+    }
+
+    const sendMessage = calls.find((c) => c.url.includes("/sendMessage"));
+    expect(sendMessage).toBeTruthy();
+    const replyMarkup = sendMessage!.body?.reply_markup as
+      | { inline_keyboard?: Array<Array<{ callback_data?: string }>> }
+      | undefined;
+    const buttons = (replyMarkup?.inline_keyboard ?? [])
+      .flat()
+      .map((b) => b.callback_data);
+    expect(buttons).toContain(`tgauth:confirm:${nonce}`);
+    expect(buttons).toContain(`tgauth:deny:${nonce}`);
+    // And critically: no confirmNonce was called (no api call confirms here).
+    expect(calls.some((c) => c.url.includes("/answerCallbackQuery"))).toBe(false);
   });
 });
