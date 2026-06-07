@@ -176,6 +176,69 @@ describe("POST /api/auth/register — analytics", () => {
     expect(registerEvents().length).toBe(baseline);
   });
 
+  it("preserves the helpful email_exists 409 for a valid-invite holder on an existing email", async () => {
+    // The reorder must close the oracle WITHOUT hiding the helpful 'email
+    // exists, go log in' message from a legit user who holds a real invite.
+    await addInviteCodes(["INV-DUP-1", "INV-DUP-2"]);
+    const { POST } = await importRoute();
+    await POST(
+      registerReq({
+        email: "dup@example.com",
+        password: "supersecret",
+        inviteCode: "INV-DUP-1",
+      })
+    );
+    await flushAfter();
+
+    const res = await POST(
+      registerReq({
+        email: "dup@example.com",
+        password: "supersecret",
+        inviteCode: "INV-DUP-2",
+      })
+    );
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toBe("email_exists");
+  });
+
+  it("closes the email-enumeration oracle: invalid invite → 403 whether the email exists or not", async () => {
+    await addInviteCodes(["INV-REAL"]);
+    const { POST } = await importRoute();
+    // Seed a real account.
+    await POST(
+      registerReq({
+        email: "taken@example.com",
+        password: "supersecret",
+        inviteCode: "INV-REAL",
+      })
+    );
+    await flushAfter();
+
+    // Existing email + a non-existent invite must be invite_invalid (403),
+    // NOT email_exists (409) — a 409-vs-403 split would leak which emails are
+    // registered to a caller holding no valid invite.
+    const existing = await POST(
+      registerReq({
+        email: "taken@example.com",
+        password: "supersecret",
+        inviteCode: "NOPE-NOPE",
+      })
+    );
+    expect(existing.status).toBe(403);
+    expect((await existing.json()).error).toBe("invite_invalid");
+
+    // Non-existing email + same bad invite → also 403. Indistinguishable.
+    const missing = await POST(
+      registerReq({
+        email: "fresh@example.com",
+        password: "supersecret",
+        inviteCode: "NOPE-NOPE",
+      })
+    );
+    expect(missing.status).toBe(403);
+    expect((await missing.json()).error).toBe("invite_invalid");
+  });
+
   it("sanitizes utmSource via the analytics key sanitizer", async () => {
     await addInviteCodes(["INV-DOE"]);
     const { POST } = await importRoute();

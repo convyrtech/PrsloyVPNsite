@@ -78,6 +78,8 @@ export function installFakeRedis(): FakeRedis {
       }
       case "SMEMBERS":
         return Array.from(store.sets.get(key) ?? []);
+      case "SISMEMBER":
+        return store.sets.get(key)?.has(String(cmd[2])) ? 1 : 0;
       case "SCAN": {
         const cursor = String(cmd[1]);
         const matchIdx = cmd.findIndex((x) => String(x).toUpperCase() === "MATCH");

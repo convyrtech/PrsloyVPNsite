@@ -11,7 +11,12 @@ import {
   kvSet,
   KvNotConfiguredError,
 } from "@/lib/kv";
-import { AccessPoolError, consumeInviteCode, getCodeUsage } from "@/lib/access-pool";
+import {
+  AccessPoolError,
+  consumeInviteCode,
+  getCodeUsage,
+  isInviteAvailable,
+} from "@/lib/access-pool";
 import { isValidEmail } from "@/lib/validation";
 
 const scryptAsync = promisify(scrypt);
@@ -254,6 +259,16 @@ export async function registerUserWithInvite(
   }
   const trimmedCode = typeof inviteCode === "string" ? inviteCode.trim() : "";
   if (!trimmedCode) throw new AuthError("invite_required");
+
+  // Close the account-enumeration oracle: validate the invite BEFORE probing
+  // the email index, so the email_exists (409) branch is only reachable by a
+  // caller who already holds a usable invite. Non-destructive — the code is not
+  // consumed here; consumeInviteCode does the authoritative atomic SREM below
+  // (and still re-checks under the race).
+  if (!(await isInviteAvailable(trimmedCode))) {
+    const usedBy = await getCodeUsage(trimmedCode).catch(() => null);
+    throw new AuthError(usedBy ? "invite_consumed" : "invite_invalid");
+  }
 
   const id = randomBytes(16).toString("hex");
   const now = new Date().toISOString();

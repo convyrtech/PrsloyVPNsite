@@ -110,6 +110,11 @@ export async function kvSRem(key: string, member: string): Promise<number> {
   return typeof result === "number" ? result : 0;
 }
 
+export async function kvSIsMember(key: string, member: string): Promise<boolean> {
+  const result = await redisCommand<number>(["SISMEMBER", key, member]);
+  return result === 1;
+}
+
 export async function kvSMembers(key: string): Promise<string[]> {
   const result = await redisCommand<string[] | null>(["SMEMBERS", key]);
   return Array.isArray(result) ? result : [];

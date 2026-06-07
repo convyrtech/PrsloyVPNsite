@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { kvGet, kvSAdd, kvSMembers, kvSet, kvSRem } from "@/lib/kv";
+import { kvGet, kvSAdd, kvSIsMember, kvSMembers, kvSet, kvSRem } from "@/lib/kv";
 
 /* Invite-code pool.
    ─────────────────
@@ -106,6 +106,22 @@ export async function consumeInviteCode(
 
   await kvSet(usedKey(trimmed), ownerLabel);
   return true;
+}
+
+// Non-destructively reports whether a code is currently available in the pool
+// (present and not yet consumed). Used to gate the registration enumeration
+// oracle — reject an invalid invite before the email index is probed — without
+// burning the code; consumeInviteCode still does the authoritative atomic SREM.
+export async function isInviteAvailable(code: string): Promise<boolean> {
+  const trimmed = typeof code === "string" ? code.trim() : "";
+  if (
+    !trimmed ||
+    trimmed.length > MAX_INVITE_CODE_LENGTH ||
+    !CODE_PATTERN.test(trimmed)
+  ) {
+    return false;
+  }
+  return await kvSIsMember(POOL_KEY, trimmed);
 }
 
 export async function listAvailableCodes(): Promise<string[]> {
