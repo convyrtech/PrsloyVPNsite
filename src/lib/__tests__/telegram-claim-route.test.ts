@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeRedis } from "./fake-redis";
 import { todayKey } from "@/lib/analytics";
-import { addInviteCodes } from "@/lib/access-pool";
 import {
   confirmNonce,
   mintNonce,
@@ -78,14 +77,12 @@ async function setupConfirmedNonce(
 
 describe("POST /api/auth/telegram/claim — analytics", () => {
   it("emits register_success with utmSource on first-time registration (isNew=true)", async () => {
-    await addInviteCodes(["INVITE-FIRST"]);
     const nonce = await setupConfirmedNonce("11111", "alice_tg");
 
     const { POST } = await importRoute();
     const res = await POST(
       claimReq({
         nonce,
-        inviteCode: "INVITE-FIRST",
         utmSource: "telegram",
       })
     );
@@ -104,11 +101,10 @@ describe("POST /api/auth/telegram/claim — analytics", () => {
   });
 
   it("emits register_success without utmSource when absent", async () => {
-    await addInviteCodes(["INVITE-NOSRC"]);
     const nonce = await setupConfirmedNonce("22222", null);
 
     const { POST } = await importRoute();
-    await POST(claimReq({ nonce, inviteCode: "INVITE-NOSRC" }));
+    await POST(claimReq({ nonce }));
     await flushAfter();
 
     const events = registerEvents();
@@ -117,15 +113,14 @@ describe("POST /api/auth/telegram/claim — analytics", () => {
   });
 
   it("does NOT emit register_success for a returning user (isNew=false)", async () => {
-    // First registration burns one invite.
-    await addInviteCodes(["INVITE-ONCE"]);
+    // First registration creates the user.
     const firstNonce = await setupConfirmedNonce("33333", "returning");
     const { POST } = await importRoute();
-    await POST(claimReq({ nonce: firstNonce, inviteCode: "INVITE-ONCE" }));
+    await POST(claimReq({ nonce: firstNonce }));
     await flushAfter();
     expect(registerEvents()).toHaveLength(1);
 
-    // Same Telegram id signs in again — no invite needed, isNew=false.
+    // Same Telegram id signs in again — isNew=false.
     const secondNonce = await setupConfirmedNonce("33333", "returning");
     const res = await POST(claimReq({ nonce: secondNonce }));
     expect(res.status).toBe(200);
@@ -137,21 +132,12 @@ describe("POST /api/auth/telegram/claim — analytics", () => {
     expect(registerEvents()).toHaveLength(1);
   });
 
-  it("does NOT emit register_success when invite is missing for a new user", async () => {
-    const nonce = await setupConfirmedNonce("44444", null);
-    const { POST } = await importRoute();
-    const res = await POST(claimReq({ nonce }));
-    expect(res.status).toBe(400);
-    await flushAfter();
-    expect(registerEvents()).toHaveLength(0);
-  });
-
   it("does NOT emit register_success when the nonce is still pending", async () => {
     const nonce = await import("@/lib/telegram-auth").then((m) => m.mintNonce());
     // Nonce never confirmed by webhook — claim returns 202 pending.
 
     const { POST } = await importRoute();
-    const res = await POST(claimReq({ nonce, inviteCode: "INV-PENDING" }));
+    const res = await POST(claimReq({ nonce }));
     expect(res.status).toBe(202);
     await flushAfter();
     expect(registerEvents()).toHaveLength(0);
@@ -160,9 +146,8 @@ describe("POST /api/auth/telegram/claim — analytics", () => {
   it("does NOT emit register_success when rate-limited (429)", async () => {
     // tg-claim is 60 / 120s per IP. We send 61 from the same IP from
     // a path that can't actually register (invalid nonce → 400) so we
-    // don't burn invites in the loop, then assert the 61st is 429
-    // AND that no register_success ever fired (the route never
-    // reached loginOrRegisterByTelegram).
+    // can assert the 61st is 429 AND that no register_success ever
+    // fired (the route never reached loginOrRegisterByTelegram).
     function fixedIp(body: Record<string, unknown>): Request {
       return new Request("http://localhost/api/auth/telegram/claim", {
         method: "POST",
@@ -187,14 +172,12 @@ describe("POST /api/auth/telegram/claim — analytics", () => {
   });
 
   it("sanitizes utmSource via the analytics key sanitizer", async () => {
-    await addInviteCodes(["INVITE-SANIT"]);
     const nonce = await setupConfirmedNonce("55555", null);
 
     const { POST } = await importRoute();
     await POST(
       claimReq({
         nonce,
-        inviteCode: "INVITE-SANIT",
         utmSource: "Telegram Ads",
       })
     );

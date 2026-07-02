@@ -4,7 +4,7 @@ import {
   createSession,
   getAuthSetupErrorCode,
   issueVerificationToken,
-  registerUserWithInvite,
+  registerUser,
   setSessionCookie,
 } from "@/lib/auth";
 import { buildVerificationEmail } from "@/lib/auth-email";
@@ -20,7 +20,6 @@ const REGISTER_WINDOW_SECONDS = 3600;
 type RegisterBody = {
   email?: unknown;
   password?: unknown;
-  inviteCode?: unknown;
   locale?: unknown;
   utmSource?: unknown;
 };
@@ -68,14 +67,13 @@ export async function POST(req: Request) {
 
   const email = typeof body.email === "string" ? body.email : "";
   const password = typeof body.password === "string" ? body.password : "";
-  const inviteCode = typeof body.inviteCode === "string" ? body.inviteCode : "";
   const locale = typeof body.locale === "string" ? body.locale : "en";
   const rawUtm = typeof body.utmSource === "string" ? body.utmSource : "";
   const utmSource = rawUtm ? sanitizeKeyPart(rawUtm) || undefined : undefined;
 
   try {
-    const user = await registerUserWithInvite(email, password, inviteCode);
-    // registerUserWithInvite always sets email on success — narrow BEFORE
+    const user = await registerUser(email, password);
+    // registerUser always sets email on success — narrow BEFORE
     // createSession so a (theoretically impossible) failure does not leak
     // an orphan session into KV.
     if (!user.email) throw new Error("register: email missing after register");
@@ -103,14 +101,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: setupError }, { status: 503 });
     }
     if (err instanceof AuthError) {
-      const status =
-        err.code === "email_exists"
-          ? 409
-          : err.code === "invite_consumed"
-            ? 409
-            : err.code === "invite_invalid"
-              ? 403
-              : 400;
+      const status = err.code === "email_exists" ? 409 : 400;
       return NextResponse.json({ ok: false, error: err.code }, { status });
     }
     console.warn("[auth] register failed", err);

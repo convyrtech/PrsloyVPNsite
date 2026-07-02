@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeRedis } from "./fake-redis";
 import { todayKey } from "@/lib/analytics";
-import { addInviteCodes } from "@/lib/access-pool";
 
 const afterQueue: Array<() => Promise<void> | void> = [];
 vi.mock("next/server", async () => {
@@ -40,10 +39,8 @@ async function importRoute() {
   return await import("@/app/api/auth/register/route");
 }
 
-// Builds a request as-is. Each test pre-seeds its own invite codes via
-// addInviteCodes and passes inviteCode in the body, so the helper stays
-// thin and explicit. Tests that exercise the no-code path (rate-limit,
-// invalid-email) simply omit the field.
+// Builds a request as-is. The invite system is gone — bodies carry only
+// email/password/locale/utmSource.
 function registerReq(body: Record<string, unknown>): Request {
   return new Request("http://localhost/api/auth/register", {
     method: "POST",
@@ -64,19 +61,25 @@ function registerEvents(): Array<Record<string, unknown>> {
 }
 
 describe("POST /api/auth/register — analytics", () => {
-  it("emits register_success with utmSource on successful registration", async () => {
-    await addInviteCodes(["INV-ALICE"]);
+  it("registers successfully: sets session cookie, reports verificationEmailSent, and emits register_success with utmSource", async () => {
     const { POST } = await importRoute();
     const res = await POST(
       registerReq({
         email: "alice@example.com",
         password: "supersecret",
-        inviteCode: "INV-ALICE",
         locale: "ru",
         utmSource: "telegram",
       })
     );
     expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(typeof json.verificationEmailSent).toBe("boolean");
+
+    const setCookie = res.headers.get("set-cookie");
+    expect(setCookie).toBeTruthy();
+    expect(setCookie).toMatch(/^prsloy_session=/);
+
     await flushAfter();
 
     const events = registerEvents();
@@ -89,13 +92,11 @@ describe("POST /api/auth/register — analytics", () => {
   });
 
   it("emits register_success without utmSource when absent", async () => {
-    await addInviteCodes(["INV-BOB"]);
     const { POST } = await importRoute();
     await POST(
       registerReq({
         email: "bob@example.com",
         password: "supersecret",
-        inviteCode: "INV-BOB",
       })
     );
     await flushAfter();
@@ -105,14 +106,12 @@ describe("POST /api/auth/register — analytics", () => {
     expect(events[0].utmSource).toBeUndefined();
   });
 
-  it("does NOT emit register_success on duplicate email", async () => {
-    await addInviteCodes(["INV-CLAIRE-1", "INV-CLAIRE-2"]);
+  it("does NOT emit register_success on duplicate email (email_exists -> 409)", async () => {
     const { POST } = await importRoute();
     await POST(
       registerReq({
         email: "claire@example.com",
         password: "supersecret",
-        inviteCode: "INV-CLAIRE-1",
       })
     );
     await flushAfter();
@@ -123,26 +122,40 @@ describe("POST /api/auth/register — analytics", () => {
       registerReq({
         email: "claire@example.com",
         password: "supersecret",
-        inviteCode: "INV-CLAIRE-2",
       })
     );
     expect(res.status).toBe(409);
+    expect((await res.json()).error).toBe("email_exists");
     await flushAfter();
 
     expect(registerEvents()).toHaveLength(1);
   });
 
   it("does NOT emit register_success on invalid email", async () => {
-    await addInviteCodes(["INV-BAD"]);
     const { POST } = await importRoute();
     const res = await POST(
       registerReq({
         email: "not-an-email",
         password: "supersecret",
-        inviteCode: "INV-BAD",
       })
     );
     expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("invalid_email");
+    await flushAfter();
+
+    expect(registerEvents()).toHaveLength(0);
+  });
+
+  it("does NOT emit register_success on invalid password", async () => {
+    const { POST } = await importRoute();
+    const res = await POST(
+      registerReq({
+        email: "shortpw@example.com",
+        password: "short",
+      })
+    );
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("invalid_password");
     await flushAfter();
 
     expect(registerEvents()).toHaveLength(0);
@@ -171,82 +184,18 @@ describe("POST /api/auth/register — analytics", () => {
       fixedIpReq({ email: "spam@example.com", password: "supersecret" })
     );
     expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBeTruthy();
     await flushAfter();
 
     expect(registerEvents().length).toBe(baseline);
   });
 
-  it("preserves the helpful email_exists 409 for a valid-invite holder on an existing email", async () => {
-    // The reorder must close the oracle WITHOUT hiding the helpful 'email
-    // exists, go log in' message from a legit user who holds a real invite.
-    await addInviteCodes(["INV-DUP-1", "INV-DUP-2"]);
-    const { POST } = await importRoute();
-    await POST(
-      registerReq({
-        email: "dup@example.com",
-        password: "supersecret",
-        inviteCode: "INV-DUP-1",
-      })
-    );
-    await flushAfter();
-
-    const res = await POST(
-      registerReq({
-        email: "dup@example.com",
-        password: "supersecret",
-        inviteCode: "INV-DUP-2",
-      })
-    );
-    expect(res.status).toBe(409);
-    expect((await res.json()).error).toBe("email_exists");
-  });
-
-  it("closes the email-enumeration oracle: invalid invite → 403 whether the email exists or not", async () => {
-    await addInviteCodes(["INV-REAL"]);
-    const { POST } = await importRoute();
-    // Seed a real account.
-    await POST(
-      registerReq({
-        email: "taken@example.com",
-        password: "supersecret",
-        inviteCode: "INV-REAL",
-      })
-    );
-    await flushAfter();
-
-    // Existing email + a non-existent invite must be invite_invalid (403),
-    // NOT email_exists (409) — a 409-vs-403 split would leak which emails are
-    // registered to a caller holding no valid invite.
-    const existing = await POST(
-      registerReq({
-        email: "taken@example.com",
-        password: "supersecret",
-        inviteCode: "NOPE-NOPE",
-      })
-    );
-    expect(existing.status).toBe(403);
-    expect((await existing.json()).error).toBe("invite_invalid");
-
-    // Non-existing email + same bad invite → also 403. Indistinguishable.
-    const missing = await POST(
-      registerReq({
-        email: "fresh@example.com",
-        password: "supersecret",
-        inviteCode: "NOPE-NOPE",
-      })
-    );
-    expect(missing.status).toBe(403);
-    expect((await missing.json()).error).toBe("invite_invalid");
-  });
-
   it("sanitizes utmSource via the analytics key sanitizer", async () => {
-    await addInviteCodes(["INV-DOE"]);
     const { POST } = await importRoute();
     await POST(
       registerReq({
         email: "doe@example.com",
         password: "supersecret",
-        inviteCode: "INV-DOE",
         utmSource: "Telegram Ads",
       })
     );

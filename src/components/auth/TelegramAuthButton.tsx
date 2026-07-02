@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { readUtmSource } from "@/lib/client-utm";
 
 export type TelegramButtonCopy = {
@@ -9,11 +9,6 @@ export type TelegramButtonCopy = {
   awaiting: string;
   awaitingHint: string;
   reopen: string;
-  inviteLabel: string;
-  invitePlaceholder: string;
-  inviteRequired: string;
-  inviteInvalid: string;
-  inviteConsumed: string;
   expired: string;
   consumed: string;
   notConfigured: string;
@@ -39,55 +34,18 @@ type State =
 const POLL_DELAYS_MS = [1000, 2000, 3000, 5000];
 const POLL_TIMEOUT_MS = 90_000;
 
-// Outer wrapper provides the Suspense boundary required by
-// useSearchParams. The inner component reads ?code= so a magic-link
-// from email lands with both the email form AND the Telegram-side
-// invite field prefilled — mirrors the AuthForm pattern.
-export function TelegramAuthButton(props: Props) {
-  return (
-    <Suspense
-      fallback={
-        <TelegramAuthButtonInner {...props} initialInviteCode="" />
-      }
-    >
-      <TelegramAuthButtonWithSearchParams {...props} />
-    </Suspense>
-  );
-}
-
-function TelegramAuthButtonWithSearchParams(props: Props) {
-  const params = useSearchParams();
-  const initialInviteCode = params.get("code")?.trim() ?? "";
-  return (
-    <TelegramAuthButtonInner {...props} initialInviteCode={initialInviteCode} />
-  );
-}
-
-function TelegramAuthButtonInner({
-  mode,
-  locale,
-  copy,
-  initialInviteCode,
-}: Props & { initialInviteCode: string }) {
+export function TelegramAuthButton({ mode, locale, copy }: Props) {
   const router = useRouter();
   const [state, setState] = useState<State>({ kind: "idle" });
-  const [inviteCode, setInviteCode] = useState(initialInviteCode);
   const timerRef = useRef<number | null>(null);
   const aliveRef = useRef(true);
   // Latest state + poll fn exposed to the visibilitychange listener, which is
-  // registered once but must read the live state and call the freshest closure
-  // (so the invite code typed before opening Telegram is the one that's sent).
+  // registered once but must read the live state and call the freshest closure.
   const stateRef = useRef<State>(state);
   stateRef.current = state;
   const pollOnceRef = useRef<
     (nonce: string, attempt: number, startedAt: number) => Promise<void>
   >(async () => {});
-
-  // Sync field if the URL param changes while the page is mounted
-  // (e.g. user clicks a different magic-link without full reload).
-  useEffect(() => {
-    if (initialInviteCode) setInviteCode(initialInviteCode);
-  }, [initialInviteCode]);
 
   useEffect(() => {
     return () => {
@@ -137,7 +95,6 @@ function TelegramAuthButtonInner({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nonce,
-          inviteCode: mode === "register" ? inviteCode.trim() : undefined,
           ...(utmSource ? { utmSource } : {}),
         }),
       });
@@ -170,11 +127,6 @@ function TelegramAuthButtonInner({
   async function onStart() {
     if (state.kind === "awaiting") return;
     setState({ kind: "idle" });
-
-    if (mode === "register" && !inviteCode.trim()) {
-      setState({ kind: "error", message: copy.inviteRequired });
-      return;
-    }
 
     try {
       const res = await fetch("/api/auth/telegram/init", {
@@ -214,27 +166,6 @@ function TelegramAuthButtonInner({
 
   return (
     <div className="flex flex-col gap-md">
-      {mode === "register" && (
-        <label className="flex flex-col gap-xs">
-          <span className="font-mono text-label uppercase tracking-[0.12em] text-text-disabled">
-            {copy.inviteLabel}
-          </span>
-          <input
-            type="text"
-            autoComplete="off"
-            spellCheck={false}
-            placeholder={copy.invitePlaceholder}
-            value={inviteCode}
-            onChange={(e) => setInviteCode(e.target.value)}
-            disabled={state.kind === "awaiting"}
-            className="bg-surface border border-border-visible rounded-full px-lg min-h-[48px]
-                       font-mono text-body text-text-display placeholder:text-text-disabled
-                       focus:outline-none focus:border-text-display transition-colors
-                       disabled:opacity-60"
-          />
-        </label>
-      )}
-
       {/* Tier-2 outline: email submit owns the single white pill in the form;
           Telegram is the alternative path, not a competing primary. */}
       <button
@@ -281,12 +212,6 @@ function mapError(
   switch (code) {
     case "telegram_not_configured":
       return copy.notConfigured;
-    case "invite_required":
-      return copy.inviteRequired;
-    case "invite_invalid":
-      return copy.inviteInvalid;
-    case "invite_consumed":
-      return copy.inviteConsumed;
     case "telegram_id_taken":
       return copy.telegramIdTaken;
     case "nonce_expired":

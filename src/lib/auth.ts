@@ -547,23 +547,17 @@ export async function setAccessBlocked(
   return publicUser(user);
 }
 
-// First-time Telegram registration consumes an invite code. Returning
-// Telegram users (telegramId already known) just get a session with the
-// username synced from the latest payload.
+// Returning Telegram users (telegramId already known) just get a session
+// with the username synced from the latest payload. First-time users are
+// registered on the spot — registration is open.
 //
-// Ordering follows the inverse-rollback pattern from the plan review:
-//   1. NX-reserve auth:telegram:<id>
-//   2. consumeInviteCode (atomic SREM in the pool)
-//   3. saveUser
-// On failure of (2) or (3) we undo (1). The invite code itself, once
-// consumed, stays burned — the used-marker in access:pool already points
-// at this aborted user id, so the operator can audit the orphan.
+// Ordering: NX-reserve auth:telegram:<id>, then saveUser. On saveUser
+// failure the reservation is rolled back so the telegram_id stays claimable.
 export async function loginOrRegisterByTelegram(params: {
   telegramId: string;
   telegramUsername: string | null;
-  inviteCode?: string;
 }): Promise<{ user: PublicAuthUser; isNew: boolean }> {
-  const { telegramId, telegramUsername, inviteCode } = params;
+  const { telegramId, telegramUsername } = params;
 
   const existing = await getUserByTelegramId(telegramId);
   if (existing) {
@@ -575,34 +569,13 @@ export async function loginOrRegisterByTelegram(params: {
     return { user: publicUser(existing), isNew: false };
   }
 
-  if (!inviteCode) throw new AuthError("invite_required");
-
   const id = randomBytes(16).toString("hex");
   const now = new Date().toISOString();
 
   const reserved = await kvSet(telegramKey(telegramId), id, { nx: true });
   if (!reserved) throw new AuthError("telegram_id_taken");
 
-  let consumed = false;
   try {
-    try {
-      consumed = await consumeInviteCode(inviteCode, `user:${id}`);
-    } catch (err) {
-      // AccessPoolError("invalid_code") happens on malformed input —
-      // translate so the route surfaces a clean error code to the user.
-      if (err instanceof AccessPoolError && err.code === "invalid_code") {
-        throw new AuthError("invite_invalid");
-      }
-      throw err;
-    }
-    if (!consumed) {
-      // Distinguish "code exists but already burned" from "code never
-      // existed (typo / not in pool)" — the UI shows a different message
-      // for each. The extra read only fires on the error path.
-      const usedBy = await getCodeUsage(inviteCode).catch(() => null);
-      throw new AuthError(usedBy ? "invite_consumed" : "invite_invalid");
-    }
-
     const user: AuthUser = {
       id,
       email: null,
@@ -638,13 +611,6 @@ export async function loginOrRegisterByTelegram(params: {
         "[auth] failed to roll back telegram reservation — operator must DEL the key",
         telegramKey(telegramId),
         cleanupErr
-      );
-    }
-    if (consumed) {
-      console.error(
-        "[auth] saveUser failed after invite consume — invite burned",
-        id,
-        err
       );
     }
     throw err;

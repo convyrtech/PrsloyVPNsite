@@ -8,11 +8,8 @@ import { RevealOnView } from "@/components/ui/RevealOnView";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
 import { PaymentCheckout } from "@/components/payments/PaymentCheckout";
 import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
-import { InviteRequest } from "@/components/access/InviteRequest";
 import { AnimatedPrice } from "@/components/pricing/AnimatedPrice";
-import { useRiffle } from "@/components/pricing/useRiffle";
 import { getForcedState } from "@/lib/dev-state";
-import { PoolFullPanel } from "@/components/access/PoolFullPanel";
 import {
   type Period,
   PERIODS,
@@ -21,84 +18,17 @@ import {
   formatPeriodTotal,
 } from "@/lib/pricing";
 
-type CapacityState =
-  | { kind: "loading" }
-  | {
-      kind: "ready";
-      display: number;
-      target: number;
-      full: boolean;
-      expansionAtIso: string;
-      vipContactUrl: string;
-    };
-
 export function PricingPageClient({ locale }: { locale: string }) {
   const t = useTranslations("pricing_page");
   const tShared = useTranslations("pricing");
 
   const [period, setPeriod] = useState<Period>("1mo");
   const savePct = Math.round((1 - PRICE_BY_PERIOD[period] / PRICE_BY_PERIOD["1mo"]) * 100);
-  const [capacity, setCapacity] = useState<CapacityState>({ kind: "loading" });
   const [authed, setAuthed] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    let alive = true;
-    // Dev-only: force the capacity surface for a visual check (inert in prod).
-    const forced = getForcedState();
-    if (forced === "pool-full" || forced === "capacity-ready" || forced === "authed") {
-      const full = forced === "pool-full";
-      setCapacity({
-        kind: "ready",
-        display: full ? 300 : 248,
-        target: 300,
-        full,
-        expansionAtIso: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        vipContactUrl: "https://t.me/prsloy",
-      });
-      return;
-    }
-    if (forced === "capacity-loading") return; // hold the skeleton
-    (async () => {
-      try {
-        const res = await fetch("/api/access/capacity", { cache: "no-store" });
-        const data = (await res.json().catch(() => ({}))) as {
-          ok?: boolean;
-          display?: number;
-          target?: number;
-          full?: boolean;
-          expansionAtIso?: string;
-          vipContactUrl?: string;
-        };
-        if (!alive) return;
-        if (
-          typeof data.display === "number" &&
-          typeof data.target === "number"
-        ) {
-          setCapacity({
-            kind: "ready",
-            display: data.display,
-            target: data.target,
-            full: Boolean(data.full),
-            expansionAtIso:
-              data.expansionAtIso ??
-              new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-            vipContactUrl: data.vipContactUrl ?? "https://t.me/prsloy",
-          });
-        }
-      } catch {
-        // soft-fail: leaves the band in "loading" skeleton — the page
-        // still loads, payment still works, only the counter glyph is
-        // a placeholder. No need to surface the error to the user.
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  // Is the visitor signed in? A guest cannot pay (checkout needs an account,
-  // which needs an invite), so a guest leads with the invite request instead
-  // of dead pay buttons. Falsy (loading/guest) shows the guest path by default.
+  // Is the visitor signed in? Checkout needs an account, so a guest leads
+  // with the register CTA instead of dead pay buttons. Falsy (loading/guest)
+  // shows the guest path by default.
   useEffect(() => {
     let alive = true;
     // Dev-only: ?__state=authed shows the signed-in checkout instead of the guest path.
@@ -126,9 +56,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
   }, []);
 
   // "ЧТО ВНУТРИ" rows — trimmed to the four differentiators (own servers,
-  // clean addresses, no logs, unlimited traffic). The generic rows were
-  // dropped: "Доступ: По приглашениям" is now explained by the WHY block above,
-  // and "Поддержка" is covered by the utility nav. `featured` lifts the three
+  // clean addresses, no logs, unlimited traffic). `featured` lifts the three
   // strongest to text-display. (Key names predate the copy; values are truth.)
   const specs: Array<{ label: string; value: string; featured: boolean }> = [
     { label: tShared("feature_encryption"), value: tShared("feature_encryption_value"), featured: true },
@@ -165,159 +93,91 @@ export function PricingPageClient({ locale }: { locale: string }) {
           </header>
         </RevealOnView>
 
-        {/* PRICE / POOL-FULL — capacity state decides which surface to
-            render. When the counter is full, payment + invite request
-            disappear and the pool-full panel takes over (timer, notify
-            form, VIP escape). */}
-        {capacity.kind === "ready" && capacity.full ? (
-          <RevealOnView delay={0.1}>
-            <PoolFullPanel
-              expansionAtIso={capacity.expansionAtIso}
-              vipContactUrl={capacity.vipContactUrl}
-              copy={{
-                title: t("pool_full_title"),
-                body: t("pool_full_body"),
-                timerLabel: t("pool_full_timer_label"),
-                timerDays: t("pool_full_timer_days"),
-                timerHours: t("pool_full_timer_hours"),
-                timerMinutes: t("pool_full_timer_minutes"),
-                timerExpired: t("pool_full_timer_expired"),
-                formLabel: t("pool_full_form_label"),
-                formPlaceholder: t("pool_full_form_placeholder"),
-                formSubmit: t("pool_full_form_submit"),
-                formSending: t("pool_full_form_sending"),
-                formSent: t("pool_full_form_sent"),
-                formInvalid: t("pool_full_form_invalid"),
-                formGeneric: t("pool_full_form_generic"),
-                vipLabel: t("pool_full_vip_label"),
-                vipCta: t("pool_full_vip_cta"),
+        <RevealOnView delay={0.1}>
+          <section className="flex flex-col gap-xl">
+            <PeriodSwitcher
+              value={period}
+              onChange={setPeriod}
+              labels={{
+                "1mo": tShared("period_1m"),
+                "6mo": tShared("period_6m"),
+                "1yr": tShared("period_12m"),
               }}
             />
-          </RevealOnView>
-        ) : (
-          <>
-            <RevealOnView delay={0.1}>
-              <section className="flex flex-col gap-xl">
-                <PeriodSwitcher
-                  value={period}
-                  onChange={setPeriod}
-                  labels={{
-                    "1mo": tShared("period_1m"),
-                    "6mo": tShared("period_6m"),
-                    "1yr": tShared("period_12m"),
+
+            {/* $5 + 'в месяц' caption: instrument readout with unit beside,
+                baseline-aligned. Doto for the digits — the one moment per
+                screen (Nothing section 2.8 #5). */}
+            <div className="flex flex-col gap-sm">
+              <div className="flex items-baseline gap-sm flex-wrap">
+                {/* Digits in Doto (the one display moment) — riffle-decode on
+                    period change + slow ambient glow. Currency kept out of
+                    Doto (it lacks a ₽ glyph): ₽ in the body font, EN "$"
+                    as a static prefix inside the digit span. */}
+                <AnimatedPrice
+                  value={locale === "en" ? PRICE_BY_PERIOD[period] : getMonthlyPriceRub(period)}
+                  prefix={locale === "en" ? "$" : ""}
+                  className="font-display text-text-display leading-[0.85] tabular-nums"
+                  style={{
+                    fontSize: "clamp(96px, 19vw, 200px)",
+                    letterSpacing: "0.02em",
                   }}
                 />
+                {locale !== "en" && (
+                  <span
+                    className="font-body font-light text-text-display leading-[0.85]"
+                    style={{ fontSize: "clamp(56px, 11vw, 120px)" }}
+                  >
+                    ₽
+                  </span>
+                )}
+                <span className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary pb-lg">
+                  {t("monthly_unit")}
+                </span>
+              </div>
+              {period !== "1mo" && (
+                <p className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary">
+                  {t("total_label")} {formatPeriodTotal(period, locale)}
+                  <span className="text-accent"> · −{savePct}%</span>
+                </p>
+              )}
+            </div>
 
-                {/* $5 + 'в месяц' caption: instrument readout with unit beside,
-                    baseline-aligned. Doto for the digits — the one moment per
-                    screen (Nothing section 2.8 #5). */}
-                <div className="flex flex-col gap-sm">
-                  <div className="flex items-baseline gap-sm flex-wrap">
-                    {/* Digits in Doto (the one display moment) — riffle-decode on
-                        period change + slow ambient glow. Currency kept out of
-                        Doto (it lacks a ₽ glyph): ₽ in the body font, EN "$"
-                        as a static prefix inside the digit span. */}
-                    <AnimatedPrice
-                      value={locale === "en" ? PRICE_BY_PERIOD[period] : getMonthlyPriceRub(period)}
-                      prefix={locale === "en" ? "$" : ""}
-                      className="font-display text-text-display leading-[0.85] tabular-nums"
-                      style={{
-                        fontSize: "clamp(96px, 19vw, 200px)",
-                        letterSpacing: "0.02em",
-                      }}
-                    />
-                    {locale !== "en" && (
-                      <span
-                        className="font-body font-light text-text-display leading-[0.85]"
-                        style={{ fontSize: "clamp(56px, 11vw, 120px)" }}
-                      >
-                        ₽
-                      </span>
-                    )}
-                    <span className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary pb-lg">
-                      {t("monthly_unit")}
-                    </span>
-                  </div>
-                  {period !== "1mo" && (
-                    <p className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary">
-                      {t("total_label")} {formatPeriodTotal(period, locale)}
-                      <span className="text-accent"> · −{savePct}%</span>
-                    </p>
-                  )}
+            {/* Guest → register CTA (checkout needs an account).
+                Signed-in → pay. */}
+            {authed ? (
+              <PaymentCheckout period={period} locale={locale} />
+            ) : (
+              <div className="flex flex-col gap-md">
+                <p className="font-mono text-label uppercase tracking-[0.08em] text-text-secondary leading-[1.6]">
+                  {t("guest_flow")}
+                </p>
+                <Link
+                  href="/register"
+                  className="self-start bg-text-display text-black font-mono uppercase tracking-[0.08em]
+                             px-xl min-h-[48px] inline-flex items-center justify-center rounded-full text-label
+                             hover:opacity-90 active:scale-[0.98] transition duration-150 ease-out-nothing"
+                >
+                  [ {t("guest_register_cta")} ]
+                </Link>
+                <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
+                  <span className="text-text-disabled">{t("have_account")}</span>
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80 transition-opacity"
+                  >
+                    {t("login_to_pay")} →
+                  </Link>
                 </div>
+              </div>
+            )}
+          </section>
+        </RevealOnView>
 
-                {/* Scarcity at the decision point — how many of the 300 slots
-                    are taken, right under the price instead of buried below. */}
-                {capacity.kind === "ready" && (
-                  <CapacityCounter
-                    display={capacity.display}
-                    target={capacity.target}
-                    statusLabel={t("status_label")}
-                    takenLabel={t("status_taken")}
-                  />
-                )}
-
-                {/* Guest → lead with the invite request (no dead pay buttons,
-                    since checkout requires an account). Signed-in → pay. */}
-                {authed ? (
-                  <PaymentCheckout period={period} locale={locale} />
-                ) : (
-                  <div className="flex flex-col gap-md">
-                    <p className="font-mono text-label uppercase tracking-[0.08em] text-text-secondary leading-[1.6]">
-                      {t("guest_flow")}
-                    </p>
-                    <InviteRequest
-                      defaultOpen
-                      copy={{
-                        cta: t("invite_cta"),
-                        collapse: t("invite_collapse"),
-                        intro: t("invite_intro"),
-                        channelTg: t("invite_channel_tg"),
-                        channelTgHint: t("invite_channel_tg_hint"),
-                        channelTgButton: t("invite_channel_tg_button"),
-                        channelEmail: t("invite_channel_email"),
-                        channelEmailHint: t("invite_channel_email_hint"),
-                        emailPlaceholder: t("invite_email_placeholder"),
-                        emailSubmit: t("invite_email_submit"),
-                        emailSending: t("invite_email_sending"),
-                        emailSent: t("invite_email_sent"),
-                        emailInvalid: t("invite_email_invalid"),
-                        emailRateLimited: t("invite_email_rate_limited"),
-                        emailGeneric: t("invite_email_generic"),
-                      }}
-                    />
-                    {/* Already holding a code (from Telegram or a friend) but
-                        no account yet → register. Sits before the sign-in row,
-                        which is for returning users. */}
-                    <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
-                      <span className="text-text-disabled">{t("have_code")}</span>
-                      <Link
-                        href="/register"
-                        className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80 transition-opacity"
-                      >
-                        {t("register_with_code")} →
-                      </Link>
-                    </div>
-                    <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
-                      <span className="text-text-disabled">{t("have_account")}</span>
-                      <Link
-                        href="/login"
-                        className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80 transition-opacity"
-                      >
-                        {t("login_to_pay")} →
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </section>
-            </RevealOnView>
-          </>
-        )}
-
-        {/* WHY INVITE-ONLY — the rationale (deliberate headroom, not scarcity):
-            answers the buyer's unspoken "why am I gated, and how is that in my
-            interest" right at the decision point. Followed by the trimmed
-            data-sheet of what's actually included. */}
+        {/* CAPACITY HEADROOM — the rationale (deliberate headroom keeps speed
+            and clean addresses): answers the buyer's unspoken "will this stay
+            fast and clean" right at the decision point. Followed by the
+            trimmed data-sheet of what's actually included. */}
         <RevealOnView>
           <section className="flex flex-col gap-2xl">
             <div className="flex flex-col">
@@ -371,31 +231,6 @@ export function PricingPageClient({ locale }: { locale: string }) {
         </RevealOnView>
       </div>
     </main>
-  );
-}
-
-// Scarcity counter — the taken-slots number riffle-decodes in once capacity
-// loads (it has no SSR value, so onMount decode is clean, no flash).
-function CapacityCounter({
-  display,
-  target,
-  statusLabel,
-  takenLabel,
-}: {
-  display: number;
-  target: number;
-  statusLabel: string;
-  takenLabel: string;
-}) {
-  const shown = useRiffle(display, { onMount: true });
-  return (
-    <div className="flex items-center gap-md font-mono text-label uppercase tracking-[0.16em]">
-      <span className="text-text-disabled">{statusLabel}</span>
-      <span className="flex-1 h-px bg-border-visible/40" />
-      <span className="text-text-display tabular-nums">
-        {shown}/{target} {takenLabel}
-      </span>
-    </div>
   );
 }
 

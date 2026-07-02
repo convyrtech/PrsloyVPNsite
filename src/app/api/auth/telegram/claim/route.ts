@@ -8,7 +8,6 @@ import {
 } from "@/lib/auth";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { isTelegramConfigured, tryClaimNonce } from "@/lib/telegram-auth";
-import { MAX_INVITE_CODE_LENGTH } from "@/lib/access-pool";
 import { sanitizeKeyPart, track } from "@/lib/analytics";
 
 export const runtime = "nodejs";
@@ -22,7 +21,6 @@ const NONCE_PATTERN = /^[A-Za-z0-9_-]+$/;
 
 type ClaimBody = {
   nonce?: unknown;
-  inviteCode?: unknown;
   utmSource?: unknown;
 };
 
@@ -66,16 +64,6 @@ export async function POST(req: Request) {
     );
   }
 
-  const rawInvite =
-    typeof body.inviteCode === "string" ? body.inviteCode.trim() : "";
-  if (rawInvite.length > MAX_INVITE_CODE_LENGTH) {
-    return NextResponse.json(
-      { ok: false, error: "invite_invalid" },
-      { status: 400 }
-    );
-  }
-  const inviteCode = rawInvite || undefined;
-
   const rawUtm = typeof body.utmSource === "string" ? body.utmSource : "";
   const utmSource = rawUtm ? sanitizeKeyPart(rawUtm) || undefined : undefined;
 
@@ -100,7 +88,6 @@ export async function POST(req: Request) {
     const { user, isNew } = await loginOrRegisterByTelegram({
       telegramId: outcome.telegramId,
       telegramUsername: outcome.telegramUsername,
-      inviteCode,
     });
     const session = await createSession(user.id);
 
@@ -128,16 +115,7 @@ export async function POST(req: Request) {
       );
     }
     if (err instanceof AuthError) {
-      const status =
-        err.code === "invite_required"
-          ? 400
-          : err.code === "telegram_id_taken"
-            ? 409
-            : err.code === "invite_consumed"
-              ? 409
-              : err.code === "invite_invalid"
-                ? 403
-                : 400;
+      const status = err.code === "telegram_id_taken" ? 409 : 400;
       return NextResponse.json({ ok: false, error: err.code }, { status });
     }
     console.warn("[auth] telegram claim failed", err);

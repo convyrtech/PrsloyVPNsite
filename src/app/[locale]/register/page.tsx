@@ -64,17 +64,6 @@ export default async function RegisterPage({
               </div>
             </RevealOnView>
 
-            <RevealOnView delay={0.16}>
-              <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
-                <span className="text-text-disabled">{t("no_code")}</span>
-                <Link
-                  href="/pricing"
-                  className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80"
-                >
-                  {t("no_code_link")}
-                </Link>
-              </div>
-            </RevealOnView>
           </div>
 
           {/* FORM SIDE */}
@@ -116,11 +105,6 @@ export default async function RegisterPage({
                   secretNotConfigured: t("secret_not_configured"),
                   rateLimited: t("rate_limited"),
                   generic: t("generic_error"),
-                  inviteLabel: t("invite_label"),
-                  invitePlaceholder: t("invite_placeholder"),
-                  inviteRequired: t("invite_required"),
-                  inviteInvalid: t("invite_invalid"),
-                  inviteConsumed: t("invite_consumed"),
                 }}
               />
 
@@ -138,11 +122,6 @@ export default async function RegisterPage({
                       awaiting: t("tg_awaiting"),
                       awaitingHint: t("tg_awaiting_hint"),
                       reopen: t("tg_reopen"),
-                      inviteLabel: t("invite_label"),
-                      invitePlaceholder: t("invite_placeholder"),
-                      inviteRequired: t("invite_required"),
-                      inviteInvalid: t("invite_invalid"),
-                      inviteConsumed: t("invite_consumed"),
                       expired: t("tg_expired"),
                       consumed: t("tg_consumed"),
                       notConfigured: t("tg_not_configured"),

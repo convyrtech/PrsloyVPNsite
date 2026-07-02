@@ -26,11 +26,9 @@ import {
   loginOrRegisterByTelegram,
   loginUser,
   registerUser,
-  registerUserWithInvite,
   setAccessBlocked,
   verifyEmailToken,
 } from "@/lib/auth";
-import { addInviteCodes, listAvailableCodes } from "@/lib/access-pool";
 
 const redis = installFakeRedis();
 
@@ -61,77 +59,6 @@ describe("registerUser", () => {
     await expect(registerUser("ok@example.com", "short")).rejects.toMatchObject({
       code: "invalid_password",
     });
-  });
-});
-
-describe("registerUserWithInvite", () => {
-  it("creates an account when a valid code is supplied", async () => {
-    await addInviteCodes(["email-invite-1"]);
-    const user = await registerUserWithInvite(
-      "new@example.com",
-      "password123",
-      "email-invite-1"
-    );
-    expect(user.email).toBe("new@example.com");
-    expect(user.accessStatus).toBe("pending");
-    expect(await listAvailableCodes()).not.toContain("email-invite-1");
-  });
-
-  it("rejects when no invite code is supplied", async () => {
-    await expect(
-      registerUserWithInvite("no-code@example.com", "password123", "")
-    ).rejects.toMatchObject({ code: "invite_required" });
-  });
-
-  it("rejects an unknown code with invite_invalid", async () => {
-    await expect(
-      registerUserWithInvite("ghost@example.com", "password123", "never-issued")
-    ).rejects.toMatchObject({ code: "invite_invalid" });
-  });
-
-  it("rejects a previously-consumed code with invite_consumed", async () => {
-    await addInviteCodes(["one-shot-email"]);
-    await registerUserWithInvite(
-      "first@example.com",
-      "password123",
-      "one-shot-email"
-    );
-    await expect(
-      registerUserWithInvite(
-        "second@example.com",
-        "password123",
-        "one-shot-email"
-      )
-    ).rejects.toMatchObject({ code: "invite_consumed" });
-  });
-
-  it("rolls back the email reservation when the code is bad", async () => {
-    await expect(
-      registerUserWithInvite("rollback@example.com", "password123", "bad-code")
-    ).rejects.toMatchObject({ code: "invite_invalid" });
-    // Email is free to register again with a valid code.
-    await addInviteCodes(["rollback-ok"]);
-    const ok = await registerUserWithInvite(
-      "rollback@example.com",
-      "password123",
-      "rollback-ok"
-    );
-    expect(ok.email).toBe("rollback@example.com");
-  });
-
-  it("rejects duplicate email even with a valid code (no double registration)", async () => {
-    await addInviteCodes(["first-code", "second-code"]);
-    await registerUserWithInvite(
-      "dup@example.com",
-      "password123",
-      "first-code"
-    );
-    await expect(
-      registerUserWithInvite("dup@example.com", "password123", "second-code")
-    ).rejects.toMatchObject({ code: "email_exists" });
-    // The second code stays in the pool — duplicate-email check happens
-    // before consume, so the code wasn't burned.
-    expect(await listAvailableCodes()).toContain("second-code");
   });
 });
 
@@ -333,11 +260,9 @@ describe("deleteUser", () => {
   });
 
   it("clears the Telegram index alongside the user record", async () => {
-    await addInviteCodes(["tg-del-1"]);
     const { user } = await loginOrRegisterByTelegram({
       telegramId: "1001",
       telegramUsername: "deleteme",
-      inviteCode: "tg-del-1",
     });
 
     await deleteUser(user.id);
@@ -345,24 +270,19 @@ describe("deleteUser", () => {
     expect(await getUserByTelegramId("1001")).toBeNull();
     // The Telegram id is now free to claim again — covers the "operator
     // wipes a test account and the user re-registers" path.
-    await addInviteCodes(["tg-del-2"]);
     const reborn = await loginOrRegisterByTelegram({
       telegramId: "1001",
       telegramUsername: "deleteme2",
-      inviteCode: "tg-del-2",
     });
     expect(reborn.isNew).toBe(true);
   });
 });
 
 describe("loginOrRegisterByTelegram", () => {
-  it("registers a new Telegram user when an unused code is supplied", async () => {
-    await addInviteCodes(["new-tg-1"]);
-
+  it("registers a new Telegram user immediately, with no invite gate", async () => {
     const { user, isNew } = await loginOrRegisterByTelegram({
       telegramId: "42",
       telegramUsername: "alice",
-      inviteCode: "new-tg-1",
     });
 
     expect(isNew).toBe(true);
@@ -370,15 +290,12 @@ describe("loginOrRegisterByTelegram", () => {
     expect(user.telegramUsername).toBe("alice");
     expect(user.email).toBeNull();
     expect(user.accessStatus).toBe("pending");
-    expect(await listAvailableCodes()).toEqual([]);
   });
 
-  it("logs an existing Telegram user in without an invite code", async () => {
-    await addInviteCodes(["new-tg-2"]);
+  it("logs an existing Telegram user in on the second call", async () => {
     const first = await loginOrRegisterByTelegram({
       telegramId: "43",
       telegramUsername: "bob",
-      inviteCode: "new-tg-2",
     });
 
     const second = await loginOrRegisterByTelegram({
@@ -391,11 +308,9 @@ describe("loginOrRegisterByTelegram", () => {
   });
 
   it("syncs the username when Telegram reports a new one", async () => {
-    await addInviteCodes(["new-tg-3"]);
     await loginOrRegisterByTelegram({
       telegramId: "44",
       telegramUsername: "old_name",
-      inviteCode: "new-tg-3",
     });
 
     const updated = await loginOrRegisterByTelegram({
@@ -406,67 +321,15 @@ describe("loginOrRegisterByTelegram", () => {
     expect(updated.user.telegramUsername).toBe("new_name");
   });
 
-  it("rejects a returning-user shape that is actually new with no code", async () => {
-    await expect(
-      loginOrRegisterByTelegram({
-        telegramId: "999",
-        telegramUsername: null,
-      })
-    ).rejects.toMatchObject({ code: "invite_required" });
-  });
-
-  it("rejects a code that is not in the pool", async () => {
-    await expect(
-      loginOrRegisterByTelegram({
-        telegramId: "888",
-        telegramUsername: null,
-        inviteCode: "never-issued",
-      })
-    ).rejects.toMatchObject({ code: "invite_invalid" });
-  });
-
-  it("rejects a previously-consumed code with invite_consumed (not invite_invalid)", async () => {
-    await addInviteCodes(["once-only"]);
-    // First user burns the code.
-    await loginOrRegisterByTelegram({
-      telegramId: "first",
-      telegramUsername: null,
-      inviteCode: "once-only",
-    });
-    // Second user with the same code — pool SREM returns 0, used-marker
-    // exists, so the error must be invite_consumed (not invite_invalid).
-    await expect(
-      loginOrRegisterByTelegram({
-        telegramId: "second",
-        telegramUsername: null,
-        inviteCode: "once-only",
-      })
-    ).rejects.toMatchObject({ code: "invite_consumed" });
-  });
-
-  it("rejects malformed invite codes via translated error", async () => {
-    await expect(
-      loginOrRegisterByTelegram({
-        telegramId: "887",
-        telegramUsername: null,
-        inviteCode: "has space",
-      })
-    ).rejects.toMatchObject({ code: "invite_invalid" });
-  });
-
   it("two parallel registrations from the same Telegram id: exactly one wins", async () => {
-    await addInviteCodes(["race-1", "race-2"]);
-
     const [a, b] = await Promise.allSettled([
       loginOrRegisterByTelegram({
         telegramId: "555",
         telegramUsername: "racer-a",
-        inviteCode: "race-1",
       }),
       loginOrRegisterByTelegram({
         telegramId: "555",
         telegramUsername: "racer-b",
-        inviteCode: "race-2",
       }),
     ]);
 
@@ -479,22 +342,31 @@ describe("loginOrRegisterByTelegram", () => {
     ).toMatchObject({ code: "telegram_id_taken" });
   });
 
-  it("rolls back the Telegram reservation when invite consume fails", async () => {
-    // No codes in pool — every register attempt fails on consume.
-    await expect(
-      loginOrRegisterByTelegram({
-        telegramId: "404",
-        telegramUsername: "rollback",
-        inviteCode: "never-existed",
-      })
-    ).rejects.toMatchObject({ code: "invite_invalid" });
+  it("rolls back the Telegram reservation when saveUser fails", async () => {
+    // Pass-through wrapper: fake-redis handles every command except the
+    // user-record SET, which we force to fail to simulate a saveUser error.
+    const original = globalThis.fetch;
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async (url, init) => {
+        const body = typeof init?.body === "string" ? init.body : "";
+        const cmd = JSON.parse(body || "[]") as (string | number)[];
+        if (String(cmd[0]).toUpperCase() === "SET" && String(cmd[1]).startsWith("auth:user:")) {
+          throw new Error("simulated saveUser failure");
+        }
+        return original(url, init);
+      });
 
-    // Reservation rolled back — second attempt with valid code must succeed.
-    await addInviteCodes(["rollback-ok"]);
+    await expect(
+      loginOrRegisterByTelegram({ telegramId: "404", telegramUsername: "rollback" })
+    ).rejects.toThrow("simulated saveUser failure");
+
+    fetchSpy.mockRestore();
+
+    // Reservation rolled back — a retry for the same Telegram id must succeed.
     const ok = await loginOrRegisterByTelegram({
       telegramId: "404",
       telegramUsername: "rollback",
-      inviteCode: "rollback-ok",
     });
     expect(ok.isNew).toBe(true);
   });
@@ -506,11 +378,9 @@ describe("getUserByTelegramId", () => {
   });
 
   it("returns the user for a known Telegram id", async () => {
-    await addInviteCodes(["tg-lookup-1"]);
     await loginOrRegisterByTelegram({
       telegramId: "777",
       telegramUsername: "lookup",
-      inviteCode: "tg-lookup-1",
     });
 
     const found = await getUserByTelegramId("777");
@@ -528,11 +398,9 @@ describe("grantAccess by identifier", () => {
   });
 
   it("resolves a numeric Telegram id", async () => {
-    await addInviteCodes(["grant-tg-1"]);
     await loginOrRegisterByTelegram({
       telegramId: "12345",
       telegramUsername: "grantme",
-      inviteCode: "grant-tg-1",
     });
 
     const granted = await grantAccess("12345", {
@@ -543,11 +411,9 @@ describe("grantAccess by identifier", () => {
   });
 
   it("resolves an @username (case-insensitive)", async () => {
-    await addInviteCodes(["grant-tg-2"]);
     await loginOrRegisterByTelegram({
       telegramId: "23456",
       telegramUsername: "GrantMeByName",
-      inviteCode: "grant-tg-2",
     });
 
     const granted = await grantAccess("@grantmebyname", {

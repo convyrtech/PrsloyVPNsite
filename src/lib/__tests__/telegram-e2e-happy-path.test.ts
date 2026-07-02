@@ -22,11 +22,9 @@ const SAVED_ENV = {
   TELEGRAM_BOT_USERNAME: process.env.TELEGRAM_BOT_USERNAME,
   TELEGRAM_WEBHOOK_SECRET: process.env.TELEGRAM_WEBHOOK_SECRET,
   AUTH_SECRET: process.env.AUTH_SECRET,
-  ADMIN_SECRET: process.env.ADMIN_SECRET,
 };
 
 const WEBHOOK_SECRET = "smoke-webhook-secret-32-bytes-minimum-floor";
-const ADMIN_SECRET = "smoke-admin-secret-32-bytes-minimum-floor";
 
 beforeEach(() => {
   redis.reset();
@@ -34,7 +32,6 @@ beforeEach(() => {
   process.env.TELEGRAM_BOT_USERNAME = "prsloy_dev_bot";
   process.env.TELEGRAM_WEBHOOK_SECRET = WEBHOOK_SECRET;
   process.env.AUTH_SECRET = "smoke-auth-secret-32-bytes-minimum-floor-too";
-  process.env.ADMIN_SECRET = ADMIN_SECRET;
 });
 
 afterEach(() => {
@@ -42,7 +39,6 @@ afterEach(() => {
   process.env.TELEGRAM_BOT_USERNAME = SAVED_ENV.TELEGRAM_BOT_USERNAME;
   process.env.TELEGRAM_WEBHOOK_SECRET = SAVED_ENV.TELEGRAM_WEBHOOK_SECRET;
   process.env.AUTH_SECRET = SAVED_ENV.AUTH_SECRET;
-  process.env.ADMIN_SECRET = SAVED_ENV.ADMIN_SECRET;
 });
 
 function makeRequest(url: string, init?: RequestInit): Request {
@@ -60,26 +56,12 @@ function makeRequest(url: string, init?: RequestInit): Request {
 // Next.js handles transparently in serverless functions anyway.
 
 describe("Telegram auth e2e happy path", () => {
-  it("seed → /init → webhook → /claim → session cookie set", async () => {
-    const adminPool = await import("@/app/api/admin/access-pool/add/route");
+  it("/init → webhook → /claim → session cookie set", async () => {
     const init = await import("@/app/api/auth/telegram/init/route");
     const webhook = await import("@/app/api/auth/telegram/webhook/route");
     const claim = await import("@/app/api/auth/telegram/claim/route");
 
-    // 1. Operator seeds an invite code through the admin endpoint.
-    const seedRes = await adminPool.POST(
-      makeRequest("http://local.test/api/admin/access-pool/add", {
-        headers: {
-          Authorization: `Bearer ${ADMIN_SECRET}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ codes: ["e2e-001"] }),
-      })
-    );
-    expect(seedRes.status).toBe(200);
-    expect(await seedRes.json()).toEqual({ ok: true, added: 1, skipped: 0 });
-
-    // 2. Browser asks for a nonce + deep-link.
+    // 1. Browser asks for a nonce + deep-link.
     const initRes = await init.POST(
       makeRequest("http://local.test/api/auth/telegram/init")
     );
@@ -97,7 +79,7 @@ describe("Telegram auth e2e happy path", () => {
     );
     expect(initBody.expiresInSeconds).toBe(5 * 60);
 
-    // 3. The user taps START in Telegram → bot fires our webhook with the
+    // 2. The user taps START in Telegram → bot fires our webhook with the
     //    Bot API update shape. We replay exactly that.
     const webhookRes = await webhook.POST(
       makeRequest("http://local.test/api/auth/telegram/webhook", {
@@ -126,7 +108,7 @@ describe("Telegram auth e2e happy path", () => {
     );
     expect(webhookRes.status).toBe(200);
 
-    // 3b. The bot replied with confirm/deny buttons; /start does NOT auto-
+    // 2b. The bot replied with confirm/deny buttons; /start does NOT auto-
     //     confirm. The user presses "Подтвердить вход" → callback_query.
     const confirmRes = await webhook.POST(
       makeRequest("http://local.test/api/auth/telegram/webhook", {
@@ -147,12 +129,12 @@ describe("Telegram auth e2e happy path", () => {
     );
     expect(confirmRes.status).toBe(200);
 
-    // 4. Browser polls /claim with the nonce + the same code the user
-    //    entered in the invite field on /register.
+    // 3. Browser polls /claim with the nonce — no invite code, registration
+    //    is open.
     const claimRes = await claim.POST(
       makeRequest("http://local.test/api/auth/telegram/claim", {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nonce: initBody.nonce, inviteCode: "e2e-001" }),
+        body: JSON.stringify({ nonce: initBody.nonce }),
       })
     );
     expect(claimRes.status).toBe(200);
@@ -174,47 +156,21 @@ describe("Telegram auth e2e happy path", () => {
     expect(claimBody.user.email).toBeNull();
     expect(claimBody.user.accessStatus).toBe("pending");
 
-    // 5. Session cookie was set on the response.
+    // 4. Session cookie was set on the response.
     const setCookie = claimRes.headers.get("set-cookie");
     expect(setCookie).toBeTruthy();
     expect(setCookie).toMatch(/^prsloy_session=/);
     expect(setCookie).toMatch(/HttpOnly/i);
     expect(setCookie).toMatch(/SameSite=lax/i);
     expect(setCookie).toMatch(/Path=\//);
-
-    // 6. The invite code is now burned: trying the same code with a
-    //    different Telegram user produces invite_consumed (not
-    //    invite_invalid — the differentiation matters for UX copy).
-    const stealRes = await claim.POST(
-      makeRequest("http://local.test/api/auth/telegram/claim", {
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nonce: "this-nonce-was-never-minted-but-tests-error-path",
-          inviteCode: "e2e-001",
-        }),
-      })
-    );
-    // Different nonce → nonce_expired (the nonce itself is the entry
-    // point; we never get to the invite check).
-    expect(stealRes.status).toBe(410);
   });
 
-  it("returning Telegram user does not need an invite code on second login", async () => {
-    const adminPool = await import("@/app/api/admin/access-pool/add/route");
+  it("returning Telegram user gets signed in again on a second login", async () => {
     const init = await import("@/app/api/auth/telegram/init/route");
     const webhook = await import("@/app/api/auth/telegram/webhook/route");
     const claim = await import("@/app/api/auth/telegram/claim/route");
 
     // First-time registration.
-    await adminPool.POST(
-      makeRequest("http://local.test/", {
-        headers: {
-          Authorization: `Bearer ${ADMIN_SECRET}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ codes: ["e2e-002"] }),
-      })
-    );
     const initOne = await init.POST(makeRequest("http://local.test/"));
     const noneOne = (await initOne.json() as { nonce: string }).nonce;
     await webhook.POST(
@@ -253,12 +209,12 @@ describe("Telegram auth e2e happy path", () => {
     const firstClaim = await claim.POST(
       makeRequest("http://local.test/", {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nonce: noneOne, inviteCode: "e2e-002" }),
+        body: JSON.stringify({ nonce: noneOne }),
       })
     );
     expect(firstClaim.status).toBe(200);
 
-    // Second login — same Telegram user, fresh nonce, NO invite code.
+    // Second login — same Telegram user, fresh nonce.
     const initTwo = await init.POST(makeRequest("http://local.test/"));
     const noneTwo = (await initTwo.json() as { nonce: string }).nonce;
     await webhook.POST(
@@ -320,7 +276,7 @@ describe("Telegram auth e2e happy path", () => {
     const pendingRes = await claim.POST(
       makeRequest("http://local.test/", {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nonce, inviteCode: "doesnt-matter-yet" }),
+        body: JSON.stringify({ nonce }),
       })
     );
     expect(pendingRes.status).toBe(202);
@@ -394,7 +350,7 @@ describe("Telegram auth e2e happy path", () => {
     const afterStart = await claim.POST(
       makeRequest("http://local.test/", {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nonce, inviteCode: "whatever" }),
+        body: JSON.stringify({ nonce }),
       })
     );
     expect(afterStart.status).toBe(202);
@@ -420,7 +376,7 @@ describe("Telegram auth e2e happy path", () => {
     const afterDeny = await claim.POST(
       makeRequest("http://local.test/", {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nonce, inviteCode: "whatever" }),
+        body: JSON.stringify({ nonce }),
       })
     );
     expect(afterDeny.status).toBe(202);
