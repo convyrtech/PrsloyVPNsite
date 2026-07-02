@@ -25,16 +25,20 @@ export function PricingPageClient({ locale }: { locale: string }) {
   const [period, setPeriod] = useState<Period>("1mo");
   const savePct = Math.round((1 - PRICE_BY_PERIOD[period] / PRICE_BY_PERIOD["1mo"]) * 100);
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [emailMissing, setEmailMissing] = useState(false);
 
   // Is the visitor signed in? Checkout needs an account, so a guest leads
   // with the register CTA instead of dead pay buttons. Falsy (loading/guest)
-  // shows the guest path by default.
+  // shows the guest path by default. Telegram-only accounts have no email,
+  // which the checkout needs for the payment gate — surface that too.
   useEffect(() => {
     let alive = true;
-    // Dev-only: ?__state=authed shows the signed-in checkout instead of the guest path.
+    // Dev-only: ?__state=authed shows the signed-in checkout instead of the
+    // guest path; ?__state=authed-noemail additionally forces the email-link step.
     const forced = getForcedState();
-    if (forced === "authed") {
+    if (forced === "authed" || forced === "authed-noemail") {
       setAuthed(true);
+      setEmailMissing(forced === "authed-noemail");
       return;
     }
     (async () => {
@@ -42,10 +46,11 @@ export function PricingPageClient({ locale }: { locale: string }) {
         const res = await fetch("/api/auth/me", { cache: "no-store" });
         const data = (await res.json().catch(() => ({}))) as {
           ok?: boolean;
-          user?: unknown | null;
+          user?: { email?: string | null } | null;
         };
         if (!alive) return;
         setAuthed(Boolean(data.user));
+        setEmailMissing(Boolean(data.user) && !data.user?.email);
       } catch {
         if (alive) setAuthed(false);
       }
@@ -146,7 +151,7 @@ export function PricingPageClient({ locale }: { locale: string }) {
             {/* Guest → register CTA (checkout needs an account).
                 Signed-in → pay. */}
             {authed ? (
-              <PaymentCheckout period={period} locale={locale} />
+              <PaymentCheckout period={period} locale={locale} emailMissing={emailMissing} />
             ) : (
               <div className="flex flex-col gap-md">
                 <p className="font-mono text-label uppercase tracking-[0.08em] text-text-secondary leading-[1.6]">

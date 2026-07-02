@@ -9,34 +9,18 @@ import {
   sendTelegramMessage,
   validateWebhookSecret,
 } from "@/lib/telegram-auth";
-import { generateInviteCode } from "@/lib/access-pool";
-import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
-
-// Bot's per-user /invite rate limit. Default 5/day during the seed window
-// (M1-2). Tighten via env later to make codes scarce ("invite-only" wedge
-// kicks in once the funnel is primed).
-const INVITE_LIMIT_PER_DAY =
-  Number(process.env.TELEGRAM_INVITE_LIMIT_PER_DAY) || 5;
-const INVITE_WINDOW_SECONDS = 86400;
-
-function getSiteUrl(req: Request): string {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() || new URL(req.url).origin
-  ).replace(/\/$/, "");
-}
 
 // Telegram delivers updates via setWebhook to this URL. The endpoint is
 // gated by the X-Telegram-Bot-Api-Secret-Token header set at setWebhook
 // time. Without configuration the route is indistinguishable from a
 // missing endpoint, so attackers cannot probe.
 //
-// Three command shapes are recognised (any other text is silently ignored,
+// Two command shapes are recognised (any other text is silently ignored,
 // always returning 200 so Telegram doesn't retry):
 //   /start <nonce>   → confirm the auth nonce (existing flow)
-//   /start           → welcome message pointing at /invite
-//   /invite          → generate a fresh code, DM with magic-link
+//   /start           → welcome message
 export async function POST(req: Request) {
   if (!isTelegramConfigured()) {
     return NextResponse.json({ ok: false, error: "not_found" }, { status: 404 });
@@ -113,8 +97,6 @@ export async function POST(req: Request) {
       await sendTelegramMessage(parsed.chatId, WELCOME_TEXT, {
         parseMode: "HTML",
       });
-    } else if (parsed.kind === "invite_request") {
-      await handleInviteRequest(req, parsed.telegramId, parsed.chatId);
     }
   } catch (err) {
     console.warn("[auth] telegram webhook handler failed", parsed.kind, err);
@@ -125,51 +107,9 @@ export async function POST(req: Request) {
   return NextResponse.json({ ok: true });
 }
 
-async function handleInviteRequest(
-  req: Request,
-  telegramId: string,
-  chatId: string
-): Promise<void> {
-  const limit = await rateLimit(
-    "tg-invite",
-    telegramId,
-    INVITE_LIMIT_PER_DAY,
-    INVITE_WINDOW_SECONDS
-  );
-  if (!limit.ok) {
-    const hours = Math.ceil(limit.retryAfter / 3600);
-    await sendTelegramMessage(
-      chatId,
-      formatRateLimitedMessage(INVITE_LIMIT_PER_DAY, hours),
-      { parseMode: "HTML" }
-    );
-    return;
-  }
+const WELCOME_TEXT = `<b>PRSLOY</b>
 
-  const code = await generateInviteCode();
-  const siteUrl = getSiteUrl(req);
-  // The bot is Russian-facing; build the localized URL directly so the user
-  // lands on /ru/register (localePrefix is "always" with an EN default, so a
-  // bare /register would redirect a Russian invitee to the English page).
-  const registerUrl = `${siteUrl}/ru/register?code=${encodeURIComponent(code)}`;
-
-  await sendTelegramMessage(chatId, formatInviteMessage(code), {
-    parseMode: "HTML",
-    replyMarkup: {
-      inline_keyboard: [
-        [{ text: "ЗАРЕГИСТРИРОВАТЬСЯ →", url: registerUrl }],
-      ],
-    },
-  });
-}
-
-const WELCOME_TEXT = `<b>PRSLOY · ЗАКРЫТАЯ БЕТА</b>
-
-Чтобы получить место — отправь команду:
-
-<code>/invite</code>
-
-Подробнее: prsloy.online`;
+Этот бот нужен для входа в аккаунт. На сайте prsloy.online нажми «Войти через Telegram» — бот пришлёт кнопку подтверждения.`;
 
 const SIGNED_IN_TEXT = `<b>✓ ВХОД ПОДТВЕРЖДЁН</b>
 
@@ -186,28 +126,3 @@ const CONFIRM_PROMPT_TEXT = `<b>ПОДТВЕРДИ ВХОД В PRSLOY</b>
 const DENIED_TEXT = `<b>ВХОД ОТКЛОНЁН</b>
 
 Запрос на вход отклонён. Если это был не ты — всё в порядке, делать ничего не нужно.`;
-
-function formatInviteMessage(code: string): string {
-  return `<b>ТВОЁ ПРИГЛАШЕНИЕ В PRSLOY</b>
-
-<code>${code}</code>
-
-Код активен 24 часа. Жми кнопку ниже чтобы продолжить.`;
-}
-
-function formatRateLimitedMessage(limit: number, hours: number): string {
-  return `<b>ЛИМИТ ПРИГЛАШЕНИЙ ИСЧЕРПАН</b>
-
-В сутки можно получить ${limit} ${ruPlural(limit, "приглашение", "приглашения", "приглашений")}.
-Попробуй через ${hours} ${ruPlural(hours, "час", "часа", "часов")}.`;
-}
-
-// Tiny i18n helper — Telegram messages need correct Russian plurals
-// without dragging next-intl into a non-page surface.
-function ruPlural(n: number, one: string, few: string, many: string): string {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return one;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
-  return many;
-}

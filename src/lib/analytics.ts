@@ -38,7 +38,10 @@ export type AnalyticsEvent =
       amountRub: number;
       utmSource?: string;
     }
-  | { name: "key_issued"; userId: string };
+  | { name: "key_issued"; userId: string }
+  // Auto-issue failed after a confirmed payment — every occurrence is a
+  // paid buyer without a key until the operator recovers the order.
+  | { name: "issue_failed"; orderId: string };
 
 export type AnalyticsEnv = "prod" | "preview" | "dev";
 

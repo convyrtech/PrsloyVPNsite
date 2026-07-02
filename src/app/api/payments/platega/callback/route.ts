@@ -11,6 +11,11 @@ import {
 import { track } from "@/lib/analytics";
 
 export const runtime = "nodejs";
+// Auto-issue runs synchronously inside this handler (worst case ~21s: two
+// 10s proxy attempts + retry delay). Without headroom the platform can kill
+// the invocation AFTER confirmedAt is persisted but BEFORE the key is
+// issued — a paid order with no key and no log line.
+export const maxDuration = 30;
 
 type CallbackBody = {
   id?: unknown;

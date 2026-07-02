@@ -48,11 +48,6 @@ done
 check "/ru/admin/grant" 404
 
 # public JSON read APIs (guest)
-if curl -sS -A "$UA" "$BASE/api/access/capacity" | grep -q '"ok"'; then
-  echo "OK    /api/access/capacity"
-else
-  echo "FAIL  /api/access/capacity"; FAIL=1
-fi
 if curl -sS -A "$UA" "$BASE/api/auth/me" | grep -q '"user":null'; then
   echo "OK    /api/auth/me (guest)"
 else

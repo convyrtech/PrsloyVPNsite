@@ -19,9 +19,11 @@ import {
   destroySession,
   findUserByIdentifier,
   getCurrentUser,
+  getUserByEmail,
   getUserByTelegramId,
   grantAccess,
   issueVerificationToken,
+  linkEmail,
   listUsers,
   loginOrRegisterByTelegram,
   loginUser,
@@ -58,6 +60,63 @@ describe("registerUser", () => {
     });
     await expect(registerUser("ok@example.com", "short")).rejects.toMatchObject({
       code: "invalid_password",
+    });
+  });
+});
+
+describe("linkEmail", () => {
+  it("links an email to a Telegram-created user, leaving it unverified", async () => {
+    const { user } = await loginOrRegisterByTelegram({
+      telegramId: "9001",
+      telegramUsername: "linkme",
+    });
+
+    const linked = await linkEmail(user.id, "linkme@example.com");
+
+    expect(linked.email).toBe("linkme@example.com");
+    expect(linked.emailVerified).toBe(false);
+
+    const found = await getUserByEmail("linkme@example.com");
+    expect(found?.id).toBe(user.id);
+  });
+
+  it("rejects an invalid email", async () => {
+    const { user } = await loginOrRegisterByTelegram({
+      telegramId: "9002",
+      telegramUsername: "badmail",
+    });
+
+    await expect(linkEmail(user.id, "not-an-email")).rejects.toMatchObject({
+      code: "invalid_email",
+    });
+  });
+
+  it("rejects an email already used by another account, leaving that account's mapping intact", async () => {
+    const owner = await registerUser("owner@example.com", "password123");
+    const { user } = await loginOrRegisterByTelegram({
+      telegramId: "9003",
+      telegramUsername: "claimer",
+    });
+
+    await expect(linkEmail(user.id, "owner@example.com")).rejects.toMatchObject({
+      code: "email_exists",
+    });
+
+    const found = await getUserByEmail("owner@example.com");
+    expect(found?.id).toBe(owner.id);
+  });
+
+  it("rejects linking when the account already has an email", async () => {
+    const user = await registerUser("already@example.com", "password123");
+
+    await expect(linkEmail(user.id, "new@example.com")).rejects.toMatchObject({
+      code: "email_already_set",
+    });
+  });
+
+  it("rejects an unknown user id", async () => {
+    await expect(linkEmail("ghost-id", "someone@example.com")).rejects.toMatchObject({
+      code: "user_not_found",
     });
   });
 });

@@ -4,9 +4,11 @@ import { findUserByIdentifier, getAuthSetupErrorCode } from "@/lib/auth";
 import {
   getLatestPaymentOrder,
   getPaymentSetupErrorCode,
+  issueKeyForOrder,
   PaymentError,
   updatePaymentByTransaction,
 } from "@/lib/payments";
+import { isMarzneshinProxyConfigured } from "@/lib/marzneshin-proxy";
 import { writeAuditEntry } from "@/lib/admin-audit";
 import { rateLimit } from "@/lib/rate-limit";
 import { track } from "@/lib/analytics";
@@ -18,7 +20,13 @@ export const runtime = "nodejs";
    auto-issue). Operator tool: prove the auto-issue path end-to-end without a
    fresh payment, and recover an order stuck at PENDING because its callback
    never landed. Idempotent — an already-confirmed order is a no-op
-   (confirmedNow=false), so it never double-issues or double-counts. */
+   (confirmedNow=false), so it never double-issues or double-counts.
+
+   Second job: recover a CONFIRMED order whose auto-issue failed (or whose
+   function died mid-issue). Those orders are unreachable through the NX-gated
+   confirm branch, so this route re-drives issuance directly with the ORIGINAL
+   order id — partner-side idempotency (payment_id = order.id) makes a replay
+   return the already-issued record instead of a second subscription. */
 
 const REPROCESS_LIMIT = 20;
 const REPROCESS_WINDOW_SECONDS = 60;
@@ -76,12 +84,41 @@ export async function POST(req: Request) {
       providerStatus: "CONFIRMED",
     });
 
+    // Confirmed-but-keyless recovery (see header comment). Triggers when the
+    // user record has no key or the order carries a failed-issue marker.
+    let reissued = false;
+    let reissueError: string | null = null;
+    if (
+      !result.confirmedNow &&
+      result.order.status === "confirmed" &&
+      isMarzneshinProxyConfigured() &&
+      (!user.subscriptionUrl || result.order.issueError)
+    ) {
+      try {
+        await issueKeyForOrder(result.order);
+        reissued = true;
+      } catch (err) {
+        reissueError =
+          err instanceof Error && "code" in err &&
+          typeof (err as { code?: unknown }).code === "string"
+            ? (err as { code: string }).code
+            : err instanceof Error
+              ? err.message
+              : "unknown";
+        console.warn("[admin] reprocess re-issue failed", result.order.id, err);
+      }
+    }
+
     await writeAuditEntry({
       action: "reprocess",
       targetUserId: user.id,
       targetEmail: user.email,
-      note: `order ${result.order.id} -> ${result.order.status} (confirmedNow=${result.confirmedNow})`,
-      result: "ok",
+      note:
+        `order ${result.order.id} -> ${result.order.status} ` +
+        `(confirmedNow=${result.confirmedNow}` +
+        `${reissued ? ", reissued" : ""}` +
+        `${reissueError ? `, reissue_error=${reissueError}` : ""})`,
+      result: reissueError ? "error" : "ok",
     });
 
     // Mirror the callback: emit payment_confirmed exactly once, only on the
@@ -102,6 +139,8 @@ export async function POST(req: Request) {
       orderId: result.order.id,
       status: result.order.status,
       confirmedNow: result.confirmedNow,
+      reissued,
+      ...(reissueError ? { reissueError } : {}),
     });
   } catch (err) {
     const setupError = getAuthSetupErrorCode(err) || getPaymentSetupErrorCode(err);

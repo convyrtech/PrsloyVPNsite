@@ -11,12 +11,6 @@ import {
   kvSet,
   KvNotConfiguredError,
 } from "@/lib/kv";
-import {
-  AccessPoolError,
-  consumeInviteCode,
-  getCodeUsage,
-  isInviteAvailable,
-} from "@/lib/access-pool";
 import { isValidEmail } from "@/lib/validation";
 
 const scryptAsync = promisify(scrypt);
@@ -235,96 +229,34 @@ export async function registerUser(email: string, password: string) {
   return publicUser(user);
 }
 
-// Email/password registration with invite-gate. Public sign-up path —
-// users coming through /register are required to present a valid code,
-// same as the Telegram-auth flow.
-//
-// Inverse-rollback order mirrors loginOrRegisterByTelegram:
-//   1. NX-reserve email index
-//   2. consume invite code
-//   3. saveUser
-// On failure of step 2 or 3 the email reservation is released. The
-// invite code, once consumed, stays burned — the access-pool used-marker
-// already points at this aborted user id so the operator can audit.
-export async function registerUserWithInvite(
-  email: string,
-  password: string,
-  inviteCode: string
-) {
+// Attaches an email to a Telegram-only account so it can pass the payment
+// gate (the receipt and operator reach-out need a deliverable address).
+// Mirrors registerUser's NX email reservation to prevent collisions.
+// Accounts that already have an email cannot swap it here — changing an
+// address is a support flow, not self-serve.
+export async function linkEmail(userId: string, email: string) {
   const normalized = normalizeEmail(email);
-
   if (!isValidEmail(normalized)) throw new AuthError("invalid_email");
-  if (password.length < 8 || password.length > 128) {
-    throw new AuthError("invalid_password");
-  }
-  const trimmedCode = typeof inviteCode === "string" ? inviteCode.trim() : "";
-  if (!trimmedCode) throw new AuthError("invite_required");
 
-  // Close the account-enumeration oracle: validate the invite BEFORE probing
-  // the email index, so the email_exists (409) branch is only reachable by a
-  // caller who already holds a usable invite. Non-destructive — the code is not
-  // consumed here; consumeInviteCode does the authoritative atomic SREM below
-  // (and still re-checks under the race).
-  if (!(await isInviteAvailable(trimmedCode))) {
-    const usedBy = await getCodeUsage(trimmedCode).catch(() => null);
-    throw new AuthError(usedBy ? "invite_consumed" : "invite_invalid");
-  }
+  const user = await getUserById(userId);
+  if (!user) throw new AuthError("user_not_found");
+  if (user.email) throw new AuthError("email_already_set");
 
-  const id = randomBytes(16).toString("hex");
-  const now = new Date().toISOString();
-
-  const reserved = await kvSet(emailKey(normalized), id, { nx: true });
+  const reserved = await kvSet(emailKey(normalized), user.id, { nx: true });
   if (!reserved) throw new AuthError("email_exists");
 
-  let consumed = false;
+  user.email = normalized;
+  user.emailVerified = false;
+  user.updatedAt = new Date().toISOString();
   try {
-    try {
-      consumed = await consumeInviteCode(trimmedCode, `user:${id}`);
-    } catch (err) {
-      if (err instanceof AccessPoolError && err.code === "invalid_code") {
-        throw new AuthError("invite_invalid");
-      }
-      throw err;
-    }
-    if (!consumed) {
-      const usedBy = await getCodeUsage(trimmedCode).catch(() => null);
-      throw new AuthError(usedBy ? "invite_consumed" : "invite_invalid");
-    }
-
-    const user: AuthUser = {
-      id,
-      email: normalized,
-      passwordHash: await hashPassword(password),
-      emailVerified: false,
-      accessStatus: "pending",
-      vpnSlug: null,
-      subscriptionUrl: null,
-      telegramId: null,
-      telegramUsername: null,
-      createdAt: now,
-      updatedAt: now,
-    };
-
     await saveUser(user);
-
-    try {
-      await kvSAdd(USERS_INDEX_KEY, id);
-    } catch (err) {
-      console.warn("[auth] failed to add user to index", err);
-    }
-
-    return publicUser(user);
   } catch (err) {
-    await kvDel(emailKey(normalized)).catch(() => undefined);
-    if (consumed) {
-      console.error(
-        "[auth] saveUser failed after invite consume — invite burned",
-        id,
-        err
-      );
-    }
+    // Roll back the reservation so the address stays claimable.
+    await kvDel(emailKey(normalized));
     throw err;
   }
+
+  return publicUser(user);
 }
 
 export async function listUsers(): Promise<AdminUserSummary[]> {

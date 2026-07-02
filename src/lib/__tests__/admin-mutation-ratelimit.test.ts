@@ -6,7 +6,7 @@ import { createReissueRequest } from "@/lib/reissue";
 
 // Completes the spec §2 coverage: every mutating admin route is rate-limited.
 // issue/access/grant have their own route specs; this pins the remaining
-// three (users DELETE, reissue PATCH, access-pool add) plus the delete audit.
+// two (users DELETE, reissue PATCH) plus the delete audit.
 
 const redis = installFakeRedis();
 const SECRET = "admin-mutation-rl-secret-1234567890";
@@ -101,33 +101,5 @@ describe("PATCH /api/admin/reissue — rate limit", () => {
       targetUserId: "u-reissue",
       result: "ok",
     });
-  });
-});
-
-describe("POST /api/admin/access-pool/add — rate limit", () => {
-  it("returns 429 only once the per-action limit is exceeded", async () => {
-    const { POST } = await import("@/app/api/admin/access-pool/add/route");
-    // POOL_ADD_LIMIT = 20 / 60s. Empty body -> 400 (codes_required).
-    const statuses: number[] = [];
-    for (let i = 0; i < 21; i += 1) {
-      const res = await POST(
-        authed("POST", "http://localhost/api/admin/access-pool/add", {})
-      );
-      statuses.push(res.status);
-    }
-    expect(statuses.slice(0, 20).every((s) => s !== 429)).toBe(true);
-    expect(statuses[20]).toBe(429);
-  });
-
-  it("writes a codes_added audit row on a successful add", async () => {
-    const { POST } = await import("@/app/api/admin/access-pool/add/route");
-    const res = await POST(
-      authed("POST", "http://localhost/api/admin/access-pool/add", {
-        codes: ["aud-c1", "aud-c2"],
-      })
-    );
-    expect(res.status).toBe(200);
-    const log = await listAuditEntries(10);
-    expect(log[0]).toMatchObject({ action: "codes_added", result: "ok" });
   });
 });

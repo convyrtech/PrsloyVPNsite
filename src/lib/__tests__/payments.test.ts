@@ -4,11 +4,15 @@ import {
   attachPaymentTransaction,
   createPaymentOrder,
   getLatestPaymentOrder,
+  getPaymentOrder,
+  issueKeyForOrder,
   providerStatusToPaymentStatus,
   updatePaymentByTransaction,
 } from "@/lib/payments";
 import { getSubscriptionRecord } from "@/lib/marzneshin-proxy";
 import { registerUser } from "@/lib/auth";
+import { listAuditEntries } from "@/lib/admin-audit";
+import { todayKey } from "@/lib/analytics";
 
 const redis = installFakeRedis();
 
@@ -193,6 +197,10 @@ describe("payments — Marzneshin auto-issue (Issue #4)", () => {
   let fetchSpy: MockInstance;
   let marzCalls: Array<{ url: string; init: RequestInit }>;
   let marzResponses: Response[];
+  // Same boundary-mock pattern as marzCalls above, but for the operator
+  // alert email so reportAutoIssueFailure's Resend call can be asserted
+  // on without mocking @/lib/email wholesale.
+  let resendCalls: Array<{ url: string; init: RequestInit }>;
 
   beforeEach(() => {
     redis.reset();
@@ -200,6 +208,7 @@ describe("payments — Marzneshin auto-issue (Issue #4)", () => {
     process.env.MARZNESHIN_PROXY_HMAC_SECRET = MARZ_SECRET;
     marzCalls = [];
     marzResponses = [];
+    resendCalls = [];
     const original = globalThis.fetch;
     fetchSpy = vi
       .spyOn(globalThis, "fetch")
@@ -211,6 +220,13 @@ describe("payments — Marzneshin auto-issue (Issue #4)", () => {
           if (!resp) throw new TypeError("fetch failed");
           return resp;
         }
+        if (u.includes("api.resend.com/emails")) {
+          resendCalls.push({ url: u, init: init ?? {} });
+          return new Response(JSON.stringify({ id: "email-fake-id" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
         return original(url, init);
       });
   });
@@ -218,8 +234,27 @@ describe("payments — Marzneshin auto-issue (Issue #4)", () => {
   afterEach(() => {
     delete process.env.MARZNESHIN_PROXY_URL;
     delete process.env.MARZNESHIN_PROXY_HMAC_SECRET;
+    delete process.env.WAITLIST_NOTIFY_EMAIL;
+    delete process.env.RESEND_API_KEY;
+    delete process.env.RESEND_FROM;
     fetchSpy.mockRestore();
   });
+
+  function analyticsEvents(name: string): Array<Record<string, unknown>> {
+    const log = redis.store.lists.get(`analytics:dev:log:${todayKey()}`) ?? [];
+    return log
+      .map((entry) => JSON.parse(entry) as Record<string, unknown>)
+      .filter((event) => event.name === name);
+  }
+
+  // key_issued/issue_failed are fired via `void track(...)` inside
+  // payments.ts (no route-level `after()` to hook into like the other
+  // callers of track()), so the write can still be in flight when the
+  // awaited call above returns. Flush pending microtasks/timers before
+  // reading the log back.
+  async function flushMicrotasks() {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
 
   function queueProxy200(body: { marz_username: string; subscription_url: string }) {
     marzResponses.push(
@@ -414,5 +449,163 @@ describe("payments — Marzneshin auto-issue (Issue #4)", () => {
     });
 
     expect(marzCalls).toHaveLength(1);
+  });
+
+  it("emits key_issued and leaves issueError unset on a successful auto-issue", async () => {
+    process.env.AUTH_SECRET = "x".repeat(32);
+    const user = await registerUser("success@example.com", "supersecret");
+    const order = await createPaymentOrder({
+      userId: user.id,
+      email: "success@example.com",
+      period: "1mo",
+      method: "sbp_qr",
+    });
+    await attachPaymentTransaction({
+      orderId: order.id,
+      transactionId: "tx-success",
+      paymentUrl: "x",
+      providerStatus: "PENDING",
+    });
+    queueProxy200({
+      marz_username: "p_success",
+      subscription_url: "https://sub/p_success/k",
+    });
+
+    const result = await updatePaymentByTransaction({
+      transactionId: "tx-success",
+      providerStatus: "CONFIRMED",
+    });
+
+    expect(result.order.issueError).toBeFalsy();
+    const stored = await getPaymentOrder(order.id);
+    expect(stored?.issueError).toBeFalsy();
+
+    await flushMicrotasks();
+    const events = analyticsEvents("key_issued");
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ userId: user.id });
+    delete process.env.AUTH_SECRET;
+    expect(analyticsEvents("issue_failed")).toHaveLength(0);
+  });
+
+  it("records issueError and writes an admin audit entry when auto-issue fails, without emailing when WAITLIST_NOTIFY_EMAIL is unset", async () => {
+    const order = await createPaymentOrder({
+      userId: "user-issuefail",
+      email: "issuefail@example.com",
+      period: "1mo",
+      method: "sbp_qr",
+    });
+    await attachPaymentTransaction({
+      orderId: order.id,
+      transactionId: "tx-issuefail",
+      paymentUrl: "x",
+      providerStatus: "PENDING",
+    });
+    // Two 502 responses → proxy_upstream_failure after retry.
+    marzResponses.push(new Response("err", { status: 502 }));
+    marzResponses.push(new Response("err", { status: 502 }));
+
+    const result = await updatePaymentByTransaction({
+      transactionId: "tx-issuefail",
+      providerStatus: "CONFIRMED",
+    });
+
+    // The order still confirms — auto-issue failure never rolls back the
+    // payment. It just marks the order for recovery.
+    expect(result.confirmedNow).toBe(true);
+    expect(result.order.status).toBe("confirmed");
+    expect(result.order.issueError).toBe("proxy_upstream_failure");
+
+    const stored = await getPaymentOrder(order.id);
+    expect(stored?.issueError).toBe("proxy_upstream_failure");
+
+    const log = await listAuditEntries(10);
+    expect(log[0]).toMatchObject({
+      action: "auto_issue",
+      targetUserId: "user-issuefail",
+      targetEmail: "issuefail@example.com",
+      result: "error",
+    });
+    expect(log[0].note).toContain(order.id);
+    expect(log[0].note).toContain("proxy_upstream_failure");
+
+    expect(resendCalls).toHaveLength(0);
+
+    await flushMicrotasks();
+    const events = analyticsEvents("issue_failed");
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ orderId: order.id });
+  });
+
+  it("emails the operator when WAITLIST_NOTIFY_EMAIL is set and auto-issue fails", async () => {
+    process.env.WAITLIST_NOTIFY_EMAIL = "ops@example.com";
+    process.env.RESEND_API_KEY = "test-resend-key";
+    process.env.RESEND_FROM = "PRSLOY <noreply@example.com>";
+
+    const order = await createPaymentOrder({
+      userId: "user-issuefail-mail",
+      email: "issuefail-mail@example.com",
+      period: "1mo",
+      method: "sbp_qr",
+    });
+    await attachPaymentTransaction({
+      orderId: order.id,
+      transactionId: "tx-issuefail-mail",
+      paymentUrl: "x",
+      providerStatus: "PENDING",
+    });
+    marzResponses.push(new Response("err", { status: 502 }));
+    marzResponses.push(new Response("err", { status: 502 }));
+
+    await updatePaymentByTransaction({
+      transactionId: "tx-issuefail-mail",
+      providerStatus: "CONFIRMED",
+    });
+
+    expect(resendCalls).toHaveLength(1);
+    const body = JSON.parse(resendCalls[0].init.body as string);
+    expect(body.to).toBe("ops@example.com");
+    expect(body.subject).toContain(order.id);
+  });
+
+  it("clears a pre-existing issueError once a retried issueKeyForOrder succeeds", async () => {
+    process.env.AUTH_SECRET = "x".repeat(32);
+    const user = await registerUser("clear@example.com", "supersecret");
+    const order = await createPaymentOrder({
+      userId: user.id,
+      email: "clear@example.com",
+      period: "1mo",
+      method: "sbp_qr",
+    });
+    await attachPaymentTransaction({
+      orderId: order.id,
+      transactionId: "tx-clear",
+      paymentUrl: "x",
+      providerStatus: "PENDING",
+    });
+    // First confirmation: proxy fails, order gets issueError persisted.
+    marzResponses.push(new Response("err", { status: 502 }));
+    marzResponses.push(new Response("err", { status: 502 }));
+    const first = await updatePaymentByTransaction({
+      transactionId: "tx-clear",
+      providerStatus: "CONFIRMED",
+    });
+    expect(first.order.issueError).toBe("proxy_upstream_failure");
+
+    // Recovery path (mirrors /api/admin/reprocess): re-drive issueKeyForOrder
+    // with the persisted order.
+    const stored = await getPaymentOrder(order.id);
+    expect(stored?.issueError).toBe("proxy_upstream_failure");
+    queueProxy200({
+      marz_username: "p_clear",
+      subscription_url: "https://sub/p_clear/k",
+    });
+
+    await issueKeyForOrder(stored!);
+
+    const after = await getPaymentOrder(order.id);
+    expect(after?.issueError).toBeNull();
+    expect(after?.status).toBe("confirmed");
+    delete process.env.AUTH_SECRET;
   });
 });

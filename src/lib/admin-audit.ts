@@ -22,6 +22,7 @@ export type AdminAuditAction =
   | "reissue_handled"
   | "codes_added"
   | "reprocess"
+  | "auto_issue"
   | "capacity_reset";
 
 export type AdminAuditEntry = {

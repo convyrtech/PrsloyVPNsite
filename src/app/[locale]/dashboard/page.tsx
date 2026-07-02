@@ -31,6 +31,8 @@ export default async function DashboardPage({
     "status_pending_body",
     "status_paid_awaiting_title",
     "status_paid_awaiting_body",
+    "status_issue_failed_title",
+    "status_issue_failed_body",
     "status_blocked_title",
     "status_blocked_body",
     "key_ready_body",

@@ -2,6 +2,9 @@ import { randomBytes } from "crypto";
 import { kvGet, kvSet, KvNotConfiguredError } from "@/lib/kv";
 import { grantSubscriptionByUserId } from "@/lib/auth";
 import { incrementPayingCounter } from "@/lib/capacity";
+import { writeAuditEntry } from "@/lib/admin-audit";
+import { sendTransactionalEmail } from "@/lib/email";
+import { track } from "@/lib/analytics";
 import {
   isMarzneshinProxyConfigured,
   issueKey,
@@ -48,6 +51,12 @@ export type PaymentOrder = {
   // field was introduced rehydrate as undefined — readers must use
   // `order.utmSource ?? null` (or falsy check) and never `=== null`.
   utmSource?: string | null;
+  // Error code of a failed auto-issue after a confirmed payment. Makes the
+  // paid-but-keyless order durable and discoverable: /api/admin/reprocess
+  // re-drives issuance for it, the ЛК shows the honest "issuing manually"
+  // state. Cleared on successful issuance. Optional for the same
+  // rehydration reason as utmSource.
+  issueError?: string | null;
 };
 
 export class PaymentError extends Error {
@@ -231,43 +240,138 @@ export async function updatePaymentByTransaction(input: {
 
       // Marzneshin auto-issue (Issue #4). Skip silently if the proxy
       // env is not set (staging / local). Failures don't roll back the
-      // order — user sees the pending state on /dashboard and an
-      // operator can re-issue via the manual /admin/grant path.
-      // Idempotency on partner side is keyed by payment_id (= order.id),
-      // so a late retry through this branch is a no-op for partner.
+      // order — the buyer keeps the paid-awaiting state in the ЛК while
+      // reportAutoIssueFailure makes the order durable and loud (issueError
+      // marker, admin audit, operator email, funnel event) so it never
+      // dies silently again. Recovery: /api/admin/reprocess re-drives
+      // issuance with the same payment_id.
       if (isMarzneshinProxyConfigured()) {
         try {
-          const result = await issueKey({
-            paymentId: order.id,
-            periodDays: periodToDays(order.period),
-            userId: order.userId,
-            email: order.email,
-          });
-          await saveSubscriptionRecord(order.userId, {
-            marzUsername: result.marzUsername,
-            subscriptionUrl: result.subscriptionUrl,
-            issuedAt: new Date().toISOString(),
-            periodDays: periodToDays(order.period),
-            paymentId: order.id,
-            source: "auto-issue",
-          });
-          // Flip AuthUser to active + populate subscriptionUrl so the
-          // dashboard's KeyBlock renders without any further plumbing.
-          // Blocked users are kept in moderation limbo per grantAccess
-          // semantics — payment still confirms (no rollback) but key is
-          // not surfaced until the operator unblocks.
-          await grantSubscriptionByUserId(order.userId, result.subscriptionUrl);
+          await issueKeyForOrder(order);
         } catch (err) {
           console.warn(
             "[payments] marzneshin auto-issue failed for order",
             order.id,
             err
           );
+          await reportAutoIssueFailure(order, err);
         }
       }
     }
   }
   return { order, confirmedNow };
+}
+
+// Issues the Ключ for a confirmed order and surfaces it in the ЛК.
+// payment_id = order.id keeps the partner-side idempotency key stable: a
+// replay for the same order returns the already-issued record (409 →
+// idempotentReplay) instead of minting a second subscription — which is
+// exactly why recovery must go through here and NOT /api/admin/issue
+// (that path mints a fresh admin-<hex> payment_id and would double-extend).
+export async function issueKeyForOrder(order: PaymentOrder): Promise<void> {
+  const result = await issueKey({
+    paymentId: order.id,
+    periodDays: periodToDays(order.period),
+    userId: order.userId,
+    email: order.email,
+  });
+  await saveSubscriptionRecord(order.userId, {
+    marzUsername: result.marzUsername,
+    subscriptionUrl: result.subscriptionUrl,
+    issuedAt: new Date().toISOString(),
+    periodDays: periodToDays(order.period),
+    paymentId: order.id,
+    source: "auto-issue",
+  });
+  // Flip AuthUser to active + populate subscriptionUrl so the
+  // dashboard's KeyBlock renders without any further plumbing.
+  // Blocked users are kept in moderation limbo per grantAccess
+  // semantics — payment still confirms (no rollback) but key is
+  // not surfaced until the operator unblocks.
+  await grantSubscriptionByUserId(order.userId, result.subscriptionUrl);
+
+  // Auto-issued keys must count in the funnel like admin-issued ones do.
+  // track() is fire-and-forget and never throws.
+  void track({ name: "key_issued", userId: order.userId });
+
+  if (order.issueError) {
+    order.issueError = null;
+    order.updatedAt = new Date().toISOString();
+    await saveOrder(order);
+  }
+}
+
+function errorCode(err: unknown): string {
+  if (err instanceof Error && "code" in err) {
+    const code = (err as { code?: unknown }).code;
+    if (typeof code === "string") return code;
+  }
+  return err instanceof Error ? err.message : "unknown";
+}
+
+// A buyer paid but the Ключ did not reach their ЛК. Make the failure
+// durable and loud: mark the order (reprocess can re-drive it), write the
+// admin audit log the operator already opens, email the operator, count it
+// in the funnel. Every step is best-effort — reporting must never throw
+// back into the payment callback.
+async function reportAutoIssueFailure(
+  order: PaymentOrder,
+  err: unknown
+): Promise<void> {
+  const code = errorCode(err);
+
+  try {
+    order.issueError = code;
+    order.updatedAt = new Date().toISOString();
+    await saveOrder(order);
+  } catch (saveErr) {
+    console.warn(
+      "[payments] failed to persist issueError for order",
+      order.id,
+      saveErr
+    );
+  }
+
+  // writeAuditEntry is internally best-effort (never throws).
+  await writeAuditEntry({
+    action: "auto_issue",
+    targetUserId: order.userId,
+    targetEmail: order.email,
+    note: `order ${order.id}: ${code}`,
+    result: "error",
+  });
+
+  const operatorEmail = process.env.WAITLIST_NOTIFY_EMAIL?.trim();
+  if (operatorEmail) {
+    try {
+      const lines = [
+        "Auto-issue failed after a confirmed payment — buyer has no key.",
+        `Order: ${order.id}`,
+        `Buyer: ${order.email}`,
+        `Period: ${order.period}`,
+        `Error: ${code}`,
+        "",
+        `Recover: POST /api/admin/reprocess {"email":"${order.email}"} —`,
+        "re-drives issuance with the original payment_id (idempotent, safe).",
+        "Do NOT use /api/admin/issue for recovery: it mints a new payment_id",
+        "and double-extends if the first issue actually landed.",
+      ];
+      await sendTransactionalEmail({
+        to: operatorEmail,
+        subject: `PRSLOY: auto-issue failed for order ${order.id}`,
+        text: lines.join("\n"),
+        html: `<pre>${lines.join("\n")}</pre>`,
+      });
+    } catch (mailErr) {
+      console.warn(
+        "[payments] operator alert email failed for order",
+        order.id,
+        mailErr
+      );
+    }
+  }
+
+  void track({ name: "issue_failed", orderId: order.id });
 }
 
 export function providerStatusToPaymentStatus(status: string): PaymentStatus {

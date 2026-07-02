@@ -136,13 +136,6 @@ export type ParsedBotMessage =
       chatId: string;
     }
   | {
-      kind: "invite_request";
-      updateId: number;
-      telegramId: string;
-      telegramUsername: string | null;
-      chatId: string;
-    }
-  | {
       kind: "confirm_login";
       updateId: number;
       nonce: string;
@@ -214,16 +207,6 @@ export function parseBotMessage(update: unknown): ParsedBotMessage | null {
   if (/^\/start(@\w+)?\s*$/.test(text)) {
     return {
       kind: "start_plain",
-      updateId,
-      telegramId: fromId,
-      telegramUsername: username,
-      chatId,
-    };
-  }
-
-  if (/^\/invite(@\w+)?\s*$/.test(text)) {
-    return {
-      kind: "invite_request",
       updateId,
       telegramId: fromId,
       telegramUsername: username,
@@ -306,7 +289,7 @@ function getBotApiBase(): string {
 }
 
 // Sends a text message back to a Telegram chat. Used by the webhook to
-// reply to /start (welcome) and /invite (issued code). Network or API
+// reply to /start (welcome) and login confirm/deny. Network or API
 // failures are non-fatal — we log and return false so the caller can
 // decide whether to retry, but never propagate; we already 200'd the
 // webhook by the time this runs.

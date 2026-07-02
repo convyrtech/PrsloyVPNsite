@@ -34,6 +34,8 @@ export type DashboardCopy = Record<
   | "status_pending_body"
   | "status_paid_awaiting_title"
   | "status_paid_awaiting_body"
+  | "status_issue_failed_title"
+  | "status_issue_failed_body"
   | "status_blocked_title"
   | "status_blocked_body"
   | "key_ready_body"
@@ -67,7 +69,7 @@ type ReissueState = "idle" | "sending" | "sent" | "error";
 // can be eyeballed on the dev server. Inert in production (getForcedState → null).
 function forcedDashboard(
   forced: string
-): { state: State; paidAwaiting: boolean } | null {
+): { state: State; paidAwaiting: boolean; issueFailed: boolean } | null {
   const base = {
     id: "dev",
     email: "dev@prsloy.local",
@@ -77,9 +79,9 @@ function forcedDashboard(
   } as unknown as PublicAuthUser;
   switch (forced) {
     case "not_configured":
-      return { state: { kind: "not_configured" }, paidAwaiting: false };
+      return { state: { kind: "not_configured" }, paidAwaiting: false, issueFailed: false };
     case "guest":
-      return { state: { kind: "ready", user: null }, paidAwaiting: false };
+      return { state: { kind: "ready", user: null }, paidAwaiting: false, issueFailed: false };
     case "active":
       return {
         state: {
@@ -87,15 +89,18 @@ function forcedDashboard(
           user: { ...base, subscriptionUrl: "https://cloudasset-dl.com/dev-token", accessStatus: "active" },
         },
         paidAwaiting: false,
+        issueFailed: false,
       };
     case "blocked":
-      return { state: { kind: "ready", user: { ...base, accessStatus: "blocked" } }, paidAwaiting: false };
+      return { state: { kind: "ready", user: { ...base, accessStatus: "blocked" } }, paidAwaiting: false, issueFailed: false };
     case "unverified":
-      return { state: { kind: "ready", user: { ...base, emailVerified: false } }, paidAwaiting: false };
+      return { state: { kind: "ready", user: { ...base, emailVerified: false } }, paidAwaiting: false, issueFailed: false };
     case "paid-awaiting":
-      return { state: { kind: "ready", user: { ...base } }, paidAwaiting: true };
+      return { state: { kind: "ready", user: { ...base } }, paidAwaiting: true, issueFailed: false };
+    case "issue-failed":
+      return { state: { kind: "ready", user: { ...base } }, paidAwaiting: true, issueFailed: true };
     case "pending":
-      return { state: { kind: "ready", user: { ...base } }, paidAwaiting: false };
+      return { state: { kind: "ready", user: { ...base } }, paidAwaiting: false, issueFailed: false };
     default:
       return null;
   }
@@ -110,11 +115,14 @@ export function DashboardClient({
 }) {
   const [state, setState] = useState<State>({ kind: "loading" });
   const [paidAwaiting, setPaidAwaiting] = useState(false);
+  const [issueFailed, setIssueFailed] = useState(false);
 
   // Does the user already have a confirmed payment whose key isn't issued yet?
   // If so the next step is "wait for issuance", not "pay" — so the pending hero
   // must not nudge them back to checkout. Defaults to false (treat as unpaid)
   // so a freshly registered user gets the pay CTA immediately, no flash-hide.
+  // A confirmed order carrying issueError means auto-issue failed and the
+  // operator is on it — the hero says so honestly instead of "usually fast".
   useEffect(() => {
     let alive = true;
     const forced = getForcedState();
@@ -122,6 +130,7 @@ export function DashboardClient({
       const f = forcedDashboard(forced);
       if (f) {
         setPaidAwaiting(f.paidAwaiting);
+        setIssueFailed(f.issueFailed);
         return;
       }
     }
@@ -129,11 +138,17 @@ export function DashboardClient({
       try {
         const res = await fetch("/api/payments/me", { cache: "no-store" });
         const data = (await res.json().catch(() => ({}))) as {
-          order?: { status?: string; confirmedAt?: string | null } | null;
+          order?: {
+            status?: string;
+            confirmedAt?: string | null;
+            issueError?: string | null;
+          } | null;
         };
         if (!alive) return;
         const o = data.order;
-        setPaidAwaiting(Boolean(o && (o.status === "confirmed" || o.confirmedAt)));
+        const paid = Boolean(o && (o.status === "confirmed" || o.confirmedAt));
+        setPaidAwaiting(paid);
+        setIssueFailed(paid && Boolean(o?.issueError));
       } catch {
         /* default false → treat as "needs to pay" */
       }
@@ -276,7 +291,13 @@ export function DashboardClient({
       )}
 
       <RevealOnView delay={0.12}>
-        <FloatingHero copy={copy} active={active} blocked={blocked} paidAwaiting={paidAwaiting} />
+        <FloatingHero
+          copy={copy}
+          active={active}
+          blocked={blocked}
+          paidAwaiting={paidAwaiting}
+          issueFailed={issueFailed}
+        />
       </RevealOnView>
 
       {hasKey && user.subscriptionUrl && !blocked && (
@@ -335,33 +356,40 @@ function FloatingHero({
   active,
   blocked,
   paidAwaiting,
+  issueFailed,
 }: {
   copy: DashboardCopy;
   active: boolean;
   blocked: boolean;
   paidAwaiting: boolean;
+  issueFailed: boolean;
 }) {
   const title = blocked
     ? copy.status_blocked_title
     : active
       ? copy.status_ready_title
-      : paidAwaiting
-        ? copy.status_paid_awaiting_title
-        : copy.status_pending_title;
+      : issueFailed
+        ? copy.status_issue_failed_title
+        : paidAwaiting
+          ? copy.status_paid_awaiting_title
+          : copy.status_pending_title;
   const body = blocked
     ? copy.status_blocked_body
     : active
       ? copy.status_ready_body
-      : paidAwaiting
-        ? copy.status_paid_awaiting_body
-        : copy.status_pending_body;
-  const tone = blocked ? "warning" : active ? "success" : "muted";
+      : issueFailed
+        ? copy.status_issue_failed_body
+        : paidAwaiting
+          ? copy.status_paid_awaiting_body
+          : copy.status_pending_body;
+  const tone = blocked || issueFailed ? "warning" : active ? "success" : "muted";
   // Primary CTA = the actual next step. Active → set up the key they hold.
   // Pending & unpaid → go pay (the post-registration nudge that was missing).
-  // Paid-but-awaiting-issue or blocked → support only; the body explains the wait.
+  // Paid-but-awaiting-issue (incl. failed auto-issue) or blocked → support
+  // only; the body explains the wait and the support button is always there.
   const primary: "setup" | "pay" | "none" = active
     ? "setup"
-    : blocked || paidAwaiting
+    : blocked || paidAwaiting || issueFailed
       ? "none"
       : "pay";
 
