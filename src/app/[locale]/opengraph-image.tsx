@@ -6,7 +6,7 @@ import { ImageResponse } from "next/og";
 // site's brand language is Latin mono labels anyway — so it renders robustly
 // without shipping a font file.
 
-export const alt = "PRSLOY — private invite-only VPN";
+export const alt = "PRSLOY — private VPN, open registration";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -45,7 +45,7 @@ export default function OpengraphImage() {
               background: "#d71921",
             }}
           />
-          CLOSED BETA
+          OPEN BETA
         </div>
 
         {/* wordmark */}
@@ -71,7 +71,7 @@ export default function OpengraphImage() {
             textTransform: "uppercase",
           }}
         >
-          PRIVATE ACCESS · INVITE ONLY
+          PRIVATE VPN · OPEN REGISTRATION
         </div>
       </div>
     ),

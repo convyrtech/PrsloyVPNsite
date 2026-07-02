@@ -1,18 +1,18 @@
 {
   "meta": {
-    "title": "PRSLOY — private VPN by invite",
-    "description": "Private access to a fast connection that holds under blocks and at peak hours. Datacenters chosen by reputation, not price. $5/mo, invite only.",
-    "ogTitle": "PRSLOY · private VPN by invite",
-    "ogDescription": "A connection that holds under blocks and load. By reputation, not by price. $5/mo, invite only."
+    "title": "PRSLOY — private VPN. Open registration.",
+    "description": "Private access to a fast connection that holds under blocks and at peak hours. Datacenters chosen by reputation, not price. $5/mo, open registration.",
+    "ogTitle": "PRSLOY · private VPN, open registration",
+    "ogDescription": "A connection that holds under blocks and load. By reputation, not by price. $5/mo, registration open."
   },
   "hero": {
-    "status_label": "CLOSED BETA",
+    "status_label": "OPEN BETA",
     "headline_line1": "A private layer of your internet.",
-    "headline_line2": "Closed access.",
+    "headline_line2": "No outsiders.",
     "sub_price": "",
     "sub_features": "Our own servers and clean IPs. Tuned to stay fast and not drop.",
     "cta": "GET ACCESS",
-    "launch_strip": "BY INVITATION ONLY",
+    "launch_strip": "REGISTRATION OPEN",
     "scroll_hint": "SCROLL"
   },
   "header": {
@@ -20,8 +20,8 @@
     "nav_faq": "FAQ",
     "nav_blog": "BLOG",
     "nav_dashboard": "DASHBOARD",
-    "status_short": "CLOSED BETA",
-    "status_full": "INVITE-ONLY · PRIVATE BETA",
+    "status_short": "OPEN BETA",
+    "status_full": "OPEN REGISTRATION · BETA",
     "cta_buy": "ACCESS",
     "cta_buy_compact": "ACCESS",
     "menu_open": "MENU",
@@ -37,8 +37,8 @@
     "subtitle": "Nodes only in datacenters with a proven track record — no budget hosting, no overcrowded channels. So the connection holds through blocks and at peak hours.",
     "metric_routing": "CONNECTION",
     "metric_routing_value": "STEADY",
-    "metric_logs": "ACCESS",
-    "metric_logs_value": "INVITE-ONLY",
+    "metric_logs": "LOGS",
+    "metric_logs_value": "NOT KEPT",
     "metric_status": "STATUS",
     "metric_status_value": "BETA",
     "legend_entry": "POINT A",
@@ -63,7 +63,7 @@
     "period_6m": "6 MO",
     "period_12m": "1 YR",
     "per_month": "/ MO",
-    "promo_text": "LIMITED CAPACITY",
+    "promo_text": "CAPACITY HEADROOM",
     "includes": "INCLUDED",
     "feature_encryption": "Servers",
     "feature_encryption_value": "Own fleet",
@@ -74,21 +74,21 @@
     "feature_servers": "Activity logs",
     "feature_servers_value": "None",
     "feature_logs": "Access",
-    "feature_logs_value": "Invite-only",
+    "feature_logs_value": "Open registration",
     "feature_support": "Support",
     "feature_support_value": "Tech chat",
     "cta": "GET ACCESS",
-    "cta_meta": "ISSUED MANUALLY DURING BETA",
-    "guarantee": "Email — for the invite only · No newsletters · Support is a real person",
-    "access_note": "Fixed price for a clean, fast channel. Invite-only access; server capacity is limited."
+    "cta_meta": "KEY APPEARS IN YOUR DASHBOARD AUTOMATICALLY AFTER PAYMENT",
+    "guarantee": "Email — for your account and receipt · No newsletters · Support is a real person",
+    "access_note": "Fixed price for a clean, fast channel. Registration is open, and we keep users-per-server with headroom so speed doesn't drop."
   },
   "faq": {
     "label": "QUESTIONS",
     "see_all": "ALL QUESTIONS",
     "q1": "What does this actually run on?",
     "a1": "On top-tier servers. Cheap hosting lands on blocklists fast and drags the whole network down with it — so we pay for clean addresses and independent locations.",
-    "q2": "Why invite-only?",
-    "a2": "To keep the speed we promise. We let people in gradually and keep the number of users per server within limits where the connection doesn't degrade.",
+    "q2": "How do you keep speed with open registration?",
+    "a2": "We keep the number of users per server within limits where the connection doesn't degrade, and add capacity ahead of demand — before nodes get near their limit.",
     "q3": "Where's the app?",
     "a3": "Privacy shouldn't depend on extra software. You get a ready-made config and import it into a trusted client — for example, Happ — in a couple of minutes. There's no app of ours between you and the network, so there's no background data collection."
   },
@@ -128,7 +128,7 @@
       },
       {
         "title": "One account",
-        "body": "Use the same email you requested the invite with. It keeps review history and access issuing tied to one PRSLOY ID."
+        "body": "Use the same email as your PRSLOY ID. It keeps payment and access history tied to one account."
       },
       {
         "title": "Private link",
@@ -228,7 +228,7 @@
     "login_link": "SIGN IN",
     "register_link": "CREATE ACCOUNT",
     "verify_title": "EMAIL NOT VERIFIED",
-    "verify_body": "Verify your email so support can safely attach an invite and access key to this account.",
+    "verify_body": "Verify your email so your access key attaches safely to this account.",
     "verify_resend": "RESEND EMAIL",
     "verify_sent": "EMAIL SENT",
     "verify_error": "Could not send the email. Try again in a minute.",
@@ -241,7 +241,7 @@
     "access_pending": "WAITING FOR ISSUE",
     "capacity_label": "CAPACITY",
     "capacity_open": "OPEN",
-    "capacity_review": "REVIEW",
+    "capacity_review": "PENDING",
     "route_label": "ROUTE",
     "route_private": "PRIVATE",
     "route_reserved": "RESERVED",
@@ -249,7 +249,7 @@
     "console_ready": "READY",
     "console_pending": "PENDING",
     "console_body_ready": "Your account is active. Keep the configuration private and use the setup guide when adding a new device.",
-    "console_body_pending": "Your identity is in the queue. Email verification and capacity review happen first; the configuration appears here after manual issue.",
+    "console_body_pending": "Your account is in the issue queue. We verify your email and payment first, then the configuration appears here automatically.",
     "signal_label": "SIGNAL",
     "signal_latency": "ROUTE CHECK",
     "signal_stability": "STABILITY",
@@ -268,14 +268,16 @@
     "status_pending_body": "Once your payment is confirmed and access is issued, the key and connection buttons appear here.",
     "status_paid_awaiting_title": "Payment received",
     "status_paid_awaiting_body": "Setting up your access. Your key and connection buttons appear here automatically once it's issued — usually quickly.",
+    "status_issue_failed_title": "Payment received — we'll issue your key manually",
+    "status_issue_failed_body": "Automatic issuance didn't go through; the order is already with the operator. Your key will be issued manually and appear here. Taking long? Message support.",
     "status_blocked_title": "Access is limited",
     "status_blocked_body": "Contact support with your account email. We will check the status and tell you what to do next.",
     "vpn_section_label": "Connection",
-    "key_ready_body": "Your personal link. Do not share it with anyone — one invite covers your own devices.",
+    "key_ready_body": "Your personal link. Do not share it with anyone — one subscription covers your own devices.",
     "key_pending_body": "The key has not been issued yet. There is nothing to configure now: once access is ready, this card will show the link and actions.",
     "pipeline_label": "ISSUE PIPELINE",
     "progress_email": "Email verification",
-    "progress_invite": "Invite and capacity review",
+    "progress_invite": "Payment confirmation",
     "progress_access": "Personal configuration issue",
     "state_done": "DONE",
     "state_current": "NOW",
@@ -290,7 +292,7 @@
     "setup_link": "SETUP GUIDE",
     "pay_cta": "GET ACCESS",
     "ready_hint_label": "Access is issued. Keep the link private and use it only in your own client.",
-    "pending_hint_label": "The account is ready for manual access attachment. Once capacity is approved, your personal configuration appears here.",
+    "pending_hint_label": "Once your payment is confirmed, your personal configuration appears here automatically.",
     "next_label": "NEXT",
     "next_active_1_title": "How to connect",
     "next_active_step_1": "Press the «Setup guide» button above.",
@@ -300,12 +302,12 @@
     "next_active_2_body": "After connecting, make sure the client shows an active state and does not ask for a new key.",
     "next_active_3_title": "Contact support",
     "next_active_3_body": "If setup fails, send your account email and an error screenshot. We will handle it manually.",
-    "next_pending_1_title": "Wait for review",
-    "next_pending_1_body": "We can see the account and will attach access manually after review. If it is urgent, contact support.",
+    "next_pending_1_title": "Wait for payment confirmation",
+    "next_pending_1_body": "Once your payment is confirmed, the key appears in your dashboard automatically. If something went wrong, contact support.",
     "next_pending_2_title": "Avoid duplicates",
-    "next_pending_2_body": "One email equals one PRSLOY ID. It keeps the invite and issue history easy to track.",
+    "next_pending_2_body": "One email equals one PRSLOY ID. It keeps your payment and issue history easy to track.",
     "next_pending_3_title": "Ask for status",
-    "next_pending_3_body": "If the invite is urgent, contact support with your account email.",
+    "next_pending_3_body": "If the key is taking too long, contact support with your account email.",
     "reissue_title": "Reissue",
     "reissue_body": "Need to reissue the key?",
     "reissue_button": "REQUEST",
@@ -325,9 +327,9 @@
   },
   "payment_result": {
     "confirmed_title": "PAYMENT CONFIRMED",
-    "confirmed_body": "Subscription active. Status is below — your key appears once access is issued.",
+    "confirmed_body": "Subscription active. Your key appears in your dashboard automatically — status is below.",
     "success_title": "PAYMENT PROCESSING",
-    "success_body": "We're checking your payment. Once it's confirmed, your subscription activates — the status is shown below. During the closed beta the key is issued manually.",
+    "success_body": "We're checking your payment. Once it's confirmed, your subscription activates and the key appears in your dashboard automatically — the status is shown below.",
     "failed_title": "PAYMENT DID NOT GO THROUGH",
     "failed_body": "The payment did not complete and no money was charged. Try again or contact support if something is off.",
     "dismiss": "Dismiss"
@@ -376,19 +378,19 @@
     "categories": {
       "product": "PRODUCT",
       "tech": "ACCESS",
-      "payment": "INVITE & PAYMENT",
+      "payment": "PAYMENT & ACCESS",
       "trust": "PRIVACY"
     },
     "items": [
       {
         "category": "product",
         "q": "What is PRSLOY?",
-        "a": "An invite-only private access service. Once issued, you get a personal configuration and a setup guide in your dashboard."
+        "a": "A private VPN with open registration. After payment you get a personal configuration and a setup guide in your dashboard."
       },
       {
         "category": "product",
-        "q": "Why invite-only and not for everyone?",
-        "a": "To keep the speed we promise. We let people in gradually and keep the number of users per server within limits where the connection doesn't degrade."
+        "q": "Is there enough capacity with open registration?",
+        "a": "To keep the speed we promise. We keep the number of users per server within limits where the connection doesn't degrade, and add capacity ahead of demand."
       },
       {
         "category": "product",
@@ -412,18 +414,13 @@
       },
       {
         "category": "payment",
-        "q": "How do I get an invite?",
-        "a": "Leave your email on the pricing page. If capacity is available, we send the next step and attach access to your PRSLOY ID."
-      },
-      {
-        "category": "payment",
         "q": "How does payment work now?",
-        "a": "SBP and USDT checkout are live. During beta, payment activates a subscription in your dashboard; the key is still issued manually after a capacity check."
+        "a": "SBP and USDT checkout are live. Once your payment is confirmed, the subscription activates and the key appears in your dashboard automatically."
       },
       {
         "category": "payment",
         "q": "Why show $5/mo?",
-        "a": "It is the beta access reference price so positioning is clear. SBP and USDT checkout are live; automatic key issuing comes later."
+        "a": "It is the beta reference price so positioning is clear. SBP and USDT checkout are live, and the key appears in your dashboard automatically once payment is confirmed."
       },
       {
         "category": "trust",
@@ -433,7 +430,7 @@
       {
         "category": "trust",
         "q": "Can I trust you?",
-        "a": "No private access service deserves blind trust. Our honest stance: no magic promises, no unnecessary public schemes, and closed beta until quality is reliable."
+        "a": "No private access service deserves blind trust. Our honest stance: no magic promises, no unnecessary public schemes, and we stay in beta until quality is reliable."
       }
     ],
     "still_have": "Still have questions?",
@@ -460,7 +457,7 @@
         },
         {
           "h": "RETENTION",
-          "p": "Your key record lives while the subscription is active + 90 days (in case of renewal). After that — deleted. Email from the waitlist form is kept until we send you the invite link, then deleted within 30 days if you don’t subscribe."
+          "p": "Your key record lives while the subscription is active + 90 days (in case of renewal). After that — deleted. Your account email and account data are kept while the account exists; after you delete the account, we erase them within 30 days."
         },
         {
           "h": "THIRD PARTIES",
@@ -556,10 +553,10 @@
     }
   },
   "footer": {
-    "closing_line1": "ACCESS",
-    "closing_line2": "BY INVITE.",
+    "closing_line1": "OPEN REGISTRATION",
+    "closing_line2": "PRIVATE ACCESS.",
     "cta": "GET ACCESS",
-    "cta_meta": "$5/MO · ISSUED MANUALLY",
+    "cta_meta": "$5/MO · AUTO KEY DELIVERY",
     "nav_pricing": "PRICING",
     "nav_faq": "FAQ",
     "nav_blog": "BLOG",

@@ -43,6 +43,19 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
     nextLabel: "NEXT",
     entries: [
       {
+        date: "2 JULY 2026",
+        label: "OPEN REGISTRATION",
+        title: "Registration is open — the gate is gone",
+        body:
+          "We retired the closed-access system. Anyone can register, pick a plan, and pay — no code, no waitlist, no queue. The remaining-slots storefront is gone with it: capacity is real, and we keep it with headroom instead of turning it into a countdown. Once payment is confirmed the key lands in the dashboard automatically — the same hand-off we shipped in June, now with the front door open.",
+        items: [
+          "Access codes and the waitlist are removed across the site.",
+          "Register → pick a plan → pay, with no gate in between.",
+          "Payment confirmed → the key appears in the dashboard automatically.",
+        ],
+        status: "LIVE",
+      },
+      {
         date: "5 JUNE 2026",
         label: "AUTO KEY DELIVERY",
         title: "The key now issues itself at payment",
@@ -294,6 +307,19 @@ const DEVLOG: Record<"en" | "ru", BlogCopy> = {
     issueLabel: "FIXED",
     nextLabel: "NEXT",
     entries: [
+      {
+        date: "2 ИЮЛЯ 2026",
+        label: "ОТКРЫТАЯ РЕГИСТРАЦИЯ",
+        title: "Регистрация открыта — закрытого входа больше нет",
+        body:
+          "Мы убрали закрытый вход. Любой может зарегистрироваться, выбрать тариф и оплатить — без кода, без листа ожидания, без очереди. Витрина с «оставшимися местами» ушла вместе с ним: ёмкость реальна, и мы держим её с запасом, а не превращаем в обратный отсчёт. После подтверждения оплаты ключ появляется в ЛК автоматически — та же замкнутая цепочка, что мы собрали в июне, теперь с открытой дверью.",
+        items: [
+          "Коды доступа и лист ожидания убраны со всего сайта.",
+          "Регистрация → выбор тарифа → оплата, без барьеров между шагами.",
+          "Оплата подтверждена → ключ появляется в ЛК автоматически.",
+        ],
+        status: "LIVE",
+      },
       {
         date: "5 ИЮНЯ 2026",
         label: "АВТОВЫДАЧА КЛЮЧА",
