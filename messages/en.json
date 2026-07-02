@@ -390,7 +390,7 @@
       {
         "category": "product",
         "q": "Is there enough capacity with open registration?",
-        "a": "To keep the speed we promise. We keep the number of users per server within limits where the connection doesn't degrade, and add capacity ahead of demand."
+        "a": "Yes. We keep the number of users per server within limits where the connection doesn't degrade, and add capacity ahead of demand — before nodes get near their limit."
       },
       {
         "category": "product",

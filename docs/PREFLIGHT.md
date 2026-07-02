@@ -31,8 +31,8 @@ The dev run is the gate. The prod run is best-effort: a `WAF-CHALLENGE` exit (2)
 ### 2) State-forcing for visual check
 
 Most hard states are not reachable by just visiting a URL. Use the reachability harness:
-- **`query-flag`** states — visit directly, no setup. Payment banners: `…/pricing?payment=success`, `…/pricing?payment=failed`, `…/dashboard?payment=success`. Magic-link prefill: `…/register?code=SOMECODE`.
-- **`dev-url`** states — `npm run dev`, then visit. Guest paths, client-side validation errors (bad-email regex, empty invite code), dashboard `no-user`/`loading`.
+- **`query-flag`** states — visit directly, no setup. Payment banners: `…/pricing?payment=success`, `…/pricing?payment=failed`, `…/dashboard?payment=success`.
+- **`dev-url`** states — `npm run dev`, then visit. Guest paths, client-side validation errors (bad-email regex), dashboard `no-user`/`loading`.
 - **`needs-auth` / `needs-kv` / `needs-payment`** states — require the `?__state=` / `?__error=` dev overrides (build them per §D) **or** a seeded KV user on a preview deploy. Until the overrides land, these are reached only by real auth/payment or admin curls.
 - **`source-only`** states — not browser-reachable without crafted KV (timer-expired pool, expired/hidden payment strips, error boundaries). Verify by reading the branch + its copy.
 
@@ -56,14 +56,9 @@ This table **is** the coverage checklist. Tier = the page's intended primary tie
 | Route | State | Primary action | Tier | How to reach |
 |---|---|---|---|---|
 | `/` (home) | static / scroll-driven | Scroll to pricing / get-access CTA | unclear | prod-url |
-| `/pricing` | guest · capacity-loading | Wait (skeleton) | none | dev-url |
-| `/pricing` | guest · capacity-ready (not full) | Request access — Telegram bot | tier-1 | prod-url |
-| `/pricing` | authed · capacity-ready (not full) | Pay with SBP | tier-1 | needs-auth |
-| `/pricing` | capacity-full (pool full) | Notify-me when slots open | tier-2 | needs-kv |
-| `/pricing` | pool-full · timer-expired | Notify-me form still present | tier-2 | source-only |
-| `/pricing` | invite · email-sent | Open Telegram bot (TG tier-1) | tier-1 | needs-kv |
-| `/pricing` | invite · email-error | Correct email + resubmit; TG always available | tier-1 | query-flag |
-| `/pricing` | invite · collapsed | Expand invite request | tier-3 | needs-auth |
+| `/pricing` | guest | Create PRSLOY ID (→ /register) | tier-1 | prod-url |
+| `/pricing` | authed · email linked | Pay with SBP | tier-1 | query-flag (`?__state=authed`) |
+| `/pricing` | authed · no email (TG-only) | Link email for receipts | tier-1 | query-flag (`?__state=authed-noemail`) |
 | `/pricing` | payment=success banner | Dismiss / proceed (informational) | none | query-flag |
 | `/pricing` | payment=failed banner | Retry (checkout below for authed) | none | query-flag |
 | `/login` | guest (default) | Sign in (submit) | tier-1 | prod-url |
@@ -76,8 +71,7 @@ This table **is** the coverage checklist. Tier = the page's intended primary tie
 | `/login` | Telegram: awaiting confirm | Confirm in bot; reopen link | tier-1 | needs-kv |
 | `/login` | Telegram: error | Restart Telegram flow | tier-1 | needs-kv |
 | `/register` | guest (default) | Create account (submit) | tier-1 | prod-url |
-| `/register` | invite-prefill from magic-link | Create account w/ prefilled code | tier-1 | query-flag |
-| `/register` | error: invite_required/invalid/consumed | Enter a valid invite code | tier-1 | needs-kv |
+| `/register` | error: client-invalid email/password | Correct input | tier-1 | dev-url |
 | `/register` | error: email_exists | Use login / different email | tier-1 | needs-kv |
 | `/register` | success → dashboard?registered=1 | (navigates to dashboard) | none | needs-kv |
 | `/register` | +telegram register block | Email register OR Telegram register | tier-1 | needs-kv |
@@ -85,7 +79,8 @@ This table **is** the coverage checklist. Tier = the page's intended primary tie
 | `/dashboard` | not_configured | None (warning panel) | none | source-only |
 | `/dashboard` | guest (no user) | Sign in | tier-1 | dev-url |
 | `/dashboard` | authed · pending-unpaid | Pay (go to pricing) | tier-1 | needs-auth |
-| `/dashboard` | authed · paid-awaiting-issue | Wait for key issuance — support only | tier-2 | needs-payment |
+| `/dashboard` | authed · paid-awaiting-issue | Wait for key issuance — support only | tier-2 | query-flag (`?__state=paid-awaiting`) |
+| `/dashboard` | authed · issue-failed (paid, auto-issue failed) | Wait — operator issues manually; support | tier-2 | query-flag (`?__state=issue-failed`) |
 | `/dashboard` | authed · active (has key) | Set up the key (→ /setup) | tier-1 | needs-payment |
 | `/dashboard` | authed · blocked | Contact support | tier-2 | needs-kv |
 | `/dashboard` | authed · email-unverified | Resend verification email | tier-2 | needs-kv |
@@ -163,10 +158,9 @@ export function getDevState(key: string): string | null {
 ```
 Add `src/lib/__tests__/dev-state.test.ts` asserting it returns `null` when `NODE_ENV==='production'`. Then wire each component's override through it (null short-circuits to the real fetch):
 
-- **`PricingPageClient.tsx`** (after the capacity `useEffect`): `?__state=pool-full` → `{kind:'ready',display:300,target:300,full:true,expansionAtIso:+3d,vipContactUrl}`; `capacity-loading` → leave loading; `capacity-ready` → `{kind:'ready',display:248,target:300,full:false}`. Unlocks the `PoolFullPanel` (timer + notify form + VIP escape) and the numeric counter — neither reachable on dev today.
-- **`DashboardClient.tsx`** (before `fetchMe`): `?__state=` `active` / `blocked` / `unverified` / `pending` / `paid-awaiting` / `not_configured`, each setting a `PublicAuthUser` fixture + `setPaidAwaiting`. Unlocks 6 branches that otherwise only ever show `auth_required` on dev. `paid-awaiting` must show **no** pay CTA (primary='none').
-- **`AuthForm.tsx`** (`AuthFormInner`, on mount): `?__error=` `email_exists` / `credentials` / `rate_limited` / `storage` / `secret` / `not_configured` / `invite_invalid` / `invite_consumed` / `generic` → `setError(copy[…])`, renders the exact `<p role="alert">` for screenshot without a backend.
-- **`InviteRequest.tsx`** (optional): `?__invite=rate_limited` → error state with `copy.emailRateLimited`.
+- **`PricingPageClient.tsx`**: `?__state=authed` → signed-in checkout (pay buttons); `?__state=authed-noemail` → the email-link step replaces the pay buttons (Telegram-only account shape). The capacity/pool states are gone with the scarcity storefront (2026-07-02).
+- **`DashboardClient.tsx`** (before `fetchMe`): `?__state=` `active` / `blocked` / `unverified` / `pending` / `paid-awaiting` / `issue-failed` / `not_configured`, each setting a `PublicAuthUser` fixture + `setPaidAwaiting`/`setIssueFailed`. `paid-awaiting` and `issue-failed` must show **no** pay CTA (primary='none').
+- **`AuthForm.tsx`** (on mount): `?__error=` `email_exists` / `credentials` / `rate_limited` / `storage` / `secret` / `not_configured` / `generic` → `setError(copy[…])`, renders the exact `<p role="alert">` for screenshot without a backend.
 
 ### 2) Curl smoke-script
 
@@ -215,7 +209,6 @@ done
 check "/ru/admin/grant" 404
 
 # public JSON read APIs (guest)
-curl -sS -A "$UA" "$BASE/api/access/capacity" | grep -q '"ok"' && echo "OK    /api/access/capacity" || { echo "FAIL  capacity"; FAIL=1; }
 curl -sS -A "$UA" "$BASE/api/auth/me"          | grep -q '"user":null' && echo "OK    /api/auth/me (guest)" || echo "NOTE  /api/auth/me not guest-null"
 
 [ "$WAF" = 1 ] && { echo "— WAF challenge seen (expected on prod, not a failure)"; exit 2; }
@@ -226,10 +219,8 @@ echo "all green"; exit 0
 
 ### 3) Manual-only states (no cheap lever — document the steps)
 
-- **Real prod pool-full** — set Vercel env `PRICING_TARGET=1` (or `PRICING_COUNTER_OFFSET=300`) and redeploy → `full:true` with no KV writes; revert to restore. After any test that INCRs the live counter, reset: `curl -X POST -H "Authorization: Bearer $ADMIN_SECRET" https://www.prsloy.online/api/admin/capacity-reset` so the public counter isn't polluted.
 - **Populated admin AccessCard** (active/pending/blocked/no-key/no-email) — needs a seeded KV user on a preview: register a test account, then curl `/api/admin/issue` (active+key), `/api/admin/access` PATCH `blocked:true` (blocked), or leave unpaid (pending/keyNone), then re-search the identifier.
 - **Admin rate_limited** — fire >10 `/api/admin/capacity-reset` calls in 60s to trip the 429 → "Слишком много действий".
-- **Invite email rate_limited** — submit the same email 4× in a day (per-email limit 3) on prod; same alert component as the dev-reachable bad-email error, so largely covered visually.
 - **`confirmed` payment banner (green)** — needs a real confirmed order in KV; on dev it sticks on `processing` forever. Screenshot `processing`+`failed` on dev, `confirmed` on prod after an `/api/admin/reprocess` run.
 
 ---
