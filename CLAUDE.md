@@ -47,13 +47,11 @@ Before reaching for Read/Grep, consider:
 
 ## 1.6 Orchestration workflow
 
-You (Fable) are the orchestrator. Plan, decompose, synthesize.
+You (Fable) are the orchestrator. Plan, decompose, synthesize — and do most of the work in the main loop.
 
-- Reasoning-heavy phases → `deep-reasoner` subagent (Opus)
-- Mechanical work → `fast-worker` subagent (Sonnet)
-- Codex (`/codex:rescue --background`) is a cracked engineer on par with deep-reasoner, from a different perspective. Treat as a peer, not a reviewer.
-
-High-stakes decisions: task Opus + Codex on the same problem in parallel, synthesize the best of both, without showing either the other's answer. Keep your own context lean.
+- **Codex (`/codex:rescue --background`) is the default delegate**: investigation, adversarial review, second opinions, big-diff reading. Runs on its own OpenAI quota — near-zero cost to the Claude plan. Treat as a peer, not a reviewer.
+- **Claude subagents are expensive on this plan** (measured 2026-07-03: parallel fleets + Workflow fan-outs ate a 5-hour session limit in ~30 min and ~1/3 of the weekly one, ~1.9M subagent tokens). Use at most ONE tightly-scoped subagent when Codex can't do the job; no parallel fleets, no Workflow fan-outs, unless the founder explicitly asks for that scale.
+- High-stakes decisions: main-loop analysis + Codex on the same problem, synthesize the best of both without showing either the other's answer. Keep your own context lean.
 
 ---
 
@@ -293,6 +291,7 @@ Format: `- (YYYY-MM-DD) Rule. Why: short reason.`
 - (2026-05-27) Tooling truth: Claude defaults to Read+Grep when Serena is faster, defaults to memory when WebSearch would be more current. §1.5 added to force the right default.
 - (2026-07-02) Orchestration adopted (§1.6): Fable orchestrates, deep-reasoner (Opus) + fast-worker (Sonnet) + Codex as peer. Supersedes the 2026-05-21 anti-parallel-agents note for delegated work.
 - (2026-07-02) Invite system removed — registration is open (plan: `docs/plans/2026-07-02-open-funnel.md`). Why: founder pivoted to open commercial service; funnel = register → pay → auto-issued Ключ. Scarcity storefront (slot counter, pool-full, notify-when-open) removed with it; «приглашение» is dead in user copy.
+- (2026-07-03) Claude-agent fleets burn the plan: parallel subagents + Workflow fan-outs ate a 5h limit in ~30 min and ~1/3 of the weekly one; Codex barely registers. Default delegate = Codex; single scoped Claude subagent only when necessary. §1.6 rewritten.
 
 ---
 
