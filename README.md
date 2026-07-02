@@ -1,6 +1,6 @@
 # PRSLOY
 
-Invite-only VPN. This repo ships the public site, the customer cabinet, the operator admin panel, and the analytics loop that backs them. Beta.
+Private VPN with open registration. This repo ships the public site, the customer cabinet, the operator admin panel, and the analytics loop that backs them. Beta.
 
 Stack: Next.js 15 (App Router) · React 19 · TypeScript 5.7 (strict) · Tailwind 3.4 · next-intl 3.26 (RU/EN) · Upstash Redis (REST) · Resend (email) · `motion` 11 · `three` 0.172. Deployed manually on Vercel via `vercel --prod`.
 
@@ -11,7 +11,7 @@ Public:
 | Path | What it is |
 |---|---|
 | `/` (`/ru`, `/en`) | Landing — hero → handshake → 3D globe → "your ISP sees nothing" → pricing → FAQ → footer |
-| `/pricing` | Period switcher (1/6/12 mo), SBP + USDT checkout, public slot counter, invite-request panel |
+| `/pricing` | Period switcher (1/6/12 mo), SBP + USDT checkout; guests get a register CTA |
 | `/faq` | Product / tech / payment / privacy |
 | `/privacy` · `/terms` · `/refunds` | Legal pages |
 | `/setup` | Per-device setup guide for Happ |
@@ -31,21 +31,20 @@ API:
 
 | Path | What it is |
 |---|---|
-| `POST /api/auth/register` · `/login` · `/logout` · `/me` · `/verify` · `/resend-verification` | Email/password flow |
+| `POST /api/auth/register` · `/login` · `/logout` · `/me` · `/verify` · `/resend-verification` · `/link-email` | Email/password flow + email linking for Telegram-only accounts |
 | `POST /api/auth/telegram/init` · `/claim` · `/webhook` | Telegram deep-link sign-in |
 | `POST /api/payments/platega/create` · `/callback` | SBP / USDT checkout + provider webhook |
 | `GET /api/payments/me` | Latest order for the current session |
-| `POST /api/access/reissue` · `/api/access/request-via-email` | Customer reissue + invite-by-email |
-| `GET /api/access/capacity` · `POST /api/access/notify-when-open` | Public slot counter + pool-full waitlist |
+| `POST /api/access/reissue` | Customer key-reissue request |
 | `POST /api/track` | First-party pageview beacon |
-| `POST /api/admin/grant` · `/api/admin/access-pool/add` · `/api/admin/users` · `/api/admin/reissue` · `GET /api/admin/analytics` | Admin endpoints (Bearer ADMIN_SECRET) |
+| `POST /api/admin/grant` · `/api/admin/issue` · `/api/admin/reprocess` · `/api/admin/users` · `/api/admin/reissue` · `GET /api/admin/analytics` | Admin endpoints (Bearer ADMIN_SECRET) |
 
 ## Local dev
 
 ```bash
 npm install
 npm run dev        # Turbopack on http://localhost:3000 (Windows: may fall back to next start)
-npm test           # vitest — 273 tests, must stay green
+npm test           # vitest — full suite, must stay green
 npm run typecheck  # tsc --noEmit
 npm run lint       # next lint
 npm run build      # production build — must stay green
@@ -61,7 +60,8 @@ Auth + storage:
 
 Email (Resend):
 
-- `RESEND_API_KEY` + `RESEND_FROM` — verification emails, reissue notifications, invite delivery. Without them email send is silently skipped (calls return `{ok: false, skipped: true}`).
+- `RESEND_API_KEY` + `RESEND_FROM` — verification emails, reissue notifications, operator alerts. Without them email send is silently skipped (calls return `{ok: false, skipped: true}`).
+- `WAITLIST_NOTIFY_EMAIL` (optional) — operator inbox for reissue requests and failed-auto-issue alerts (name predates the removed waitlist; rename is a separate chore).
 
 Payments (Platega):
 
@@ -80,7 +80,7 @@ Site:
 
 ## Telegram sign-in
 
-Browser opens `t.me/<bot>?start=<nonce>` from `/login` or `/register`. User taps confirm in the bot; webhook captures the Telegram id; the page polls `/api/auth/telegram/claim` and exchanges the nonce for a session. First-time registration consumes one invite code; returning users sign in free.
+Browser opens `t.me/<bot>?start=<nonce>` from `/login` or `/register`. User taps confirm in the bot; webhook captures the Telegram id; the page polls `/api/auth/telegram/claim` and exchanges the nonce for a session. First-time users are registered on the spot; before paying they link an email in checkout (`POST /api/auth/link-email`).
 
 One-time webhook wiring:
 
@@ -95,7 +95,7 @@ curl -s "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" \
   -d "allowed_updates=[\"message\"]"
 ```
 
-The bot recognises `/start <nonce>` (auth), bare `/start` (welcome DM), and `/invite` (auto-generates a code and DMs a magic link, rate-limited per Telegram id).
+The bot recognises `/start <nonce>` (auth) and bare `/start` (welcome DM).
 
 ### Dev workflow
 
@@ -117,28 +117,13 @@ Telegram's webhook needs a public HTTPS URL — keep a separate `@prsloy_dev_bot
    ```
 5. `npm run dev`, open `/register`, tap the Telegram button.
 
-## Invite codes
+## Key issuance
 
-Codes live in Redis under the `access:pool:reserved` SET. The bot's `/invite` command auto-generates one per Telegram user (XXXX-XXXX format, rate-limited). Operators can also pre-seed in bulk:
+Automatic: when the provider callback confirms an order, `src/lib/payments.ts` issues the key through the provisioning proxy (`src/lib/marzneshin-proxy.ts`, HMAC-signed, `payment_id = order id` for idempotency) and the user's `/dashboard` shows the subscription link.
 
-```bash
-curl -X POST https://prsloy.online/api/admin/access-pool/add \
-  -H "Authorization: Bearer $ADMIN_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"codes":["alpha-001","alpha-002","alpha-003"]}'
-# → {"ok":true,"added":3,"skipped":0}
-```
+If auto-issue fails, the order is marked with `issueError`, an admin-audit entry is written, and the operator gets an email. Recovery: `POST /api/admin/reprocess {"email": "<buyer>"}` re-drives issuance with the original `payment_id` (safe to repeat). Do not recover via `/api/admin/issue` — it mints a fresh payment id and double-extends an already-issued subscription.
 
-Codes match `[A-Za-z0-9_-]+`, max 128 chars. Already-present or already-consumed codes count as `skipped`.
-
-## Manual VPN grant
-
-VPN-panel provisioning is not yet automated (`NEXT — AUTO KEY DELIVERY` on the devlog). After a successful payment the access key is still issued by the operator:
-
-1. Create the subscription/config URL in the VPN panel.
-2. Open `/ru/admin/grant`.
-3. Enter `ADMIN_SECRET`, an identifier (email / `@username` / Telegram id), and the subscription URL.
-4. Submit. The user's `/ru/dashboard` shows active access and the link.
+Manual fallback (`/ru/admin/grant`): enter `ADMIN_SECRET`, an identifier (email / `@username` / Telegram id), and a subscription URL created by hand in the VPN panel.
 
 ## Analytics
 
@@ -166,7 +151,7 @@ src/
 │   └── ui/               # shared atoms (SectionLabel, RevealOnView, DotoNumber)
 ├── i18n/                 # next-intl config + routing
 └── lib/                  # business logic (auth, payments, platega, telegram-auth,
-                          # analytics, capacity, access-pool, kv, rate-limit, …)
+                          # analytics, capacity, marzneshin-proxy, kv, rate-limit, …)
 messages/{ru,en}.json     # ALL user-facing copy — never hardcode strings in components
 ```
 

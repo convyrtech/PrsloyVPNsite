@@ -45,6 +45,16 @@ Before reaching for Read/Grep, consider:
 
 **Failure mode I (Claude) keep showing:** I default to Read+Grep when Serena would be faster. Push back on yourself before opening anything >200 lines.
 
+## 1.6 Orchestration workflow
+
+You (Fable) are the orchestrator. Plan, decompose, synthesize.
+
+- Reasoning-heavy phases → `deep-reasoner` subagent (Opus)
+- Mechanical work → `fast-worker` subagent (Sonnet)
+- Codex (`/codex:rescue --background`) is a cracked engineer on par with deep-reasoner, from a different perspective. Treat as a peer, not a reviewer.
+
+High-stakes decisions: task Opus + Codex on the same problem in parallel, synthesize the best of both, without showing either the other's answer. Keep your own context lean.
+
 ---
 
 ## 2. Simplicity first (Karpathy)
@@ -149,8 +159,8 @@ After every session where the agent did something wrong:
 - Animations: `motion` 11, `three` 0.172
 - Storage: Vercel KV (Upstash Redis REST)
 - Email: Resend (transactional)
-- Payments: Platega (SBP QR live). See `src/lib/platega.ts`.
-- Auth: custom — email/password + Telegram bot deep-link. See `src/lib/auth.ts`, `src/lib/telegram-auth.ts`. Invite codes via `src/lib/access-pool.ts`.
+- Payments: Platega (SBP QR + USDT live). See `src/lib/platega.ts`.
+- Auth: custom — email/password + Telegram bot deep-link. See `src/lib/auth.ts`, `src/lib/telegram-auth.ts`. Registration is open (invite system removed 2026-07-02); Telegram-only accounts link an email at checkout (`linkEmail`).
 - Package manager: `npm`. Runtime: Vercel Node.js.
 - **Deployment: manual `vercel --prod`.** No GitHub Actions, no auto-deploy.
 
@@ -188,8 +198,8 @@ Prefer single-file test runs during iteration. Full suites for final verificatio
 ### Forbidden
 - **Never edit `messages/ru.json` without `messages/en.json`** (and vice versa). Exception: brand-only literals (`"PRSLOY"`).
 - **Never re-introduce dead terms** in code/copy/comments: `Convyr`, `Arsenal`, `Rollypay`, `Approach D`.
-- **Never assume payment flows beyond SBP work.** Only SBP QR is wired through Platega. CARD/BTC/ETH/TON/USDT are conversion-rate displays, not checkout paths.
-- **Never assume the Ключ is auto-issued after payment.** Order `confirmed` = **Подписка** active (money landed), but the **Ключ** (VPN config) is issued manually via `/admin/grant` until provisioning lands (PR #4). Two separate lifecycles. See `CONTEXT.md`.
+- **Never assume payment flows beyond SBP and USDT work.** Only SBP QR and USDT are wired through the provider. CARD/BTC/ETH/TON are conversion-rate displays, not checkout paths.
+- **Подписка ≠ Ключ, even with auto-issue.** Order `confirmed` = **Подписка** active (money landed); the **Ключ** auto-issues right after (`issueKeyForOrder`), but can fail — the order then carries `issueError` and the operator recovers via `/api/admin/reprocess` (same `payment_id`, idempotent; never via `/api/admin/issue` — it mints a new payment_id and double-extends). Manual `/admin/grant` is the last-resort fallback. See `CONTEXT.md`.
 - **Never cite dated plans as current spec** (`PRSLOY_PHASES.md`, `docs/plans/*.md`). They're snapshots — verify against `main`.
 - **Never set up GitHub Actions or CI for deploy.** Deploy is intentionally manual.
 
@@ -225,13 +235,13 @@ Project-specific anti-failure rules. Numbered for correction reference.
 1. **i18n parity is non-optional.** Any change in `messages/ru.json` requires matching change in `messages/en.json` in the same commit. Brand-only literals (`"PRSLOY"`) exempt. Hook 1 enforces this automatically.
 2. **`CONTEXT.md` is truth for domain terms.** Before naming an Order/Transaction/Access/Period/etc., scan it. New term → propose, get confirmation.
 3. **Order ≠ Transaction ≠ Подписка ≠ Ключ.** Four lifecycles, four timelines. In RU copy: «ключ» = artifact, «подписка» = time-bound entitlement. Never imply "payment confirmed" = "VPN works now".
-4. **SBP is the only live payment method.** When touching pricing/checkout/success copy, don't write text implying other methods are live.
+4. **SBP and USDT are the only live payment methods.** When touching pricing/checkout/success copy, don't write text implying other methods are live.
 5. **Manual deploy.** No GitHub Actions, no auto-deploy. User runs `vercel --prod` after commits.
 6. **Auto-memory drifts.** Files in `~/.claude/projects/E--VPN/memory/` can be 2-3 weeks stale. Sniff-check against current code on `main` before quoting.
 7. **Plans decay.** `docs/plans/*.md` are dated snapshots, not current spec.
 8. **Partner code arrives via PR.** Marzneshin integration is no longer "dead reference" — partner has SSH access and will deliver provisioning code into `src/server/`. Reviewer is the user, not Claude. Treat that PR as a load-bearing review when it lands.
 9. **Never name the payment provider in user-facing copy.** Users see the METHOD ("СБП" / "SBP" / "card" / "USDT") — never the backend processor brand (Platega, etc.). Applies to UI, FAQ, privacy, terms. Internal code/env vars/routes can keep the brand. See [[feedback_no_tech_jargon]], [[feedback_marketing_voice]].
-10. **Telegram is a sign-in method, not a payment provider.** Bot deep-link is auth + waitlist. Never imply it accepts payment. Keep auth and payment in separate sentences in copy.
+10. **Telegram is a sign-in method, not a payment provider.** Bot deep-link is auth only. Never imply it accepts payment. Keep auth and payment in separate sentences in copy.
 11. **Marketing voice = neutral company artifact.** Public pages (`/`, `/pricing`, `/blog`, `/faq`) read as confident-concrete-honest, never addressed to "investors" or "elite". No hype, no superlatives, no "by invitation" framing. See [[feedback_marketing_voice]], [[feedback_investor_copy_framing]]. Applies to SMM posts as much as to site copy.
 
 ---
@@ -281,6 +291,8 @@ Format: `- (YYYY-MM-DD) Rule. Why: short reason.`
 - (2026-05-27) User role expanded: now full-stack + marketing + SMM. Partner contributes via PR to `src/server/`. Marzneshin integration is a live workstream, not legacy.
 - (2026-05-27) Workflow tightened: 7 hooks added (i18n parity, destructive Bash block, secret scan, Stop verification, correction nudge, PreCompact snapshot, SessionStart resume). Skill count cut from ~80 to ~20. Karpathy guidelines inlined. See `.claude/settings.local.json`.
 - (2026-05-27) Tooling truth: Claude defaults to Read+Grep when Serena is faster, defaults to memory when WebSearch would be more current. §1.5 added to force the right default.
+- (2026-07-02) Orchestration adopted (§1.6): Fable orchestrates, deep-reasoner (Opus) + fast-worker (Sonnet) + Codex as peer. Supersedes the 2026-05-21 anti-parallel-agents note for delegated work.
+- (2026-07-02) Invite system removed — registration is open (plan: `docs/plans/2026-07-02-open-funnel.md`). Why: founder pivoted to open commercial service; funnel = register → pay → auto-issued Ключ. Scarcity storefront (slot counter, pool-full, notify-when-open) removed with it; «приглашение» is dead in user copy.
 
 ---
 

@@ -25,7 +25,7 @@ Mirrors open GitHub Issues + ongoing workstreams. Synced with [Project board](ht
 
 **What:** Перевыпустить `ADMIN_SECRET`, обновить env на Vercel (production + preview), передеплоить, проверить вход в админку.
 
-**Why:** Единый секрет, закрывающий весь админ-surface — `/api/admin/grant`, `/issue`, `/reprocess`, `/users`, `/lookup`, `/access`, `/access-pool/*` (проверка per-request в `src/lib/admin-auth.ts`). Старое значение светилось в чате → скомпрометировано. Утечка = кто угодно может выдавать ключи Marzneshin, грантить доступ, читать записи юзеров.
+**Why:** Единый секрет, закрывающий весь админ-surface — `/api/admin/grant`, `/issue`, `/reprocess`, `/users`, `/lookup`, `/access` (проверка per-request в `src/lib/admin-auth.ts`). Старое значение светилось в чате → скомпрометировано. Утечка = кто угодно может выдавать ключи Marzneshin, грантить доступ, читать записи юзеров.
 
 **Context:** `openssl rand -hex 32` → `vercel env` (prod+preview) → `vercel --prod`. In-app сессии нет (сверка per-request), хватает обновления env + редеплоя. Проверка: новый секрет → 200, старый → 401. **Отдельно от #5** (`TELEGRAM_BOT_TOKEN`) — другой секрет, тот же класс «утёк в чате».
 
@@ -98,6 +98,8 @@ Vercel (PRSLOY) ──POST /external/issue-key (HMAC)──► Partner backend �
 ---
 
 ### Marketing voice audit
+
+**Status (2026-07-02): ✅ выполнено** в рамках открытия регистрации (ветка `feat/open-funnel`): «по приглашению» и витрина дефицита убраны со всех страниц, SEO-мета и OG-картинка переписаны. См. `docs/plans/2026-07-02-open-funnel.md`.
 
 **What:** Пройтись по `/`, `/pricing`, `/blog`, `/faq` и убрать всё что звучит «для инвесторов», «элитарно», «по приглашению».
 

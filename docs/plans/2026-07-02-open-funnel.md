@@ -68,33 +68,33 @@
 
 ## Группа C — привязка почты для Telegram-входа
 
-- [ ] C1. `linkEmail(userId, email)` в `src/lib/auth.ts`: NX-резервация почты (как registerUser:205-212),
-      занята → AuthError email_exists; установка email + отправка письма-подтверждения; тесты.
-- [ ] C2. `POST /api/auth/link-email`: сессия обязательна, ограничение частоты, тесты по образцу
-      register-route.
-- [ ] C3. `PaymentCheckout.tsx`: если `user.email === null` — вместо кнопок оплаты поле «почта для чека
-      и доступа к аккаунту» → POST link-email → показать оплату. Серверный затвор 409 (:67-72 create)
-      остаётся защитой. Убрать мёртвое обещание в копии (:39). Ошибки 403 user_blocked / 429 показать
-      внятно (сейчас падают в generic, :111-112).
-- [ ] C4. i18n парой: ключи шага привязки почты.
-- [ ] C5. Проверка: typecheck + тесты + dev-прогон TG-пользователем (?__state, либо тестовый аккаунт).
+- [x] C1. `linkEmail(userId, email)` в `src/lib/auth.ts`: NX-резервация почты, занята → email_exists,
+      уже есть почта → email_already_set, откат резервации при сбое сохранения. Тесты: 5 случаев.
+- [x] C2. `POST /api/auth/link-email`: сессия, ограничение 5/час, письмо-подтверждение best-effort.
+      Тесты: 7 случаев (итого 48 зелёных по двум файлам).
+- [x] C3. `PaymentCheckout.tsx`: при `emailMissing` вместо кнопок оплаты — поле «ПОЧТА ДЛЯ ЧЕКА»
+      → link-email → кнопки; email_already_set трактуется как успех; копия 409 переписана.
+      Копия компонента — встроенный COPY-объект (ru+en), messages не задействованы.
+- [x] C4. Признак с тарифной: `PricingPageClient` читает email из /api/auth/me, передаёт
+      `emailMissing`; dev-состояние `?__state=authed-noemail` для визуальной проверки.
+- [~] C5. Проверка: typecheck + 48 тестов зелёные; визуальный прогон — в H3.
+      Замечание: внятные тексты для user_blocked/429 в checkout НЕ делались (не блокирует; хвост).
 
 ## Группа D — надёжность выдачи ключа
 
-- [ ] D1. `export const maxDuration = 30` в `payments/platega/callback/route.ts` (выдача до ~21 c,
-      сейчас лимита нет — окно падения).
-- [ ] D2. В catch авто-выдачи (payments.ts:260-266): `order.issueError` + saveOrder (долговечная метка),
-      `writeAuditEntry` (журнал админки), письмо оператору по образцу reissue
-      (WAITLIST_NOTIFY_EMAIL + sendTransactionalEmail, best-effort), `track({name:"issue_failed"})`.
-- [ ] D3. Восстановление: ветка в `/api/admin/reprocess` (или соседний маршрут) для «подтверждён, но без
-      ключа» (`order.confirmedAt && !user.subscriptionUrl`) — повторная выдача с ИСХОДНЫМ `order.id`
-      (партнёрская идемпотентность: повтор → 409 → idempotentReplay). НЕ через /api/admin/issue
-      (новый payment_id → удвоение срока).
-- [ ] D4. `track({name:"key_issued"})` на авто-пути (сейчас только admin-пути шлют — недоучёт).
-- [ ] D5. ЛК: paidAwaiting получает кнопку поддержки (сейчас CTA нет, DashboardClient:362-366);
-      состояние issueFailed по метке из /api/payments/me — честное «выпустим вручную». i18n парой.
-- [ ] D6. Тесты: issueKey бросает → метка сохранена, журнал получил запись, заказ восстановим повтором
-      с исходным order.id; happy-path не тронут (payments.test.ts зелёный без правок логики).
+- [x] D1. `export const maxDuration = 30` на callback-маршруте (окно падения закрыто).
+- [x] D2. Выдача вынесена в `issueKeyForOrder(order)`; catch → `reportAutoIssueFailure`:
+      `order.issueError` + saveOrder, `writeAuditEntry(action:"auto_issue", result:"error")`,
+      письмо оператору (WAITLIST_NOTIFY_EMAIL, best-effort), `track issue_failed`.
+- [x] D3. `/api/admin/reprocess`: ветка «подтверждён, но без ключа» → `issueKeyForOrder` с исходным
+      `order.id`; ответ дополнен `reissued`/`reissueError`; журнал пишет исход.
+- [x] D4. `key_issued` отправляется на авто-пути (внутри issueKeyForOrder).
+- [x] D5. ЛК: кнопка поддержки в герое была всегда (проверено, DashboardClient:403-412); добавлено
+      состояние issueFailed (метка из /api/payments/me → честное «выдадим вручную», тон warning),
+      dev-состояние `?__state=issue-failed`; i18n парой (status_issue_failed_title/body).
+- [x] D6. Тесты: 24/24 в payments.test.ts + admin-reprocess-route.test.ts (сбой выдачи → метка,
+      журнал, письмо оператору, issue_failed; восстановление через reprocess → reissued:true,
+      повтор — no-op; сбой восстановления → reissueError + журнал с ошибкой). Полный набор 345/345.
 
 ## Группа E — копирайт: открытый сервис (RU+EN строго парой)
 
@@ -112,27 +112,31 @@
 
 ## Группа F — удаление машинерии приглашений
 
-- [ ] F1. `auth.ts`: удалить `registerUserWithInvite` (:249-328) + import access-pool (:14-19).
-- [ ] F2. Удалить: `src/lib/access-pool.ts`, `src/lib/invite-email.ts`, `src/app/api/access/request-via-email/`,
-      `src/app/api/admin/access-pool/add/`, `src/components/access/InviteRequest.tsx`,
-      `src/components/access/PoolFullPanel.tsx` (если не удалён в B).
-- [ ] F3. Бот: `/invite` из webhook (:116-172 dispatch+handler+WELCOME_TEXT, :190-203 шаблоны),
-      `parseBotMessage` invite_request из `telegram-auth.ts` (:139,:224-227,:309), env
-      `TELEGRAM_INVITE_LIMIT_PER_DAY` из кода.
-- [ ] F4. `links.ts`: INVITE_BOT_FALLBACK_URL + мёртвый комментарий getInviteBotUrl (:4-8).
-- [ ] F5. Тесты: удалить `access-pool.test.ts`; в `admin-mutation-ratelimit.test.ts` убрать только набор
-      access-pool/add (:107-126 — файл покрывает и другие маршруты!); подчистить telegram-auth.test.ts
-      (:181-223).
-- [ ] F6. Проверка: typecheck + полный `npm test` + `npm run build`.
+- [x] F1. `auth.ts`: `registerUserWithInvite` + import access-pool удалены.
+- [x] F2. Удалены: access-pool.ts, invite-email.ts, request-via-email/, admin/access-pool/,
+      InviteRequest.tsx, PoolFullPanel.tsx, notify-when-open/, access/capacity/ (потребителей нет),
+      access-pool.test.ts, пустая папка components/access/. В scripts/smoke.sh снята проверка
+      /api/access/capacity.
+- [x] F3. Бот: /invite убран из webhook (+ осиротевшие getSiteUrl/ruPlural), WELCOME_TEXT переписан
+      под вход; parseBotMessage без invite_request; TELEGRAM_INVITE_LIMIT_PER_DAY выпилен из кода.
+- [x] F4. `links.ts`: INVITE_BOT_FALLBACK_URL удалён (ссылок ноль).
+- [x] F5. Тесты подчищены (telegram-auth 2 смежных случая переведены на «/start» — их смысл был
+      про chatId, не про приглашения); admin-mutation-ratelimit: удалён только набор access-pool.
+- [x] F6. Sweep по 15 маркерам — ноль вхождений; typecheck чист (после сброса устаревшего .next),
+      80 тестов в трёх затронутых файлах зелёные. Полный test+build — в H1.
 
 ## Группа G — документы
 
-- [ ] G1. CLAUDE.md + AGENTS.md синхронно: §10 стек (:163 инвайты), §11.4 (СБП+USDT — снять «SBP-only»),
-      §11.10 (бот = вход, лист ожидания мёртв), §13 запись о снятии инвайтов.
-- [ ] G2. CONTEXT.md: открытая регистрация (:3,:10), термин Waitlist (:25-26), Method (USDT живой),
-      Ключ (авто-выдача с ручным запасным путём — снять «issued manually»).
-- [ ] G3. README.md: разделы об инвайтах (:3,:14,:38-41,:64,:83,:98,:120-125,:169).
-- [ ] G4. TODOS.md: закрыть строку 102 (снятие «по приглашению»), убрать /access-pool/* из :28.
+- [x] G1. CLAUDE.md + AGENTS.md синхронно: стек (Auth/Payments), Forbidden (СБП+USDT; авто-выдача
+      с восстановлением через reprocess вместо «issued manually»), §11.4, §11.10, §13 запись.
+- [x] G2. CONTEXT.md: открытая регистрация, термин Waitlist удалён, Method (СБП+USDT), Ключ
+      (авто-выдача + issueError + reprocess), Grant = исключение, диалог-пример обновлён,
+      PRSLOY ID упоминает привязку почты для Telegram-аккаунтов.
+- [x] G3. README.md: интро, маршруты (без счётчика/панели приглашений; +link-email, +reprocess/issue),
+      раздел «Invite codes» удалён, «Manual VPN grant» → «Key issuance» (авто + восстановление +
+      ручной запасной), Telegram-раздел без /invite, WAITLIST_NOTIFY_EMAIL задокументирован.
+- [x] G4. TODOS.md: /access-pool/* убран из перечня админ-surface; Marketing voice audit помечен
+      выполненным (2026-07-02).
 
 ## Группа H — финальная проверка и выкат
 

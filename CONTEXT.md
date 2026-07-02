@@ -1,17 +1,17 @@
 # PRSLOY
 
-PRSLOY is an invite-only beta VPN. This document defines the domain vocabulary for the marketing+waitlist site at `prsloy.online` so terms stay consistent across code, copy, and conversation.
+PRSLOY is a private VPN with open registration. This document defines the domain vocabulary for the site at `prsloy.online` so terms stay consistent across code, copy, and conversation.
 
 ## Language
 
 ### Brand & site
 
 **PRSLOY**:
-The product brand. Invite-only beta VPN. Always written uppercase in copy and code identifiers.
+The product brand. Private VPN, open registration (invite gate removed 2026-07-02). Always written uppercase in copy and code identifiers.
 _Avoid_: Convyr (dead codename), "the site", "our VPN".
 
 **PRSLOY ID**:
-A user account on `prsloy.online` (email + password). Created via `/register`, used to sign in at `/login`, links to one Dashboard.
+A user account on `prsloy.online` (email + password, or Telegram sign-in). Created via `/register`, used to sign in at `/login`, links to one Dashboard. Telegram-created accounts have no email until they link one at checkout (`linkEmail`) — payment requires an email for the receipt.
 _Avoid_: account, user account, profile.
 
 **Dashboard / ЛК**:
@@ -21,9 +21,6 @@ _Avoid_: "кабинет", "личный кабинет" (use the abbreviation "
 **Devlog**:
 The public `/blog` page. Public-facing build log; reads as a neutral company artifact, never explicitly addresses investors. See [[feedback_investor_copy_framing]].
 _Avoid_: Arsenal (dead internal label), "investor blog".
-
-**Waitlist**:
-Email capture for visitors who aren't ready to register a PRSLOY ID. (The dedicated `POST /api/waitlist` endpoint was removed as unused/unthrottled; `POST /api/access/notify-when-open` covers pool-full interest.) Distinct from a PRSLOY ID — a Waitlist entry is just an email; a PRSLOY ID is a real account.
 
 ### Billing
 
@@ -35,10 +32,10 @@ _Avoid_: tier, plan, subscription length.
 Per-month USD price by Period: $5 / $4 / $3. Total = price × months. RUB conversion uses a hardcoded `RUB_PER_USD = 90`.
 
 **Method**:
-A payment method. The declared `Payment` type lists six: `SBP`, `CARD`, `BTC`, `ETH`, `TON`, `USDT`. **Only SBP is wired through Platega today** — the other five appear in the pricing UI conversion display but do not have a live checkout flow.
+A payment method. **`SBP` and `USDT` (crypto) are wired through the Provider today** — `CARD`/`BTC`/`ETH`/`TON` appear in the pricing UI conversion display but do not have a live checkout flow.
 
 **SBP**:
-СБП (Система Быстрых Платежей) — Russian instant-payments protocol. The currently live payment method, settled in RUB.
+СБП (Система Быстрых Платежей) — Russian instant-payments protocol. One of the two live payment methods (with USDT), settled in RUB.
 
 ### Payments domain
 
@@ -60,11 +57,11 @@ The time-bound paid entitlement. Becomes active when the user's Order reaches `s
 _Avoid_: "plan", "tier", "membership" — say "подписка / subscription".
 
 **Ключ** (Key):
-The actual VPN config artifact a paid user puts into their Happ-style client. Issued **manually** by an operator via `/admin/grant` until the provisioning API is wired. **Подписка active ≠ Ключ issued.** Treat them as two separate lifecycles.
+The actual VPN config artifact a paid user puts into their Happ-style client. Issued **automatically** right after the Order reaches `confirmed` (auto-issue via the provisioning proxy, `issueKeyForOrder`). If auto-issue fails, the Order carries `issueError` and the operator recovers via `/api/admin/reprocess`; manual `/admin/grant` is the last-resort fallback. **Подписка active ≠ Ключ issued.** Treat them as two separate lifecycles.
 _Avoid_: "access", "credentials", "доступ", "конфиг" in product copy — say "ключ / key".
 
 **Grant**:
-Manual issuance of a Ключ by an operator. Endpoint `POST /api/admin/grant`, protected by `ADMIN_SECRET`. The path `/admin/grant` is the operator UI.
+Manual issuance of a Ключ by an operator — the exception path since auto-issue went live. Endpoint `POST /api/admin/grant`, protected by `ADMIN_SECRET`. The path `/admin/grant` is the operator UI.
 
 **Reissue**:
 Replacing an existing user's Ключ (compromised key, lost device, etc.). User-initiated request flow exists; operators fulfill from `/admin/users` or the reissue queue. Подписка is not affected by Reissue — only the artifact changes.
@@ -88,6 +85,6 @@ These appear in older notes, plans, or external conversations. They are **not** 
 ## Example dialogue
 
 > **dev:** "After Platega confirms the payment, the user gets the Ключ automatically, right?"
-> **founder:** "No — confirmed Order means money landed and **Подписка is active**. The **Ключ** is still issued manually via `/admin/grant` until we wire the provisioning API. The Order goes `pending → confirmed`, but the user sees 'оплачено, ключ скоро придёт' until an operator does the Grant."
-> **dev:** "Got it. So `confirmed` on the Order = Подписка active, but Ключ is a separate step until provisioning lands."
+> **founder:** "Usually yes — confirmed Order means money landed and **Подписка is active**, and auto-issue delivers the **Ключ** to the ЛК right after. But they are still two lifecycles: auto-issue can fail, the Order then carries `issueError`, and the operator re-drives it via `/api/admin/reprocess`."
+> **dev:** "Got it. So `confirmed` on the Order = Подписка active, and the Ключ follows automatically — with a manual recovery path when it doesn't."
 > **founder:** "Right. And don't confuse Transaction (Platega's ID for the charge) with Order (our row). One Order → one Transaction → one Подписка → one Ключ. Four things on four timelines."
