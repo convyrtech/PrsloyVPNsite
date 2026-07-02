@@ -119,6 +119,44 @@ describe("linkEmail", () => {
       code: "user_not_found",
     });
   });
+
+  it("serializes concurrent link attempts — the loser cannot orphan an email index", async () => {
+    const { user } = await loginOrRegisterByTelegram({
+      telegramId: "9004",
+      telegramUsername: "racer",
+    });
+
+    const results = await Promise.allSettled([
+      linkEmail(user.id, "first@example.com"),
+      linkEmail(user.id, "second@example.com"),
+    ]);
+
+    const fulfilled = results.filter(
+      (r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof linkEmail>>> =>
+        r.status === "fulfilled"
+    );
+    const rejected = results.filter(
+      (r): r is PromiseRejectedResult => r.status === "rejected"
+    );
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect((rejected[0].reason as { code?: string }).code).toBe(
+      "link_in_progress"
+    );
+
+    // The losing address must stay claimable — no orphan auth:email:* mapping.
+    const winner = fulfilled[0].value.email;
+    const loser =
+      winner === "first@example.com"
+        ? "second@example.com"
+        : "first@example.com";
+    expect(await getUserByEmail(loser)).toBeNull();
+
+    // And the lock is released: a follow-up attempt reports the real state.
+    await expect(linkEmail(user.id, loser)).rejects.toMatchObject({
+      code: "email_already_set",
+    });
+  });
 });
 
 describe("loginUser", () => {

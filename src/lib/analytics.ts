@@ -243,6 +243,12 @@ export async function track(event: AnalyticsEvent): Promise<void> {
       case "key_issued":
         await bumpCounter(env, date, `funnel:${date}:key:_`);
         break;
+      case "issue_failed":
+        // Paid buyers without a key — the number the operator must drive
+        // back to zero. Counted, not just logged, so the admin funnel
+        // table surfaces it.
+        await bumpCounter(env, date, `funnel:${date}:issue_failed:_`);
+        break;
     }
     await appendLog(env, date, event);
   } catch (err) {

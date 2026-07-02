@@ -93,7 +93,9 @@ export async function POST(req: Request) {
     }
     if (err instanceof AuthError) {
       const status =
-        err.code === "email_exists" || err.code === "email_already_set"
+        err.code === "email_exists" ||
+        err.code === "email_already_set" ||
+        err.code === "link_in_progress"
           ? 409
           : 400;
       return NextResponse.json({ ok: false, error: err.code }, { status });

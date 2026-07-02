@@ -229,6 +229,17 @@ export async function registerUser(email: string, password: string) {
   return publicUser(user);
 }
 
+// Serializes concurrent linkEmail calls for one account. Without it two
+// parallel requests with DIFFERENT addresses both pass the user.email===null
+// check, both NX-reserve their auth:email:* key, and the losing key stays
+// mapped to this user forever — permanently blocking that address from
+// registration. TTL bounds the lock if the function dies mid-flight.
+const LINK_EMAIL_LOCK_TTL_SECONDS = 10;
+
+function linkEmailLockKey(userId: string) {
+  return `auth:linkemail:lock:${userId}`;
+}
+
 // Attaches an email to a Telegram-only account so it can pass the payment
 // gate (the receipt and operator reach-out need a deliverable address).
 // Mirrors registerUser's NX email reservation to prevent collisions.
@@ -238,25 +249,40 @@ export async function linkEmail(userId: string, email: string) {
   const normalized = normalizeEmail(email);
   if (!isValidEmail(normalized)) throw new AuthError("invalid_email");
 
-  const user = await getUserById(userId);
-  if (!user) throw new AuthError("user_not_found");
-  if (user.email) throw new AuthError("email_already_set");
+  const locked = await kvSet(linkEmailLockKey(userId), "1", {
+    nx: true,
+    ex: LINK_EMAIL_LOCK_TTL_SECONDS,
+  });
+  if (!locked) throw new AuthError("link_in_progress");
 
-  const reserved = await kvSet(emailKey(normalized), user.id, { nx: true });
-  if (!reserved) throw new AuthError("email_exists");
-
-  user.email = normalized;
-  user.emailVerified = false;
-  user.updatedAt = new Date().toISOString();
   try {
-    await saveUser(user);
-  } catch (err) {
-    // Roll back the reservation so the address stays claimable.
-    await kvDel(emailKey(normalized));
-    throw err;
-  }
+    const user = await getUserById(userId);
+    if (!user) throw new AuthError("user_not_found");
+    if (user.email) throw new AuthError("email_already_set");
 
-  return publicUser(user);
+    const reserved = await kvSet(emailKey(normalized), user.id, { nx: true });
+    if (!reserved) throw new AuthError("email_exists");
+
+    user.email = normalized;
+    user.emailVerified = false;
+    user.updatedAt = new Date().toISOString();
+    try {
+      await saveUser(user);
+    } catch (err) {
+      // Roll back the reservation so the address stays claimable.
+      await kvDel(emailKey(normalized));
+      throw err;
+    }
+
+    return publicUser(user);
+  } finally {
+    try {
+      await kvDel(linkEmailLockKey(userId));
+    } catch {
+      // Lock expires via TTL — a failed release only delays retries by
+      // a few seconds, it must not mask the real outcome.
+    }
+  }
 }
 
 export async function listUsers(): Promise<AdminUserSummary[]> {
