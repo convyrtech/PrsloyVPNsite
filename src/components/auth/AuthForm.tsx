@@ -169,7 +169,7 @@ function AuthFormInner({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="bg-surface border border-border-visible rounded-full px-lg min-h-[48px]
-                     font-mono text-body-sm text-text-display placeholder:text-text-disabled
+                     font-mono text-body text-text-display placeholder:text-text-disabled
                      focus:outline-none focus:border-text-display transition-colors"
         />
       </label>
@@ -187,7 +187,7 @@ function AuthFormInner({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="bg-surface border border-border-visible rounded-full px-lg min-h-[48px]
-                     font-mono text-body-sm text-text-display placeholder:text-text-disabled
+                     font-mono text-body text-text-display placeholder:text-text-disabled
                      focus:outline-none focus:border-text-display transition-colors"
         />
       </label>
@@ -206,7 +206,7 @@ function AuthFormInner({
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
             className="bg-surface border border-border-visible rounded-full px-lg min-h-[48px]
-                       font-mono text-body-sm text-text-display placeholder:text-text-disabled
+                       font-mono text-body text-text-display placeholder:text-text-disabled
                        focus:outline-none focus:border-text-display transition-colors uppercase"
           />
         </label>

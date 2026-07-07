@@ -47,14 +47,14 @@
     "hint_desktop": "DRAG TO ROTATE · HOVER A POINT",
     "hint_touch": "DRAG TO ROTATE · TAP A POINT",
     "loading": "BUILDING THE GLOBE",
-    "fallback": "INFRASTRUCTURE PREVIEW UNAVAILABLE · WEBGL REQUIRED",
+    "fallback": "INFRASTRUCTURE PREVIEW UNAVAILABLE",
     "cta": "GET ACCESS"
   },
   "nothing": {
     "label": "YOUR CONNECTION · ENCRYPTED",
     "your_isp_sees": "Your ISP sees",
     "nothing_word": "NOTHING",
-    "meta_invisible": "Encrypted traffic only · No activity logs · Personal gateway",
+    "meta_invisible": "Encrypted traffic only · No activity logs · Personal access",
     "scroll_cue": "ACCESS"
   },
   "pricing": {
@@ -63,7 +63,6 @@
     "period_6m": "6 MO",
     "period_12m": "1 YR",
     "per_month": "/ MO",
-    "everything_included": "One price. No “basic” or “premium” tiers.",
     "promo_text": "LIMITED CAPACITY",
     "includes": "INCLUDED",
     "feature_encryption": "Servers",
