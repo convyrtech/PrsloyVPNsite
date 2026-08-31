@@ -6,7 +6,7 @@ import { ImageResponse } from "next/og";
 // site's brand language is Latin mono labels anyway — so it renders robustly
 // without shipping a font file.
 
-export const alt = "PRSLOY — private VPN, open registration";
+export const alt = "PRSLOY — VPN for Russia: SBP checkout, 199 ₽/mo";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -71,7 +71,7 @@ export default function OpengraphImage() {
             textTransform: "uppercase",
           }}
         >
-          PRIVATE VPN · OPEN REGISTRATION
+          PRIVATE VPN · SBP · 199 RUB/MO
         </div>
       </div>
     ),

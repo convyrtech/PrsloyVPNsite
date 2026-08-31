@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -9,57 +9,28 @@ import { TELEGRAM_BOT_URL } from "@/lib/links";
 import { PaymentCheckout } from "@/components/payments/PaymentCheckout";
 import { PaymentResultBanner } from "@/components/payments/PaymentResultBanner";
 import { AnimatedPrice } from "@/components/pricing/AnimatedPrice";
-import { getForcedState } from "@/lib/dev-state";
 import {
   type Period,
   PERIODS,
-  PRICE_BY_PERIOD,
+  PRICE_RUB_BY_PERIOD,
   getMonthlyPriceRub,
   formatPeriodTotal,
 } from "@/lib/pricing";
 
-export function PricingPageClient({ locale }: { locale: string }) {
+export function PricingPageClient({
+  locale,
+  authed,
+  emailMissing,
+}: {
+  locale: string;
+  authed: boolean;
+  emailMissing: boolean;
+}) {
   const t = useTranslations("pricing_page");
   const tShared = useTranslations("pricing");
 
   const [period, setPeriod] = useState<Period>("1mo");
-  const savePct = Math.round((1 - PRICE_BY_PERIOD[period] / PRICE_BY_PERIOD["1mo"]) * 100);
-  const [authed, setAuthed] = useState<boolean | null>(null);
-  const [emailMissing, setEmailMissing] = useState(false);
-
-  // Is the visitor signed in? Checkout needs an account, so a guest leads
-  // with the register CTA instead of dead pay buttons. Falsy (loading/guest)
-  // shows the guest path by default. Telegram-only accounts have no email,
-  // which the checkout needs for the payment gate — surface that too.
-  useEffect(() => {
-    let alive = true;
-    // Dev-only: ?__state=authed shows the signed-in checkout instead of the
-    // guest path; ?__state=authed-noemail additionally forces the email-link step.
-    const forced = getForcedState();
-    if (forced === "authed" || forced === "authed-noemail") {
-      setAuthed(true);
-      setEmailMissing(forced === "authed-noemail");
-      return;
-    }
-    (async () => {
-      try {
-        const res = await fetch("/api/auth/me", { cache: "no-store" });
-        const data = (await res.json().catch(() => ({}))) as {
-          ok?: boolean;
-          user?: { email?: string | null } | null;
-        };
-        if (!alive) return;
-        setAuthed(Boolean(data.user));
-        setEmailMissing(Boolean(data.user) && !data.user?.email);
-      } catch {
-        if (alive) setAuthed(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
+  const savePct = Math.round((1 - PRICE_RUB_BY_PERIOD[period] / PRICE_RUB_BY_PERIOD["1mo"]) * 100);
   // "ЧТО ВНУТРИ" rows — trimmed to the four differentiators (own servers,
   // clean addresses, no logs, unlimited traffic). `featured` lifts the three
   // strongest to text-display. (Key names predate the copy; values are truth.)
@@ -117,65 +88,53 @@ export function PricingPageClient({ locale }: { locale: string }) {
               <div className="flex items-baseline gap-sm flex-wrap">
                 {/* Digits in Doto (the one display moment) — riffle-decode on
                     period change + slow ambient glow. Currency kept out of
-                    Doto (it lacks a ₽ glyph): ₽ in the body font, EN "$"
-                    as a static prefix inside the digit span. */}
+                    Doto (it lacks a ₽ glyph): ₽ in the body font beside it. */}
                 <AnimatedPrice
-                  value={locale === "en" ? PRICE_BY_PERIOD[period] : getMonthlyPriceRub(period)}
-                  prefix={locale === "en" ? "$" : ""}
+                  value={getMonthlyPriceRub(period)}
                   className="font-display text-text-display leading-[0.85] tabular-nums"
                   style={{
                     fontSize: "clamp(96px, 19vw, 200px)",
                     letterSpacing: "0.02em",
                   }}
                 />
-                {locale !== "en" && (
-                  <span
-                    className="font-body font-light text-text-display leading-[0.85]"
-                    style={{ fontSize: "clamp(56px, 11vw, 120px)" }}
-                  >
-                    ₽
-                  </span>
-                )}
+                <span
+                  className="font-body font-light text-text-display leading-[0.85]"
+                  style={{ fontSize: "clamp(56px, 11vw, 120px)" }}
+                >
+                  ₽
+                </span>
                 <span className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary pb-lg">
                   {t("monthly_unit")}
                 </span>
               </div>
               {period !== "1mo" && (
                 <p className="font-mono text-label uppercase tracking-[0.16em] text-text-secondary">
-                  {t("total_label")} {formatPeriodTotal(period, locale)}
+                  {t("total_label")} {formatPeriodTotal(period)}
                   <span className="text-accent"> · −{savePct}%</span>
                 </p>
               )}
             </div>
 
-            {/* Guest → register CTA (checkout needs an account).
-                Signed-in → pay. */}
-            {authed ? (
-              <PaymentCheckout period={period} locale={locale} emailMissing={emailMissing} />
-            ) : (
-              <div className="flex flex-col gap-md">
-                <p className="font-mono text-label uppercase tracking-[0.08em] text-text-secondary leading-[1.6]">
-                  {t("guest_flow")}
-                </p>
-                <Link
-                  href="/register"
-                  className="self-start bg-text-display text-black font-mono uppercase tracking-[0.08em]
-                             px-xl min-h-[48px] inline-flex items-center justify-center rounded-full text-label
-                             hover:opacity-90 active:scale-[0.98] transition duration-150 ease-out-nothing"
-                >
-                  [ {t("guest_register_cta")} ]
-                </Link>
-                <div className="flex items-center gap-sm font-mono text-label uppercase tracking-[0.08em]">
-                  <span className="text-text-disabled">{t("have_account")}</span>
-                  <Link
-                    href="/login"
-                    className="inline-flex items-center min-h-[44px] text-text-display hover:opacity-80 transition-opacity"
-                  >
-                    {t("login_to_pay")} →
-                  </Link>
-                </div>
-              </div>
-            )}
+            {/* One checkout for everyone: a guest fills email + password
+                right here and the pay click registers, signs in and opens the
+                provider in a single action. No detour through /register. */}
+            <PaymentCheckout
+              period={period}
+              locale={locale}
+              authed={authed}
+              emailMissing={emailMissing}
+            />
+
+            {/* The policy pages have to be reachable from the payment screen
+                itself, not only from the landing footer — the checkout is
+                where the buyer agrees to them. */}
+            <p className="font-mono text-label uppercase tracking-[0.08em] text-text-disabled leading-[1.6]">
+              {t.rich("legal_consent", {
+                terms: (chunks) => <LegalRef href="/terms">{chunks}</LegalRef>,
+                privacy: (chunks) => <LegalRef href="/privacy">{chunks}</LegalRef>,
+                refunds: (chunks) => <LegalRef href="/refunds">{chunks}</LegalRef>,
+              })}
+            </p>
           </section>
         </RevealOnView>
 
@@ -190,7 +149,6 @@ export function PricingPageClient({ locale }: { locale: string }) {
               <div className="flex flex-col gap-md font-body text-body-sm text-text-secondary leading-[1.6] max-w-2xl">
                 <p>{t("why_line1")}</p>
                 <p>{t("why_line2")}</p>
-                <p>{t("why_line3")}</p>
               </div>
             </div>
 
@@ -236,6 +194,23 @@ export function PricingPageClient({ locale }: { locale: string }) {
         </RevealOnView>
       </div>
     </main>
+  );
+}
+
+function LegalRef({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href as "/terms"}
+      className="text-text-secondary underline underline-offset-4 hover:text-text-display transition-colors"
+    >
+      {children}
+    </Link>
   );
 }
 

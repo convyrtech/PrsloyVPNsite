@@ -1,11 +1,11 @@
 /**
  * Dev-only state forcing for pre-flight visual checks.
  *
- * Many UI states (pool-full, blocked, paid-awaiting, each auth error, …) can't
- * be reached on the dev server because it has no KV / auth / payment, and prod
- * sits behind a WAF that blocks automated browsers. These helpers let a human
- * force a state via a query flag during local review — e.g.
- *   /ru/pricing?__state=pool-full
+ * Many UI states (blocked, paid-awaiting, issue-failed, each auth error, …)
+ * can't be reached on the dev server because it has no KV / auth / payment,
+ * and prod sits behind a WAF that blocks automated browsers. These helpers let
+ * a human force a state via a query flag during local review — e.g.
+ *   /ru/dashboard?__state=active
  *   /ru/dashboard?__state=paid-awaiting
  *   /ru/register?__error=email_exists
  *
@@ -23,7 +23,7 @@ export function getDevState(key: string): string | null {
   }
 }
 
-/** Convenience: the forced page-state, e.g. ?__state=pool-full. */
+/** Convenience: the forced page-state, e.g. ?__state=active. */
 export function getForcedState(): string | null {
   return getDevState("__state");
 }

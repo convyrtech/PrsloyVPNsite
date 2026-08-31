@@ -13,18 +13,15 @@ import { useRiffle } from "@/components/pricing/useRiffle";
  *     without the cheapness of a blinking pulse.
  *
  * Both honour prefers-reduced-motion. Digit count is constant across periods
- * within a locale (RU 450/360/270, EN 5/4/3), so the riffle never shifts
- * layout; `tabular-nums` on the consumer keeps each frame the same width.
+ * (199/159/119 — three digits each), so the riffle never shifts layout;
+ * `tabular-nums` on the consumer keeps each frame the same width.
  */
 export function AnimatedPrice({
   value,
-  prefix = "",
   className,
   style,
 }: {
   value: number;
-  /** Static glyph rendered before the digits (e.g. "$"), never scrambled. */
-  prefix?: string;
   className?: string;
   style?: React.CSSProperties;
 }) {
@@ -35,7 +32,7 @@ export function AnimatedPrice({
     <motion.span
       className={className}
       style={style}
-      aria-label={`${prefix}${value}`}
+      aria-label={String(value)}
       animate={
         reduce
           ? undefined
@@ -49,7 +46,6 @@ export function AnimatedPrice({
       }
       transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
     >
-      {prefix}
       {display}
     </motion.span>
   );

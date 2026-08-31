@@ -8,7 +8,7 @@ import {
   useTransform,
   type MotionValue,
 } from "motion/react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Bracketed } from "@/components/ui/Bracketed";
 import { FeatureCell } from "@/components/pricing/FeatureCell";
@@ -16,7 +16,6 @@ import { DividerLabel } from "@/components/ui/DividerLabel";
 import {
   type Period,
   PERIODS,
-  PRICE_BY_PERIOD,
   getMonthlyPriceRub,
 } from "@/lib/pricing";
 import { AnimatedPrice } from "@/components/pricing/AnimatedPrice";
@@ -46,7 +45,6 @@ const DUST_PARTICLES = createDustParticles();
  */
 export function PricingStage() {
   const t = useTranslations("pricing");
-  const locale = useLocale();
   const stageRef = useRef<HTMLElement | null>(null);
 
   const { scrollYProgress: rawProgress } = useScroll({
@@ -81,7 +79,7 @@ export function PricingStage() {
     { clamp: true }
   );
 
-  // Price ($5 + /MONTH) — visible early, then the controls layer in
+  // Price (199 ₽ + /MONTH) — visible early, then the controls layer in
   const priceOpacity = useTransform(rawProgress, [0.06, 0.16], [0, 1], { clamp: true });
   const priceY = useTransform(scrollYProgress, [0.06, 0.16], [40, 0], { clamp: true });
   const priceScale = useTransform(scrollYProgress, [0.06, 0.16], [0.6, 1], { clamp: true });
@@ -172,19 +170,16 @@ export function PricingStage() {
                 slow glow; ₽ rendered as a sibling so only the digits scramble. */}
             <div className="flex items-baseline gap-sm">
               <AnimatedPrice
-                value={locale === "en" ? PRICE_BY_PERIOD[period] : getMonthlyPriceRub(period)}
-                prefix={locale === "en" ? "$" : ""}
+                value={getMonthlyPriceRub(period)}
                 className="font-body font-bold text-text-display leading-[0.85] tabular-nums"
                 style={{ fontSize: "clamp(64px, 17vw, 240px)", letterSpacing: "0" }}
               />
-              {locale !== "en" && (
-                <span
-                  className="font-body font-bold text-text-display leading-[0.85]"
-                  style={{ fontSize: "clamp(40px, 11vw, 150px)" }}
-                >
-                  ₽
-                </span>
-              )}
+              <span
+                className="font-body font-bold text-text-display leading-[0.85]"
+                style={{ fontSize: "clamp(40px, 11vw, 150px)" }}
+              >
+                ₽
+              </span>
             </div>
 
             <motion.p

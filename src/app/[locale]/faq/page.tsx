@@ -5,6 +5,7 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { RevealOnView } from "@/components/ui/RevealOnView";
 import { DotoNumber } from "@/components/ui/DotoNumber";
 import { TELEGRAM_BOT_URL } from "@/lib/links";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 type FaqItem = { category: string; q: string; a: string };
 
@@ -39,8 +40,21 @@ export default async function FaqPage({
     items: items.filter((it) => it.category === cat),
   })).filter((g) => g.items.length > 0);
 
+  // Q&A pairs mirrored into FAQPage markup — the format Yandex's AI answers
+  // and rich snippets consume directly.
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((it) => ({
+      "@type": "Question",
+      name: it.q,
+      acceptedAnswer: { "@type": "Answer", text: it.a },
+    })),
+  };
+
   return (
     <main className="min-h-screen bg-black text-text-primary pt-[120px] pb-3xl">
+      <JsonLd data={faqJsonLd} />
       <div className="max-w-2xl mx-auto px-lg flex flex-col gap-3xl">
         <RevealOnView y={12}>
           <SectionLabel>{t("label")}</SectionLabel>

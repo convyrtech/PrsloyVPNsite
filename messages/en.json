@@ -1,19 +1,16 @@
 {
   "meta": {
-    "title": "PRSLOY — private VPN. Open registration.",
-    "description": "Private access to a fast connection that holds under blocks and at peak hours. Datacenters chosen by reputation, not price. $5/mo, open registration.",
-    "ogTitle": "PRSLOY · private VPN, open registration",
-    "ogDescription": "A connection that holds under blocks and load. By reputation, not by price. $5/mo, registration open."
+    "title": "PRSLOY — VPN for Russia: SBP checkout, 199 ₽/mo",
+    "description": "A VPN that holds under blocks and at peak hours. Pay by SBP or USDT, 199 ₽ per month, the key appears in your dashboard automatically. Registration is open.",
+    "ogTitle": "PRSLOY · VPN for Russia, SBP checkout",
+    "ogDescription": "A connection that holds under blocks and load. 199 ₽/mo via SBP or USDT, the key is issued automatically."
   },
   "hero": {
-    "status_label": "OPEN BETA",
     "headline_line1": "A private layer of your internet.",
     "headline_line2": "No outsiders.",
-    "sub_price": "",
     "sub_features": "Our own servers and clean IPs. Tuned to stay fast and not drop.",
     "cta": "GET ACCESS",
-    "launch_strip": "REGISTRATION OPEN",
-    "scroll_hint": "SCROLL"
+    "launch_strip": "REGISTRATION OPEN"
   },
   "header": {
     "nav_pricing": "PRICING",
@@ -21,7 +18,6 @@
     "nav_blog": "BLOG",
     "nav_dashboard": "DASHBOARD",
     "status_short": "OPEN BETA",
-    "status_full": "OPEN REGISTRATION · BETA",
     "cta_buy": "ACCESS",
     "cta_buy_compact": "ACCESS",
     "menu_open": "MENU",
@@ -41,9 +37,6 @@
     "metric_logs_value": "NOT KEPT",
     "metric_status": "STATUS",
     "metric_status_value": "BETA",
-    "legend_entry": "POINT A",
-    "legend_exit": "POINT B",
-    "legend_active": "PRIVATE CHANNEL",
     "hint_desktop": "DRAG TO ROTATE · HOVER A POINT",
     "hint_touch": "DRAG TO ROTATE · TAP A POINT",
     "loading": "BUILDING THE GLOBE",
@@ -96,24 +89,22 @@
     "label": "PRICING",
     "headline_line1": "One plan. Full access.",
     "headline_line2": "",
-    "subheadline": "Personal configuration. No extra setup.",
+    "subheadline": "The key shows up in your dashboard automatically once the payment lands.",
     "monthly_unit": "per month",
     "total_label": "TOTAL",
-    "guest_flow": "Create your PRSLOY ID and pay — your key appears in your dashboard automatically.",
     "why_label": "CAPACITY HEADROOM",
-    "why_line1": "Speed and a clean address are a shared resource: the more people on a node, the less speed each gets — and the faster the address gets flagged and blocked.",
-    "why_line2": "Mass services pack the channel for volume — we add capacity before nodes get near their limit.",
-    "why_line3": "So the speed and the clean address stay what you pay for.",
+    "why_line1": "Speed and a clean address are a shared resource: the more people on a node, the slower it gets for each of them and the sooner the address is flagged and blocked.",
+    "why_line2": "Volume services pack the pipe for margin. We add capacity before a node approaches its limit — that is what you are paying for.",
     "whats_inside_label": "WHAT'S INSIDE",
-    "guest_register_cta": "CREATE A PRSLOY ID",
-    "have_account": "ALREADY HAVE A PRSLOY ID?",
-    "login_to_pay": "SIGN IN TO PAY",
     "telegram_label": "Need support?",
     "telegram_link": "Message us on Telegram",
     "refunds_label": "Refunds",
     "refunds_link": "Refund policy",
     "faq_label": "More questions?",
-    "faq_link": "Full FAQ"
+    "faq_link": "Full FAQ",
+    "legal_consent": "By paying you accept the <terms>terms</terms>, the <privacy>privacy policy</privacy> and the <refunds>refund rules</refunds>.",
+    "meta_title": "VPN pricing — 199 ₽/mo, SBP and USDT | PRSLOY",
+    "meta_description": "VPN for 199 ₽ per month: 159 ₽/mo when paying for six months, 119 ₽/mo for a year. Pay by SBP or USDT. The key appears in the dashboard automatically after payment."
   },
   "setup_page": {
     "label": "SETUP",
@@ -197,27 +188,12 @@
     "no_key_body": "Verify your email and get access. Once we confirm capacity, your personal configuration appears in the dashboard.",
     "get_key_link": "Get access",
     "telegram_label": "Got a question?",
-    "telegram_link": "Support"
+    "telegram_link": "Support",
+    "meta_title": "How to connect: Happ on phone, PC and TV | PRSLOY",
+    "meta_description": "Connect your PRSLOY VPN key in Happ on iOS, Android, Windows, macOS, Linux, Android TV and Apple TV. Three steps: copy the key from the dashboard, import it as a subscription, switch it on."
   },
   "dashboard_page": {
     "label": "DASHBOARD",
-    "telegram_cta_label": "CREATE PRSLOY ID",
-    "telegram_cta_meta": "Email and password",
-    "what_label": "WHAT’S IN THERE",
-    "feature_status_title": "Key status",
-    "feature_status_body": "Whether your key is active, valid until when, how much traffic is left (if there’s a cap).",
-    "feature_renew_title": "Renew",
-    "feature_renew_body": "Pay for a new period without regenerating the key. The route is preserved, devices stay connected.",
-    "feature_regen_title": "Regenerate",
-    "feature_regen_body": "If the key leaked or broke — issue a new one in one tap. The old one is automatically revoked.",
-    "feature_config_title": "Download config",
-    "feature_config_body": "Link or QR code for adding it to a new client. All your devices run off the same key.",
-    "feature_support_title": "Support",
-    "feature_support_body": "Direct chat with an engineer. Not a bot, not autoresponders — a real person who sees your key and the infrastructure.",
-    "feature_history_title": "History",
-    "feature_history_body": "Payments and renewals list. No traffic telemetry — billing only.",
-    "web_soon_label": "WEB DASHBOARD",
-    "web_soon_body": "Once manual issuing is stable, we will add more features directly in the browser dashboard — no Telegram detour.",
     "no_key_label": "No access yet?",
     "get_key_link": "Get access",
     "setup_title": "DASHBOARD TEMPORARILY UNAVAILABLE",
@@ -232,36 +208,9 @@
     "verify_resend": "RESEND EMAIL",
     "verify_sent": "EMAIL SENT",
     "verify_error": "Could not send the email. Try again in a minute.",
-    "email_label": "EMAIL",
-    "email_status_label": "EMAIL STATUS",
-    "email_verified": "VERIFIED",
-    "email_pending": "PENDING",
     "access_label": "ACCESS",
-    "access_active": "ACTIVE",
-    "access_pending": "WAITING FOR ISSUE",
-    "capacity_label": "CAPACITY",
-    "capacity_open": "OPEN",
-    "capacity_review": "PENDING",
-    "route_label": "ROUTE",
-    "route_private": "PRIVATE",
-    "route_reserved": "RESERVED",
-    "console_label": "ACCESS CONSOLE",
-    "console_ready": "READY",
-    "console_pending": "PENDING",
-    "console_body_ready": "Your account is active. Keep the configuration private and use the setup guide when adding a new device.",
-    "console_body_pending": "Your account is in the issue queue. We verify your email and payment first, then the configuration appears here automatically.",
-    "signal_label": "SIGNAL",
-    "signal_latency": "ROUTE CHECK",
-    "signal_stability": "STABILITY",
-    "signal_support": "HUMAN SUPPORT",
-    "signal_ready": "READY",
-    "signal_pending": "STANDBY",
-    "privacy_label": "PRIVATE BY DEFAULT",
-    "privacy_body": "No public config links and no fake checkout state. The dashboard only shows what is attached to this account.",
-    "account_created_label": "CREATED",
     "key_label": "ACCESS KEY",
     "key_ready": "ISSUED",
-    "key_not_issued": "NOT ISSUED",
     "status_ready_title": "Access is active",
     "status_ready_body": "Your configuration is ready to use. Copy the personal link below and set up your device using the guide.",
     "status_pending_title": "Access not issued yet",
@@ -272,43 +221,15 @@
     "status_issue_failed_body": "Automatic issuance didn't go through; the order is already with the operator. Your key will be issued manually and appear here. Taking long? Message support.",
     "status_blocked_title": "Access is limited",
     "status_blocked_body": "Contact support with your account email. We will check the status and tell you what to do next.",
-    "vpn_section_label": "Connection",
     "key_ready_body": "Your personal link. Do not share it with anyone — one subscription covers your own devices.",
     "key_pending_body": "The key has not been issued yet. There is nothing to configure now: once access is ready, this card will show the link and actions.",
-    "pipeline_label": "ISSUE PIPELINE",
-    "progress_email": "Email verification",
-    "progress_invite": "Payment confirmation",
-    "progress_access": "Personal configuration issue",
-    "state_done": "DONE",
-    "state_current": "NOW",
-    "state_waiting": "WAIT",
-    "updated_label": "UPDATED",
     "copy_key": "COPY",
     "copy_done": "COPIED",
     "copy_error": "Could not copy. Select the link manually.",
-    "config_label": "PERSONAL CONFIGURATION",
     "show_key": "SHOW",
     "hide_key": "HIDE",
     "setup_link": "SETUP GUIDE",
     "pay_cta": "GET ACCESS",
-    "ready_hint_label": "Access is issued. Keep the link private and use it only in your own client.",
-    "pending_hint_label": "Once your payment is confirmed, your personal configuration appears here automatically.",
-    "next_label": "NEXT",
-    "next_active_1_title": "How to connect",
-    "next_active_step_1": "Press the «Setup guide» button above.",
-    "next_active_step_2": "Pick your operating system.",
-    "next_active_step_3": "Copy the link and import it into the client.",
-    "next_active_2_title": "Check access",
-    "next_active_2_body": "After connecting, make sure the client shows an active state and does not ask for a new key.",
-    "next_active_3_title": "Contact support",
-    "next_active_3_body": "If setup fails, send your account email and an error screenshot. We will handle it manually.",
-    "next_pending_1_title": "Wait for payment confirmation",
-    "next_pending_1_body": "Once your payment is confirmed, the key appears in your dashboard automatically. If something went wrong, contact support.",
-    "next_pending_2_title": "Avoid duplicates",
-    "next_pending_2_body": "One email equals one PRSLOY ID. It keeps your payment and issue history easy to track.",
-    "next_pending_3_title": "Ask for status",
-    "next_pending_3_body": "If the key is taking too long, contact support with your account email.",
-    "reissue_title": "Reissue",
     "reissue_body": "Need to reissue the key?",
     "reissue_button": "REQUEST",
     "reissue_disabled": "AFTER ISSUE",
@@ -319,10 +240,8 @@
     "reissue_rate_limited": "Too many requests. Try again later.",
     "reissue_no_key": "There is no active configuration to reissue yet.",
     "reissue_auth_required": "Session expired. Refresh the page and sign in again.",
-    "support_title": "Support",
     "support_body": "Connection issues?",
     "support_link": "MESSAGE",
-    "account_label": "ACCOUNT",
     "logout": "LOG OUT"
   },
   "payment_result": {
@@ -419,8 +338,8 @@
       },
       {
         "category": "payment",
-        "q": "Why show $5/mo?",
-        "a": "It is the beta reference price so positioning is clear. SBP and USDT checkout are live, and the key appears in your dashboard automatically once payment is confirmed."
+        "q": "Why 199 ₽/mo?",
+        "a": "199 ₽ per month, 159 ₽/mo when paying for six months, 119 ₽/mo for a year. SBP and USDT checkout; the key shows up in the dashboard automatically once the payment is confirmed."
       },
       {
         "category": "trust",
@@ -440,7 +359,7 @@
     "privacy": {
       "label": "PRIVACY",
       "title": "What we know about you",
-      "updated": "Updated: May 31, 2026",
+      "updated": "Updated: August 31, 2026",
       "intro": "This is not a corporate privacy policy with 40 clauses. Here’s an honest list of what we collect, why, and how long we keep it.",
       "sections": [
         {
@@ -478,12 +397,12 @@
     "terms": {
       "label": "TERMS",
       "title": "Rules of use",
-      "updated": "Updated: May 31, 2026",
-      "intro": "Short rules. This is not an enterprise SLA — these are beta-service terms written so they can actually be read.",
+      "updated": "Updated: August 31, 2026",
+      "intro": "Short rules. This is not an enterprise SLA — these are terms written so they can actually be read.",
       "sections": [
         {
           "h": "WHAT YOU GET",
-          "p": "A personal configuration for private access, access validity, and a dashboard guide. During private beta, issuing is manual so we can control quality."
+          "p": "A personal configuration for private access, access validity, and a dashboard guide. The key is issued automatically once the payment is confirmed; if issuing fails, support completes it."
         },
         {
           "h": "WHAT YOU CAN USE IT FOR",
@@ -495,11 +414,11 @@
         },
         {
           "h": "AVAILABILITY",
-          "p": "The service is in closed beta. We do everything we can to keep routes up 24/7, but we can’t guarantee 100% uptime — that would be a lie. If a node falls, the route switches; if something stays down for a long time, we compensate by extending the subscription."
+          "p": "The service is in beta. We do everything we can to keep routes up 24/7, but we can’t guarantee 100% uptime — that would be a lie. If a node falls, the route switches; if something stays down for a long time, we compensate by extending the subscription."
         },
         {
           "h": "PAYMENT AND REFUNDS",
-          "p": "SBP and USDT checkout are live. During private beta the key is still issued manually after payment; automated issuing is next up. If something goes wrong, message support."
+          "p": "SBP and USDT checkout are live. The key is issued automatically once the payment is confirmed. If something goes wrong, message support."
         },
         {
           "h": "TERMINATION",
@@ -516,8 +435,8 @@
     "refunds": {
       "label": "REFUNDS",
       "title": "Refund and cancellation policy",
-      "updated": "Updated: May 31, 2026",
-      "intro": "Clear rules for private beta access. If the service does not work for you, contact support and we will handle the request without loops or hidden steps.",
+      "updated": "Updated: August 31, 2026",
+      "intro": "Clear rules. If the service does not work for you, contact support and we will handle the request without loops or hidden steps.",
       "sections": [
         {
           "h": "REFUND WINDOW",
@@ -556,7 +475,7 @@
     "closing_line1": "OPEN REGISTRATION",
     "closing_line2": "PRIVATE ACCESS.",
     "cta": "GET ACCESS",
-    "cta_meta": "$5/MO · AUTO KEY DELIVERY",
+    "cta_meta": "199 ₽/MO · AUTO KEY DELIVERY",
     "nav_pricing": "PRICING",
     "nav_faq": "FAQ",
     "nav_blog": "BLOG",

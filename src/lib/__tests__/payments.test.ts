@@ -29,8 +29,8 @@ describe("payments", () => {
       method: "sbp_qr",
     });
 
-    expect(order.amountUsd).toBe(24);
-    expect(order.amountRub).toBe(2160);
+    expect(order.amountUsd).toBe(10.6);
+    expect(order.amountRub).toBe(954);
     expect(order.status).toBe("created");
     await expect(getLatestPaymentOrder("user-1")).resolves.toMatchObject({
       id: order.id,

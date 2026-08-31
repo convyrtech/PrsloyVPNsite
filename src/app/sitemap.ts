@@ -8,7 +8,7 @@ const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://www.prsloy.online"
 ).replace(/\/+$/, "");
 
-const STATIC_PAGES = ["", "pricing", "faq", "blog", "privacy", "terms", "refunds"];
+const STATIC_PAGES = ["", "pricing", "faq", "setup", "blog", "privacy", "terms", "refunds"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];
